@@ -1,6 +1,7 @@
+from typing import Any
+
 import cupy as cp
 import cupyx.scipy.signal
-from typing import Any
 
 FLOAT = cp.float32
 INT = cp.int32
@@ -272,7 +273,10 @@ def radial_profile(
     return profiles
 
 # TODO: Add documentation
-def lookup_z_para_fit(profiles, zlut):
+def lookup_z_para_fit(
+        profiles: cp.ndarray[tuple[int, int], FLOAT],
+        zlut: cp.ndarray[tuple[int, int], FLOAT]
+) -> cp.ndarray[int, FLOAT]:
     ref_z = zlut[0, :]
     ref_profiles = zlut[1:, :]
     n_images = profiles.shape[1]
