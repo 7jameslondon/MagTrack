@@ -1,18 +1,14 @@
-from typing import Any
-
 import cupy as cp
 import cupyx.scipy.signal
 
-FLOAT = cp.float32
-INT = cp.int32
 
-def binmean(
-        x: cp.ndarray[tuple[int, int], INT],
-        weights: cp.ndarray[tuple[int, int], FLOAT],
-        n_bins: int,
-) -> cp.ndarray[tuple[int, int], FLOAT]:
+def binmean(x, weights, n_bins: int):
     """
     Similar to numpy.bincount but for mean of 2D arrays
+
+    Note: CPU or GPU: The code is agnostic of CPU and GPU usage. If the first
+    parameter is on the GPU the computation/result will be on the GPU.
+    Otherwise, the computation/result will be on the CPU.
 
     Parameters
     ----------
@@ -38,33 +34,38 @@ def binmean(
     xp.minimum(x, n_bins, out=x)
 
     # Create an index to keep track of each row/dataset of x
-    i_base = xp.arange(x.shape[1], dtype=cp.uint16)
+    i_base = xp.arange(x.shape[1], dtype=xp.uint16)
     i = xp.broadcast_to(i_base, x.shape)
 
     # Binning
-    bin_means = xp.zeros((n_bins + 1, n_datasets), dtype=FLOAT)  # Pre-allocate
+    bin_means = xp.zeros(
+        (n_bins + 1, n_datasets), dtype=xp.float32
+    )  # Pre-allocate
     xp.add.at(bin_means, (x, i), weights)
 
-    bin_counts = xp.zeros((n_bins + 1, n_datasets), dtype=FLOAT)  # Pre-allocate
+    bin_counts = xp.zeros(
+        (n_bins + 1, n_datasets), dtype=xp.float32
+    )  # Pre-allocate
     xp.add.at(bin_counts, (x, i), 1)
 
     bin_means /= bin_counts
 
     return bin_means[:-1, :]  # Return without the overflow row
 
-def crop_stack_to_rois(
-        stack: cp.ndarray[tuple[int, int, int], Any],
-        rois: cp.ndarray[tuple[int, 4], cp.integer]
-) -> cp.ndarray[tuple[int, int, int, int], Any]:
+
+def crop_stack_to_rois(stack, rois):
     """
     Takes a 3D image-stack and crops it to the region of interests (ROIs).
 
     Given a 3D image-stack and a list of ROIs, this function will crop around
     each ROI and return a 4D array. Note the input stack must contain square
-    images and the ROIs must be squares. This can run on both CPU and GPU. The
-    function will use the GPU if the stack is on the GPU. Otherwise, the CPU.
-    However, it is recommended to use the CPU and then transfer the result to
-    the GPU and perform downstream analysis on the GPU.
+    images and the ROIs must be squares.
+
+    Note: CPU or GPU: The code is agnostic of CPU and GPU usage. If the first
+    parameter is on the GPU the computation/result will be on the GPU.
+    Otherwise, the computation/result will be on the CPU. However, it is
+    recommended to use the CPU and then transfer the result to the GPU and
+    perform downstream analysis on the GPU.
 
     Parameters
     ----------
@@ -84,29 +85,31 @@ def crop_stack_to_rois(
     # Pre-allocate space for cropped stack
     n_images = stack.shape[2]
     n_rois = rois.shape[0]
-    width = rois[0,1] - rois[0,0]
+    width = rois[0, 1] - rois[0, 0]
     shape = (width, width, n_images, n_rois)
-    cropped_stack = xp.ndarray(shape, dtype=stack.dtype)  # width, width, frames, rois
+    cropped_stack = xp.ndarray(
+        shape, dtype=stack.dtype
+    )  # width, width, frames, rois
 
     # Crop
     for i in range(n_rois):
         cropped_stack[:, :, :, i] = (
-            stack[rois[i,0]:rois[i,1], rois[i,2]:rois[i,3], :])
+            stack[rois[i, 0]:rois[i, 1], rois[i, 2]:rois[i, 3], :]
+        )
 
     return cropped_stack
 
-def parabolic_vertex(
-        data: cp.ndarray[tuple[int, int], FLOAT],
-        vertex_est: cp.ndarray[int, FLOAT],
-        n_local: int
-) -> cp.ndarray[int, FLOAT]:
+
+def parabolic_vertex(data, vertex_est, n_local: int):
     """
     Refines a local min/max by parabolic interpolation.
 
     Given an estimated location of a local min/max, this function will find a
     more precise location of the vertex by fitting the local datapoints to a
-    parabola and interpolating the vertex. The code is agnostic of CPU and GPU
-    usage. If data is on the GPU the computation and result will be on the GPU.
+    parabola and interpolating the vertex.
+
+    Note: CPU or GPU: The code is agnostic of CPU and GPU usage. If the first
+    parameter is on the GPU the computation/result will be on the GPU.
     Otherwise, the computation/result will be on the CPU.
 
     Parameters
@@ -132,7 +135,7 @@ def parabolic_vertex(
     n_local_half = (n_local // 2)
 
     # Convert the estimated vertex to an int for use as an index
-    vertex_int = vertex_est.round().astype(INT)
+    vertex_int = vertex_est.round().astype(xp.int32)
 
     # Force index to be with the limits
     index_min = n_local_half
@@ -141,10 +144,10 @@ def parabolic_vertex(
 
     # Get the local data to be fit
     n_datasets = data.shape[0]
-    rel_idx = xp.arange(-n_local_half, n_local_half + 1, dtype=INT)
+    rel_idx = xp.arange(-n_local_half, n_local_half + 1, dtype=xp.int32)
     idx = rel_idx + vertex_int[:, xp.newaxis]
     y = data[xp.arange(n_datasets)[:, xp.newaxis], idx].T
-    x = xp.arange(n_local, dtype=FLOAT)
+    x = xp.arange(n_local, dtype=xp.float32)
 
     # Fit to parabola
     p = xp.polyfit(x, y, 2)
@@ -158,31 +161,31 @@ def parabolic_vertex(
 
     return vertex
 
-def center_of_mass(
-        stack: cp.ndarray[tuple[int, int, int], FLOAT]
-) -> tuple[cp.ndarray[int, FLOAT], cp.ndarray[int, FLOAT]]:
+
+def center_of_mass(stack):
     """
-    Calculates the center-of-mass of each 2D image from a 3D image-stack.
+    Calculate center-of-mass
 
     For each 2D image of a 3D image-stack: the mean background is
     subtracted, the absolute value is taken and then the center-of-mass in
-    along the x- and y-axis is calculated. The code is agnostic of CPU and
-    GPU usage. If the stack is on the GPU the computation and result will
-    be on the GPU. Otherwise, the computation/result will be on the CPU.
-    Benchmarking show this function is faster than the version from scipy
-    or cupyx.scipy
+    along the x- and y-axis is calculated. This function is faster than the
+    version from scipy or cupyx.scipy.
+
+    Note: CPU or GPU: The code is agnostic of CPU and GPU usage. If the first
+    parameter is on the GPU the computation/result will be on the GPU.
+    Otherwise, the computation/result will be on the CPU.
 
     Parameters
     ----------
     stack : 3D float array, shape (n_pixels, n_pixels, n_images)
-        The image-stack. Note, the images must be square.
+        The image-stack. The images must be square.
 
     Returns
     ----------
     x : 1D float array, shape (n_images,)
-        The x coordinates of the center of mass.
+        The x coordinates of the center
     y : 1D float array, shape (n_images,)
-        The y coordinates of the center of mass.
+        The y coordinates of the center
     """
 
     # GPU or CPU?
@@ -194,49 +197,130 @@ def center_of_mass(
     xp.absolute(stack_norm, out=stack_norm)
 
     # Calculate center-of-mass
-    index = xp.arange(stack_norm.shape[0], dtype=FLOAT)[:, xp.newaxis]
+    index = xp.arange(stack_norm.shape[0], dtype=xp.float32)[:, xp.newaxis]
     total_mass = xp.sum(stack_norm, axis=(0, 1))
     x = xp.sum(index * xp.sum(stack_norm, axis=0), axis=0) / total_mass
     y = xp.sum(index * xp.sum(stack_norm, axis=1), axis=0) / total_mass
 
     return x, y
 
-# TODO: Add documentation
-def auto_conv(stack, x_old, y_old):
+
+def auto_conv(stack, x_old, y_old, return_conv=False):
+    """
+    Re-calculate center of symmetric object by auto-convolution
+
+    For each 2D image of a 3D image-stack: use the previous center to select
+    the central row and column. Convolve these against reversed versions of
+    themselves (auto-convolution). Then take the maximum as the new center.
+    Optionally, by setting return_conv to True the convolution results can be
+    returned directly. This is useful for sub-pixel fitting.
+
+    Note: CPU or GPU: The code is agnostic of CPU and GPU usage. If the first
+    parameter is on the GPU the computation/result will be on the GPU.
+    Otherwise, the computation/result will be on the CPU.
+
+    Parameters
+    ----------
+    stack : 3D float array, shape (n_pixels, n_pixels, n_images)
+        The image-stack. The images must be square.
+    x_old : 1D float array, shape (n_images)
+        Estimated x coordinates near the true centers.
+    y_old : 1D float array, shape (n_images)
+        Estimated y coordinates near the true centers.
+    return_conv : bool, optional
+        Whether to return the convolution or return the new center.
+        The default is False.
+
+    Returns
+    ----------
+    tuple
+        see information below
+    If return_conv is False:
+        x : 1D float array, shape (n_images,)
+            The x coordinates of the center
+        y : 1D float array, shape (n_images,)
+            The y coordinates of the center
+    If return_conv is True:
+        col_max : 1D float array, shape (n_images,)
+            The index of the maximum of the column convolution
+        row_max : 1D float array, shape (n_images,)
+            The index of the maximum of the row convolution
+        col_con : 2D float array, shape (n_pixels, n_images)
+            The column convolution
+        row_con : 2D float array, shape (n_pixels, n_images)
+            The row convolution
+    """
     # GPU or CPU?
     xp = cp.get_array_module(stack)
     xpx = cupyx.scipy.get_array_module(stack)
 
-    # Get the "signal" from the row and column of the last x & y
-    index = xp.arange(stack.shape[2], dtype=INT)
-    x_arr = stack[:, xp.round(x_old).astype(INT), index]
-    y_arr = stack[xp.round(y_old).astype(INT), :, index]
+    # Get the row and column slices corresponding to the previous x & y
+    frame_idx = xp.arange(stack.shape[2], dtype=xp.int32)
+    x_idx = xp.round(x_old).astype(xp.int32)
+    y_idx = xp.round(y_old).astype(xp.int32)
+    cols = stack[:, x_idx, frame_idx]
+    rows = stack[y_idx, :, frame_idx]
 
-    # Subtract mean from signals
-    x_arr -= xp.mean(x_arr, axis=0, keepdims=True)
-    y_arr -= xp.mean(y_arr, axis=1, keepdims=True)
+    # Subtract means
+    cols -= xp.mean(cols, axis=0, keepdims=True)
+    rows -= xp.mean(rows, axis=1, keepdims=True)
 
     # Convolve the signals
-    x_con = xpx.signal.fftconvolve(x_arr, x_arr, 'same', axes=0)
-    y_con = xpx.signal.fftconvolve(y_arr, y_arr, 'same', axes=1)
+    col_con = xpx.signal.fftconvolve(cols, cols, 'same', axes=0)
+    row_con = xpx.signal.fftconvolve(rows, rows, 'same', axes=1)
 
     # Find the convolution maxima
-    y_con_max = xp.argmax(y_con, axis=1)
-    x_con_max = xp.argmax(x_con, axis=0)
+    col_max = xp.argmax(col_con, axis=0)
+    row_max = xp.argmax(row_con, axis=1)
 
-    # Use the maximum of the convolution to find center of the beads
-    radius = (stack.shape[0] - 1) // 2
-    x = radius - ((radius - y_con_max) / 2)
-    y = radius - ((radius - x_con_max) / 2)
+    if return_conv:
+        return col_max, row_max, col_con, row_con
+    else:
+        # Use the maximum of the convolution to find center of the beads
+        radius = (stack.shape[0] - 1) // 2
+        x = radius - ((radius - row_max) / 2)
+        y = radius - ((radius - col_max) / 2)
+        return x, y
 
-    return (x, y), (x_con_max, y_con_max, x_con, y_con)
 
-# TODO: Add documentation
-def auto_conv_para_fit(stack, x_old, y_old):
-    _, (x_con_max, y_con_max, x_con, y_con) = auto_conv(stack, x_old, y_old)
+def auto_conv_para_fit(stack, x_old, y_old, n_local=11):
+    """
+    Re-calculate center of symmetric object by auto-convolution sub-pixel fit
 
-    x = parabolic_vertex(y_con, y_con_max, 11)
-    y = parabolic_vertex(x_con.T, x_con_max, 11)
+    For each 2D image of a 3D image-stack: use the previous center to select
+    the central row and column. Convolve these against themselves. Use several
+    points around the maximum of the convolution to fit a parabola and use the
+    vertex of the parabola as the center to find the sub-pixel coordinates.
+
+    Note: CPU or GPU: The code is agnostic of CPU and GPU usage. If the
+    parameters are on the GPU the computation/result will be on the GPU.
+    Otherwise, the computation/result will be on the CPU.
+
+    Parameters
+    ----------
+    stack : 3D float array, shape (n_pixels, n_pixels, n_images)
+        The image-stack. Note, the images must be square.
+    x_old : 1D float array, shape (n_images)
+        Estimated x coordinates near the true centers.
+    y_old : 1D float array, shape (n_images)
+        Estimated y coordinates near the true centers.
+    n_local : int
+        The number of local points around the vertex to be used in parabolic
+        fitting. Must be an odd int >=3.
+
+    Returns
+    ----------
+    x : 1D float array, shape (n_images,)
+        The x coordinates of the center.
+    y : 1D float array, shape (n_images,)
+        The y coordinates of the center.
+    """
+    col_max, row_max, col_con, row_con = auto_conv(
+        stack, x_old, y_old, return_conv=True
+    )
+
+    x = parabolic_vertex(row_con, row_max, n_local)
+    y = parabolic_vertex(col_con.T, col_max, n_local)
 
     radius = (stack.shape[0] - 1) // 2
     x = radius - ((radius - x) / 2)
@@ -244,13 +328,37 @@ def auto_conv_para_fit(stack, x_old, y_old):
 
     return x, y
 
-# TODO: Add documentation
-def radial_profile(
-        stack: cp.ndarray[tuple[int, int, int], FLOAT],
-        x: cp.ndarray[int, FLOAT],
-        y: cp.ndarray[int, FLOAT]
-) -> cp.ndarray[tuple[int, int], FLOAT]:
 
+def radial_profile(stack, x, y):
+    """
+    Calculate the average radial profile about a center
+
+    For each 2D image of a 3D image-stack: calculate the average radial profile
+    about the corresponding center (x and y). The profile is calculated by
+    binning. For each pixel in an image the Euclidean distance from the center
+    is calculated. The distance is then used to bin each pixel. The bin widths
+    are 1 pixel wide. The bins are then normalized by the number of pixels in
+    each bin to find the average intensity in each bin. The number of bins
+    (n_bins) is stack.shape[0] // 4.
+
+    Note: CPU or GPU: The code is agnostic of CPU and GPU usage. If the first
+    parameter is on the GPU the computation/result will be on the GPU.
+    Otherwise, the computation/result will be on the CPU.
+
+    Parameters
+    ----------
+    stack : 3D float array, shape (n_pixels, n_pixels, n_images)
+        The image-stack. Note, the images must be square.
+    x : 1D float array, shape (n_images)
+        x-coordinates of the center.
+    y : 1D float array, shape (n_images)
+        y-coordinates of the center.
+
+    Returns
+    ----------
+    profiles : 2D float array, shape (n_bins, n_images)
+        The average radial profile of each image about the center
+    """
     # GPU or CPU?
     xp = cp.get_array_module(stack)
 
@@ -258,68 +366,113 @@ def radial_profile(
     width = stack.shape[0]
     n_images = stack.shape[2]
     n_bins = stack.shape[0] // 4
-    grid = xp.indices((width, width), dtype=FLOAT)
-    flat_stack = stack.reshape((width*width, n_images))  # flatten spatial dimensions
+    grid = xp.indices((width, width), dtype=xp.float32)
+    flat_stack = stack.reshape((width * width, n_images))
 
     # Calculate distance of each pixel from x and y
-    r = xp.hypot(
-        grid[1][:, :, xp.newaxis] - x,
-        grid[0][:, :, xp.newaxis] - y
-    ).reshape(-1, n_images).round().astype(cp.uint16)
+    r = xp.hypot(grid[1][:, :, xp.newaxis] - x, grid[0][:, :, xp.newaxis] -
+                 y).reshape(-1, n_images).round().astype(xp.uint16)
 
-    # Calculate profile by summing
+    # Calculate profiles
     profiles = binmean(r, flat_stack, n_bins)
 
     return profiles
 
-# TODO: Add documentation
-def lookup_z_para_fit(
-        profiles: cp.ndarray[tuple[int, int], FLOAT],
-        zlut: cp.ndarray[tuple[int, int], FLOAT]
-) -> cp.ndarray[int, FLOAT]:
+
+def lookup_z_para_fit(profiles, zlut, n_local=3):
+    """
+    Calculate the corresponding sub-planar z-coordinate of each profile by LUT
+
+    For each image's profile in profiles: find the best matching profile in the
+    Z-LUT (lookup table). Fits the local points around the best matching
+    profile to find sub-planar fit in between columns of the LUT.
+
+    Note: CPU or GPU: The code is agnostic of CPU and GPU usage. If the first
+    parameter is on the GPU the computation/result will be on the GPU.
+    Otherwise, the computation/result will be on the CPU.
+
+    Parameters
+    ----------
+    profiles : 2D float array, shape (n_bins, n_images)
+        The average radial profile of each image about the center
+    zlut : 2D float array, shape (1+n_bins, n_ref)
+        The reference radial profiles and corresponding z-coordinates. The
+        first row (zlut[0, :]) are the z-coordinates. The rest of the rows are
+        the corresponding profiles as generated by radial_profile.
+    n_local : int
+        The number of local points around the vertex to be used in parabolic
+        fitting. Must be an odd int >=3.
+
+    Returns
+    ----------
+    z : 1D float array, shape (n_images)
+        z-coordinates
+    """
+    # GPU or CPU?
+    xp = cp.get_array_module(profiles)
+
     ref_z = zlut[0, :]
     ref_profiles = zlut[1:, :]
     n_images = profiles.shape[1]
     n_ref = ref_profiles.shape[1]
 
-    # Calculate the total difference between Z-LUT and current profiles
-    dif = cp.empty((n_images, n_ref), dtype=FLOAT)
+    # Calculate the total difference between Z-LUT and current profiles.
+    # This (likely) needs to be done in a loop to prevent the subtraction
+    # operation from taking too much memory at once.
+    dif = xp.empty((n_images, n_ref), dtype=xp.float32)
     for i in range(n_images):
-        dif[i, :] = cp.sum(cp.abs(ref_profiles - profiles[:, i:i+1]), axis=0)
+        dif[i, :] = xp.sum(xp.abs(ref_profiles - profiles[:, i:i + 1]), axis=0)
 
     # Find index of the minimum difference
-    z_int_idx = cp.argmin(dif, axis=1).astype(FLOAT)
+    z_int_idx = xp.argmin(dif, axis=1).astype(xp.float32)
 
     # Find the sub-planar index of the minimum difference
-    z_idx = parabolic_vertex(dif, z_int_idx, 3)
+    z_idx = parabolic_vertex(dif, z_int_idx, n_local)
 
     # Interpolate z from reference index
-    z = cp.interp(z_idx, cp.arange(n_ref), ref_z, left=cp.nan, right=cp.nan)
+    z = xp.interp(z_idx, xp.arange(n_ref), ref_z, left=xp.nan, right=xp.nan)
 
     return z
 
+
 # TODO: Add documentation
-def stack_to_xyzp(stack, zlut):
-    g_stack = cp.asarray(stack, dtype=FLOAT)
+def stack_to_xyzp(stack, zlut=None):
+    """
+    Calculate image-stack XYZ and profiles (Z is None if Z-LUT is None)
 
-    x, y = center_of_mass(g_stack)
+    Parameters
+    ----------
+    stack : 3D float array, shape (n_pixels, n_pixels, n_images)
+        The image-stack. Note, the images must be square. It is expected it is
+        in the regular CPU memory. It will be transferred to the GPU.
+    zlut : 2D float array, shape (1+n_bins, n_ref), optional
+        The reference radial profiles and corresponding z-coordinates. The
+        first row (zlut[0, :]) are the z-coordinates. The rest of the rows are
+        the corresponding profiles as generated by radial_profile. It is
+        expected it is already in the GPU memory. The defualt is None.
+
+    Returns
+    ----------
+    z : 1D float array, shape (n_images)
+        z-coordinates
+    """
+    # Move stack to GPU memory
+    gpu_stack = cp.asarray(stack, dtype=cp.float32)
+
+    x, y = center_of_mass(gpu_stack)
 
     for _ in range(1):
-        (x, y), _ = auto_conv(g_stack, x, y)
+        x, y = auto_conv(gpu_stack, x, y)
 
     for _ in range(1):
-        x, y = auto_conv_para_fit(g_stack, x, y)
+        x, y = auto_conv_para_fit(gpu_stack, x, y)
 
-    # If this needs to be added it should be set to cp.nan
-    # width = stack.shape[0]
-    # cp.clip(x, 0, width, out=x)
-    # cp.clip(y, 0, width, out=y)
-
-    profiles = radial_profile(g_stack, x, y)
+    profiles = radial_profile(gpu_stack, x, y)
 
     if zlut is None:
-        z = x*cp.nan
+        z = x * cp.nan
     else:
         z = lookup_z_para_fit(profiles, zlut)
 
+    # Return and move back to regular memory
     return cp.asnumpy(x), cp.asnumpy(y), cp.asnumpy(z), cp.asnumpy(profiles)

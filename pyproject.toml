@@ -12,3 +12,11 @@ authors = [
 ]
 requires-python = ">=3.12"
 dependencies = ["numpy", "cupy-cuda12x"]
+
+[project.optional-dependencies]
+dev = ["yapf"]
+
+[tool.yapf]
+column_limit = 80
+split_arguments_when_comma_terminated = true
+dedent_closing_brackets = true
