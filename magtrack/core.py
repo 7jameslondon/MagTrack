@@ -162,7 +162,7 @@ def parabolic_vertex(data, vertex_est, n_local: int):
     return vertex
 
 
-def center_of_mass(stack):
+def center_of_mass(stack, background='mean'):
     """
     Calculate center-of-mass
 
@@ -179,6 +179,10 @@ def center_of_mass(stack):
     ----------
     stack : 3D float array, shape (n_pixels, n_pixels, n_images)
         The image-stack. The images must be square.
+    background : str, optional
+        The method to subtract background. 'mean' subtracts the mean. 'median'
+        subtracts the median. Otherwise, no background is subtracted. Default
+        is 'mean'.
 
     Returns
     ----------
@@ -192,13 +196,24 @@ def center_of_mass(stack):
     xp = cp.get_array_module(stack)
 
     # Correct background of each image
-    stack_norm = stack.copy()
-    xp.subtract(stack_norm, xp.mean(stack, axis=(0, 1)), out=stack_norm)
-    xp.absolute(stack_norm, out=stack_norm)
+    if background == 'mean':
+        stack_norm = stack.copy()
+        xp.subtract(stack_norm, xp.mean(stack, axis=(0, 1)), out=stack_norm)
+        xp.absolute(stack_norm, out=stack_norm)
+    elif background == 'median':
+        stack_norm = stack.copy()
+        xp.subtract(stack_norm, xp.median(stack, axis=(0, 1)), out=stack_norm)
+        xp.absolute(stack_norm, out=stack_norm)
+    else:
+        stack_norm = stack.view()
 
-    # Calculate center-of-mass
-    index = xp.arange(stack_norm.shape[0], dtype=xp.float32)[:, xp.newaxis]
+    # Calculate total
     total_mass = xp.sum(stack_norm, axis=(0, 1))
+    # Prevent divide by zero
+    total_mass = xp.where(total_mass == 0., xp.nan, total_mass)
+
+    # Calculate center
+    index = xp.arange(stack_norm.shape[0], dtype=xp.float32)[:, xp.newaxis]
     x = xp.sum(index * xp.sum(stack_norm, axis=0), axis=0) / total_mass
     y = xp.sum(index * xp.sum(stack_norm, axis=1), axis=0) / total_mass
 

@@ -1,3 +1,4 @@
+import itertools
 import os
 import time
 import tempfile
@@ -8,7 +9,8 @@ import tifffile as tf
 import matplotlib.pyplot as plt
 from cupyx.profiler import benchmark as cupy_benchmark
 
-import imageprocessing
+import magtrack
+
 
 def benchmark_save_stack_to_disk():
     STACK_SHAPE = (512, 512, 1000)
@@ -43,43 +45,6 @@ def benchmark_save_stack_to_disk():
     plt.ylabel('Count')
     plt.show()
 
-def benchmark_center_of_mass():
-    N_IMAGES = np.logspace(7, 13.3, num=10, base=2).astype(int)
-    IMAGE_WIDTH = 256
-    MAX_DURATION = 30
-    N_WARMUP = 10
-    USE_GPU = True
-
-    mean_times = []
-    for n_images in N_IMAGES:
-        # Create fake images
-        stack = np.random.rand(IMAGE_WIDTH, IMAGE_WIDTH, n_images).astype(imageprocessing.FLOAT)
-        if USE_GPU:
-            stack = cp.asarray(stack)
-
-        # Repeatedly test speed
-        results = cupy_benchmark(
-            imageprocessing.center_of_mass,
-            args=(stack,),
-            max_duration=MAX_DURATION,
-            n_repeat = 10,
-            n_warmup=N_WARMUP,
-        )
-        # Results
-        if USE_GPU:
-            mean_times.append(np.mean(results.gpu_times.squeeze()+results.cpu_times))
-        else:
-            mean_times.append(np.mean(results.cpu_times))
-
-        plt.clf()
-        plt.plot(N_IMAGES[0:len(mean_times)], mean_times, '.',
-                 markersize=10, clip_on=False, zorder=100)
-        plt.ylim(0, 1.5)
-        plt.xlim(0, N_IMAGES[-1]*1.05)
-        plt.draw()
-        plt.show(block=False)
-        plt.pause(0.1)
-    plt.show()
 
 def benchmark_auto_conv():
     N_IMAGES = np.logspace(7, 13.3, num=10, base=2).astype(int)
@@ -91,8 +56,9 @@ def benchmark_auto_conv():
     mean_times = []
     for n_images in N_IMAGES:
         # Create fake images
-        stack = np.random.rand(IMAGE_WIDTH, IMAGE_WIDTH, n_images).astype(imageprocessing.FLOAT)
-        x = np.zeros(n_images, dtype=imageprocessing.FLOAT) + (IMAGE_WIDTH/2)
+        stack = np.random.rand(IMAGE_WIDTH, IMAGE_WIDTH,
+                               n_images).astype(imageprocessing.FLOAT)
+        x = np.zeros(n_images, dtype=imageprocessing.FLOAT) + (IMAGE_WIDTH / 2)
         y = x.copy()
         if USE_GPU:
             stack = cp.asarray(stack)
@@ -104,24 +70,33 @@ def benchmark_auto_conv():
             imageprocessing.auto_conv,
             args=(stack, x, y),
             max_duration=MAX_DURATION,
-            n_repeat = 10,
+            n_repeat=10,
             n_warmup=N_WARMUP,
         )
         # Results
         if USE_GPU:
-            mean_times.append(np.mean(results.gpu_times.squeeze()+results.cpu_times))
+            mean_times.append(
+                np.mean(results.gpu_times.squeeze() + results.cpu_times)
+            )
         else:
             mean_times.append(np.mean(results.cpu_times))
 
         plt.clf()
-        plt.plot(N_IMAGES[0:len(mean_times)], mean_times, '.',
-                 markersize=10, clip_on=False, zorder=100)
+        plt.plot(
+            N_IMAGES[0:len(mean_times)],
+            mean_times,
+            '.',
+            markersize=10,
+            clip_on=False,
+            zorder=100
+        )
         plt.ylim(0, 0.16)
-        plt.xlim(0, N_IMAGES[-1]*1.05)
+        plt.xlim(0, N_IMAGES[-1] * 1.05)
         plt.draw()
         plt.show(block=False)
         plt.pause(0.1)
     plt.show()
+
 
 def benchmark_auto_conv_para_fit():
     N_IMAGES = np.logspace(7, 13.3, num=10, base=2).astype(int)
@@ -133,8 +108,9 @@ def benchmark_auto_conv_para_fit():
     mean_times = []
     for n_images in N_IMAGES:
         # Create fake images
-        stack = np.random.rand(IMAGE_WIDTH, IMAGE_WIDTH, n_images).astype(imageprocessing.FLOAT)
-        x = np.zeros(n_images, dtype=imageprocessing.FLOAT) + (IMAGE_WIDTH/2)
+        stack = np.random.rand(IMAGE_WIDTH, IMAGE_WIDTH,
+                               n_images).astype(imageprocessing.FLOAT)
+        x = np.zeros(n_images, dtype=imageprocessing.FLOAT) + (IMAGE_WIDTH / 2)
         y = x.copy()
         if USE_GPU:
             stack = cp.asarray(stack)
@@ -146,24 +122,33 @@ def benchmark_auto_conv_para_fit():
             imageprocessing.auto_conv_para_fit,
             args=(stack, x, y),
             max_duration=MAX_DURATION,
-            n_repeat = 10,
+            n_repeat=10,
             n_warmup=N_WARMUP,
         )
         # Results
         if USE_GPU:
-            mean_times.append(np.mean(results.gpu_times.squeeze()+results.cpu_times))
+            mean_times.append(
+                np.mean(results.gpu_times.squeeze() + results.cpu_times)
+            )
         else:
             mean_times.append(np.mean(results.cpu_times))
 
         plt.clf()
-        plt.plot(N_IMAGES[0:len(mean_times)], mean_times, '.',
-                 markersize=10, clip_on=False, zorder=100)
+        plt.plot(
+            N_IMAGES[0:len(mean_times)],
+            mean_times,
+            '.',
+            markersize=10,
+            clip_on=False,
+            zorder=100
+        )
         plt.ylim(0, 0.21)
-        plt.xlim(0, N_IMAGES[-1]*1.05)
+        plt.xlim(0, N_IMAGES[-1] * 1.05)
         plt.draw()
         plt.show(block=False)
         plt.pause(0.1)
     plt.show()
+
 
 def benchmark_radial_profile():
     N_IMAGES = np.logspace(7, 13.3, num=10, base=2).astype(int)
@@ -176,8 +161,9 @@ def benchmark_radial_profile():
     mean_times = []
     for n_images in N_IMAGES:
         # Create fake images
-        stack = np.random.rand(IMAGE_WIDTH, IMAGE_WIDTH, n_images).astype(imageprocessing.FLOAT)
-        x = np.zeros(n_images, dtype=imageprocessing.FLOAT) + (IMAGE_WIDTH/2)
+        stack = np.random.rand(IMAGE_WIDTH, IMAGE_WIDTH,
+                               n_images).astype(imageprocessing.FLOAT)
+        x = np.zeros(n_images, dtype=imageprocessing.FLOAT) + (IMAGE_WIDTH / 2)
         y = x.copy()
         if USE_GPU:
             stack = cp.asarray(stack)
@@ -194,22 +180,33 @@ def benchmark_radial_profile():
         )
         # Results
         if USE_GPU:
-            mean_times.append(np.mean(results.gpu_times.squeeze()+results.cpu_times))
+            mean_times.append(
+                np.mean(results.gpu_times.squeeze() + results.cpu_times)
+            )
         else:
             mean_times.append(np.mean(results.cpu_times))
 
         plt.clf()
-        plt.plot(N_IMAGES[0:len(mean_times)], mean_times, 'r.',
-                 markersize=10, clip_on=False, zorder=100)
+        plt.plot(
+            N_IMAGES[0:len(mean_times)],
+            mean_times,
+            'r.',
+            markersize=10,
+            clip_on=False,
+            zorder=100
+        )
         plt.ylim(0, 4)
-        plt.xlim(0, N_IMAGES[-1]*1.05)
+        plt.xlim(0, N_IMAGES[-1] * 1.05)
         plt.draw()
         plt.show(block=False)
         plt.pause(0.1)
     plt.show()
 
+
 def benchmark_stack_to_xyzp():
-    N_IMAGES = np.linspace(100, 1000, num=10).astype(int) #np.logspace(7, 12, num=12-7+1, base=2).astype(int)
+    N_IMAGES = np.linspace(100, 1000, num=10).astype(
+        int
+    )  #np.logspace(7, 12, num=12-7+1, base=2).astype(int)
     IMAGE_WIDTH = 512
     MAX_DURATION = 30
     N_REPEAT = 100
@@ -219,8 +216,10 @@ def benchmark_stack_to_xyzp():
     mean_times = []
     for n_images in N_IMAGES:
         # Create fake images
-        stack = np.random.rand(IMAGE_WIDTH, IMAGE_WIDTH, n_images).astype(imageprocessing.FLOAT)
-        zlut = np.random.rand((IMAGE_WIDTH//4)+1, 1000).astype(imageprocessing.FLOAT)
+        stack = np.random.rand(IMAGE_WIDTH, IMAGE_WIDTH,
+                               n_images).astype(imageprocessing.FLOAT)
+        zlut = np.random.rand((IMAGE_WIDTH // 4) + 1,
+                              1000).astype(imageprocessing.FLOAT)
         if USE_GPU:
             stack = cp.asarray(stack)
             zlut = cp.asarray(zlut)
@@ -235,19 +234,28 @@ def benchmark_stack_to_xyzp():
         )
         # Results
         if USE_GPU:
-            mean_times.append(np.mean(results.gpu_times.squeeze()+results.cpu_times))
+            mean_times.append(
+                np.mean(results.gpu_times.squeeze() + results.cpu_times)
+            )
         else:
             mean_times.append(np.mean(results.cpu_times))
 
         plt.clf()
-        plt.plot(N_IMAGES[0:len(mean_times)], mean_times, 'r.',
-                 markersize=10, clip_on=False, zorder=100)
+        plt.plot(
+            N_IMAGES[0:len(mean_times)],
+            mean_times,
+            'r.',
+            markersize=10,
+            clip_on=False,
+            zorder=100
+        )
         plt.ylim(0, None)
-        plt.xlim(0, N_IMAGES[-1]*1.05)
+        plt.xlim(0, N_IMAGES[-1] * 1.05)
         plt.draw()
         plt.show(block=False)
         plt.pause(0.1)
     plt.show()
+
 
 def benchmark_asarray():
     N_IMAGES = np.logspace(7, 13.3, num=10, base=2).astype(int)
@@ -258,31 +266,41 @@ def benchmark_asarray():
     mean_times = []
     for n_images in N_IMAGES:
         # Create fake images
-        stack = np.random.rand(IMAGE_WIDTH, IMAGE_WIDTH, n_images).astype(imageprocessing.FLOAT)
+        stack = np.random.rand(IMAGE_WIDTH, IMAGE_WIDTH,
+                               n_images).astype(imageprocessing.FLOAT)
 
         # Repeatedly test speed
         results = cupy_benchmark(
             cp.asarray,
-            args=(stack,),
+            args=(stack, ),
             max_duration=MAX_DURATION,
-            n_repeat = 10,
+            n_repeat=10,
             n_warmup=N_WARMUP,
         )
         # Results
-        mean_times.append(np.mean(results.gpu_times.squeeze()+results.cpu_times))
+        mean_times.append(
+            np.mean(results.gpu_times.squeeze() + results.cpu_times)
+        )
 
         bps = stack.nbytes / mean_times[-1]
         print(f'Bytes/second {bps}')
 
         plt.clf()
-        plt.plot(N_IMAGES[0:len(mean_times)], mean_times, '.',
-                 markersize=10, clip_on=False, zorder=100)
+        plt.plot(
+            N_IMAGES[0:len(mean_times)],
+            mean_times,
+            '.',
+            markersize=10,
+            clip_on=False,
+            zorder=100
+        )
         plt.ylim(0, None)
-        plt.xlim(0, N_IMAGES[-1]*1.05)
+        plt.xlim(0, N_IMAGES[-1] * 1.05)
         plt.draw()
         plt.show(block=False)
         plt.pause(0.1)
     plt.show()
+
 
 def benchmark_get_array_module():
 
@@ -290,13 +308,14 @@ def benchmark_get_array_module():
 
     results = cupy_benchmark(
         cp.get_array_module,
-        args=(stack,),
+        args=(stack, ),
         max_duration=30,
         n_repeat=100,
         n_warmup=10,
     )
 
-    print(np.mean(results.gpu_times.squeeze()+results.cpu_times))
+    print(np.mean(results.gpu_times.squeeze() + results.cpu_times))
+
 
 def bechmark_crop():
     N_IMAGES = np.logspace(1, 3, num=10, base=10).astype(int)
@@ -330,13 +349,20 @@ def bechmark_crop():
         # Results
         if USE_GPU:
             mean_times.append(
-                np.mean(results.gpu_times.squeeze() + results.cpu_times))
+                np.mean(results.gpu_times.squeeze() + results.cpu_times)
+            )
         else:
             mean_times.append(np.mean(results.cpu_times))
 
         plt.clf()
-        plt.plot(N_IMAGES[0:len(mean_times)], mean_times, '.',
-                 markersize=10, clip_on=False, zorder=100)
+        plt.plot(
+            N_IMAGES[0:len(mean_times)],
+            mean_times,
+            '.',
+            markersize=10,
+            clip_on=False,
+            zorder=100
+        )
         plt.ylim(0, None)
         plt.xlim(0, N_IMAGES[-1] * 1.05)
         plt.draw()
@@ -344,5 +370,6 @@ def bechmark_crop():
         plt.pause(0.1)
     plt.show()
 
+
 if __name__ == "__main__":
-    benchmark_stack_to_xyzp()
+    benchmark_center_of_mass()

@@ -19,7 +19,7 @@ Calculates the Z coordinates with Z-LUT (lookup table).
 * Numpy >=2.2.3
 * Cupy-cuda12x >=13.4.0
 
-```pip install magtrack @ git+https://github.com/7jameslondon/MagTrack```
+```pip install git+https://github.com/7jameslondon/MagTrack```
 
 ## Usage
 ```
