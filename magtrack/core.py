@@ -162,7 +162,7 @@ def parabolic_vertex(data, vertex_est, n_local: int):
     return vertex
 
 
-def center_of_mass(stack, background='mean'):
+def center_of_mass(stack, background='none'):
     """
     Calculate center-of-mass
 
@@ -196,7 +196,9 @@ def center_of_mass(stack, background='mean'):
     xp = cp.get_array_module(stack)
 
     # Correct background of each image
-    if background == 'mean':
+    if background == 'none':
+        stack_norm = stack.view()
+    elif background == 'mean':
         stack_norm = stack.copy()
         xp.subtract(stack_norm, xp.mean(stack, axis=(0, 1)), out=stack_norm)
         xp.absolute(stack_norm, out=stack_norm)
@@ -205,7 +207,7 @@ def center_of_mass(stack, background='mean'):
         xp.subtract(stack_norm, xp.median(stack, axis=(0, 1)), out=stack_norm)
         xp.absolute(stack_norm, out=stack_norm)
     else:
-        stack_norm = stack.view()
+        raise NotImplementedError
 
     # Calculate total
     total_mass = xp.sum(stack_norm, axis=(0, 1))
@@ -344,6 +346,121 @@ def auto_conv_para_fit(stack, x_old, y_old, n_local=11):
     return x, y
 
 
+def auto_conv_multiline(stack, x_old, y_old, line_ratio=0.1, return_conv=False):
+    """
+    Re-calculate center of symmetric object by auto-convolution
+
+    For each 2D image of a 3D image-stack: use the previous center to select
+    the central row and column. Convolve these against reversed versions of
+    themselves (auto-convolution). Then take the maximum as the new center.
+    Optionally, by setting return_conv to True the convolution results can be
+    returned directly. This is useful for sub-pixel fitting.
+
+    Note: CPU or GPU: The code is agnostic of CPU and GPU usage. If the first
+    parameter is on the GPU the computation/result will be on the GPU.
+    Otherwise, the computation/result will be on the CPU.
+
+    Parameters
+    ----------
+    stack : 3D float array, shape (n_pixels, n_pixels, n_images)
+        The image-stack. The images must be square.
+    x_old : 1D float array, shape (n_images)
+        Estimated x coordinates near the true centers.
+    y_old : 1D float array, shape (n_images)
+        Estimated y coordinates near the true centers.
+    line_ratio : int, optional
+        The ratio relative to the total image width of lines to be used in the
+        convolutions.
+    return_conv : bool, optional
+        Whether to return the convolution or return the new center.
+        The default is False.
+
+    Returns
+    ----------
+    tuple
+        see information below
+    If return_conv is False:
+        x : 1D float array, shape (n_images,)
+            The x coordinates of the center
+        y : 1D float array, shape (n_images,)
+            The y coordinates of the center
+    If return_conv is True:
+        col_max : 1D float array, shape (n_images,)
+            The index of the maximum of the column convolution
+        row_max : 1D float array, shape (n_images,)
+            The index of the maximum of the row convolution
+        col_con : 2D float array, shape (n_pixels, n_images)
+            The column convolution
+        row_con : 2D float array, shape (n_pixels, n_images)
+            The row convolution
+    """
+    # GPU or CPU?
+    xp = cp.get_array_module(stack)
+    xpx = cupyx.scipy.get_array_module(stack)
+
+    # Get the row and column slices corresponding to the previous x & y
+    half_n_lines = int(stack.shape[0] * line_ratio // 2)
+    n_lines = half_n_lines * 2 + 1
+    line_idx = xp.arange(-half_n_lines, half_n_lines + 1)
+    width = stack.shape[0]
+    n_images = stack.shape[2]
+    frame_idx = xp.arange(n_images, dtype=xp.int32)
+    frame_idx = xp.repeat(frame_idx, n_lines)
+    x_idx = xp.round(x_old).astype(xp.int32)
+    y_idx = xp.round(y_old).astype(xp.int32)
+    x_idx = x_idx[:, xp.newaxis] + line_idx
+    y_idx = y_idx[:, xp.newaxis] + line_idx
+    x_idx = x_idx.flatten()
+    y_idx = y_idx.flatten()
+    cols = stack[:, x_idx, frame_idx]
+    rows = stack[y_idx, :, frame_idx]
+
+    # Average multi-lines
+    cols = cols.reshape(width, n_images, n_lines)
+    rows = rows.reshape(n_images, n_lines, width)
+    cols = xp.mean(cols, axis=2)
+    rows = xp.mean(rows, axis=1)
+
+    # Subtract means
+    cols -= xp.mean(cols, axis=0, keepdims=True)
+    rows -= xp.mean(rows, axis=1, keepdims=True)
+
+    # Convolve the signals
+    col_con = xpx.signal.fftconvolve(cols, cols, 'same', axes=0)
+    row_con = xpx.signal.fftconvolve(rows, rows, 'same', axes=1)
+
+    # Find the convolution maxima
+    col_max = xp.argmax(col_con, axis=0)
+    row_max = xp.argmax(row_con, axis=1)
+
+    if return_conv:
+        return col_max, row_max, col_con, row_con
+    else:
+        # Use the maximum of the convolution to find center of the beads
+        radius = (stack.shape[0] - 1) // 2
+        x = radius - ((radius - row_max) / 2)
+        y = radius - ((radius - col_max) / 2)
+        return x, y
+
+
+# TODO: Add documentation
+def auto_conv_multiline_para_fit(
+    stack, x_old, y_old, line_ratio=0.1, n_local=11
+):
+    col_max, row_max, col_con, row_con = auto_conv_multiline(
+        stack, x_old, y_old, return_conv=True
+    )
+
+    x = parabolic_vertex(row_con, row_max, n_local)
+    y = parabolic_vertex(col_con.T, col_max, n_local)
+
+    radius = (stack.shape[0] - 1) // 2
+    x = radius - ((radius - x) / 2)
+    y = radius - ((radius - y) / 2)
+
+    return x, y
+
+
 def radial_profile(stack, x, y):
     """
     Calculate the average radial profile about a center
@@ -427,7 +544,7 @@ def lookup_z_para_fit(profiles, zlut, n_local=3):
     xp = cp.get_array_module(profiles)
 
     ref_z = zlut[0, :]
-    ref_profiles = zlut[1:, :]
+    ref_profiles = zlut[2:, :]  # Skip the first pixel
     n_images = profiles.shape[1]
     n_ref = ref_profiles.shape[1]
 
@@ -436,7 +553,8 @@ def lookup_z_para_fit(profiles, zlut, n_local=3):
     # operation from taking too much memory at once.
     dif = xp.empty((n_images, n_ref), dtype=xp.float32)
     for i in range(n_images):
-        dif[i, :] = xp.sum(xp.abs(ref_profiles - profiles[:, i:i + 1]), axis=0)
+        # Skip the first pixel
+        dif[i, :] = xp.sum(xp.abs(ref_profiles - profiles[1:, i:i + 1]), axis=0)
 
     # Find index of the minimum difference
     z_int_idx = xp.argmin(dif, axis=1).astype(xp.float32)
@@ -450,7 +568,6 @@ def lookup_z_para_fit(profiles, zlut, n_local=3):
     return z
 
 
-# TODO: Add documentation
 def stack_to_xyzp(stack, zlut=None):
     """
     Calculate image-stack XYZ and profiles (Z is None if Z-LUT is None)
@@ -468,19 +585,26 @@ def stack_to_xyzp(stack, zlut=None):
 
     Returns
     ----------
+    x : 1D float array, shape (n_images)
+        x-coordinates
+    y : 1D float array, shape (n_images)
+        y-coordinates
     z : 1D float array, shape (n_images)
         z-coordinates
+    profiles : 2D float array, shape (n_bins, n_images)
+        The average radial profile of each image about the center
     """
     # Move stack to GPU memory
     gpu_stack = cp.asarray(stack, dtype=cp.float32)
 
     x, y = center_of_mass(gpu_stack)
 
-    for _ in range(1):
-        x, y = auto_conv(gpu_stack, x, y)
+    x, y = auto_conv(gpu_stack, x, y)
 
-    for _ in range(1):
-        x, y = auto_conv_para_fit(gpu_stack, x, y)
+    for _ in range(5):
+        x, y = auto_conv_multiline_para_fit(
+            gpu_stack, x, y, n_local=5, line_ratio=0.05
+        )
 
     profiles = radial_profile(gpu_stack, x, y)
 

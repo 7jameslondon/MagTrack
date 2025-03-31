@@ -1,1 +1,2 @@
-from .core import *
+from magtrack.core import *
+import magtrack.utils
