@@ -39,12 +39,12 @@ def binmean(x, weights, n_bins: int):
 
     # Binning
     bin_means = xp.zeros(
-        (n_bins + 1, n_datasets), dtype=xp.float32
+        (n_bins + 1, n_datasets), dtype=xp.float64
     )  # Pre-allocate
     xp.add.at(bin_means, (x, i), weights)
 
     bin_counts = xp.zeros(
-        (n_bins + 1, n_datasets), dtype=xp.float32
+        (n_bins + 1, n_datasets), dtype=xp.float64
     )  # Pre-allocate
     xp.add.at(bin_counts, (x, i), 1)
 
@@ -135,7 +135,7 @@ def parabolic_vertex(data, vertex_est, n_local: int):
     n_local_half = (n_local // 2)
 
     # Convert the estimated vertex to an int for use as an index
-    vertex_int = vertex_est.round().astype(xp.int32)
+    vertex_int = vertex_est.round().astype(xp.int64)
 
     # Force index to be with the limits
     index_min = n_local_half
@@ -144,10 +144,10 @@ def parabolic_vertex(data, vertex_est, n_local: int):
 
     # Get the local data to be fit
     n_datasets = data.shape[0]
-    rel_idx = xp.arange(-n_local_half, n_local_half + 1, dtype=xp.int32)
+    rel_idx = xp.arange(-n_local_half, n_local_half + 1, dtype=xp.int64)
     idx = rel_idx + vertex_int[:, xp.newaxis]
     y = data[xp.arange(n_datasets)[:, xp.newaxis], idx].T
-    x = xp.arange(n_local, dtype=xp.float32)
+    x = xp.arange(n_local, dtype=xp.float64)
 
     # Fit to parabola
     p = xp.polyfit(x, y, 2)
@@ -215,7 +215,7 @@ def center_of_mass(stack, background='none'):
     total_mass = xp.where(total_mass == 0., xp.nan, total_mass)
 
     # Calculate center
-    index = xp.arange(stack_norm.shape[0], dtype=xp.float32)[:, xp.newaxis]
+    index = xp.arange(stack_norm.shape[0], dtype=xp.float64)[:, xp.newaxis]
     x = xp.sum(index * xp.sum(stack_norm, axis=0), axis=0) / total_mass
     y = xp.sum(index * xp.sum(stack_norm, axis=1), axis=0) / total_mass
 
@@ -272,9 +272,9 @@ def auto_conv(stack, x_old, y_old, return_conv=False):
     xpx = cupyx.scipy.get_array_module(stack)
 
     # Get the row and column slices corresponding to the previous x & y
-    frame_idx = xp.arange(stack.shape[2], dtype=xp.int32)
-    x_idx = xp.round(x_old).astype(xp.int32)
-    y_idx = xp.round(y_old).astype(xp.int32)
+    frame_idx = xp.arange(stack.shape[2], dtype=xp.int64)
+    x_idx = xp.round(x_old).astype(xp.int64)
+    y_idx = xp.round(y_old).astype(xp.int64)
     cols = stack[:, x_idx, frame_idx]
     rows = stack[y_idx, :, frame_idx]
 
@@ -300,7 +300,7 @@ def auto_conv(stack, x_old, y_old, return_conv=False):
         return x, y
 
 
-def auto_conv_para_fit(stack, x_old, y_old, n_local=11):
+def auto_conv_para_fit(stack, x_old, y_old, n_local=5):
     """
     Re-calculate center of symmetric object by auto-convolution sub-pixel fit
 
@@ -346,7 +346,9 @@ def auto_conv_para_fit(stack, x_old, y_old, n_local=11):
     return x, y
 
 
-def auto_conv_multiline(stack, x_old, y_old, line_ratio=0.1, return_conv=False):
+def auto_conv_multiline(
+    stack, x_old, y_old, line_ratio=0.05, return_conv=False
+):
     """
     Re-calculate center of symmetric object by auto-convolution
 
@@ -404,10 +406,10 @@ def auto_conv_multiline(stack, x_old, y_old, line_ratio=0.1, return_conv=False):
     line_idx = xp.arange(-half_n_lines, half_n_lines + 1)
     width = stack.shape[0]
     n_images = stack.shape[2]
-    frame_idx = xp.arange(n_images, dtype=xp.int32)
+    frame_idx = xp.arange(n_images, dtype=xp.int64)
     frame_idx = xp.repeat(frame_idx, n_lines)
-    x_idx = xp.round(x_old).astype(xp.int32)
-    y_idx = xp.round(y_old).astype(xp.int32)
+    x_idx = xp.round(x_old).astype(xp.int64)
+    y_idx = xp.round(y_old).astype(xp.int64)
     x_idx = x_idx[:, xp.newaxis] + line_idx
     y_idx = y_idx[:, xp.newaxis] + line_idx
     x_idx = x_idx.flatten()
@@ -445,7 +447,7 @@ def auto_conv_multiline(stack, x_old, y_old, line_ratio=0.1, return_conv=False):
 
 # TODO: Add documentation
 def auto_conv_multiline_para_fit(
-    stack, x_old, y_old, line_ratio=0.1, n_local=11
+    stack, x_old, y_old, line_ratio=0.05, n_local=5
 ):
     col_max, row_max, col_con, row_con = auto_conv_multiline(
         stack, x_old, y_old, return_conv=True
@@ -497,8 +499,8 @@ def radial_profile(stack, x, y):
     # Setup
     width = stack.shape[0]
     n_images = stack.shape[2]
-    n_bins = stack.shape[0] // 4
-    grid = xp.indices((width, width), dtype=xp.float32)
+    n_bins = width // 4
+    grid = xp.indices((width, width), dtype=xp.float64)
     flat_stack = stack.reshape((width * width, n_images))
 
     # Calculate distance of each pixel from x and y
@@ -551,13 +553,13 @@ def lookup_z_para_fit(profiles, zlut, n_local=3):
     # Calculate the total difference between Z-LUT and current profiles.
     # This (likely) needs to be done in a loop to prevent the subtraction
     # operation from taking too much memory at once.
-    dif = xp.empty((n_images, n_ref), dtype=xp.float32)
+    dif = xp.empty((n_images, n_ref), dtype=xp.float64)
     for i in range(n_images):
         # Skip the first pixel
         dif[i, :] = xp.sum(xp.abs(ref_profiles - profiles[1:, i:i + 1]), axis=0)
 
     # Find index of the minimum difference
-    z_int_idx = xp.argmin(dif, axis=1).astype(xp.float32)
+    z_int_idx = xp.argmin(dif, axis=1).astype(xp.float64)
 
     # Find the sub-planar index of the minimum difference
     z_idx = parabolic_vertex(dif, z_int_idx, n_local)
@@ -595,7 +597,7 @@ def stack_to_xyzp(stack, zlut=None):
         The average radial profile of each image about the center
     """
     # Move stack to GPU memory
-    gpu_stack = cp.asarray(stack, dtype=cp.float32)
+    gpu_stack = cp.asarray(stack, dtype=cp.float64)
 
     x, y = center_of_mass(gpu_stack)
 
