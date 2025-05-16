@@ -53,6 +53,41 @@ def binmean(x, weights, n_bins: int):
     return bin_means[:-1, :]  # Return without the overflow row
 
 
+def pearson(x, y):
+    """
+    Calculate the Pearson correlation coefficient.
+
+    Note: CPU or GPU: The code is agnostic of CPU and GPU usage. If the first
+    parameter is on the GPU the computation/result will be on the GPU.
+    Otherwise, the computation/result will be on the CPU.
+
+    Parameters
+    ----------
+    x : 2D array, shape (n, m)
+        Input array
+    y : 1D array, shape (n,)
+        Input array
+
+    Returns
+    ----------
+    r : 1D array, shape (m,)
+        Pearson correlation coefficient
+    """
+
+    # GPU or CPU?
+    xp = cp.get_array_module(x)
+
+    mean_x = xp.mean(x, axis=0)
+    mean_y = xp.mean(y, axis=0)
+    dif_x = x - mean_x
+    dif_y = y - mean_y
+    dif_x2 = dif_x ** 2
+    dif_y2 = dif_y ** 2
+    r = xp.sum(dif_x*dif_y, axis=0) / xp.sqrt(xp.sum(dif_x2, axis=0) * xp.sum(dif_y2, axis=0))
+
+    return r
+
+
 def crop_stack_to_rois(stack, rois):
     """
     Takes a 3D image-stack and crops it to the region of interests (ROIs).
@@ -513,7 +548,7 @@ def radial_profile(stack, x, y):
     return profiles
 
 
-def lookup_z_para_fit(profiles, zlut, n_local=3):
+def lookup_z_para_fit(profiles, zlut, n_local=7):
     """
     Calculate the corresponding sub-planar z-coordinate of each profile by LUT
 
@@ -550,19 +585,19 @@ def lookup_z_para_fit(profiles, zlut, n_local=3):
     n_images = profiles.shape[1]
     n_ref = ref_profiles.shape[1]
 
-    # Calculate the total difference between Z-LUT and current profiles.
-    # This (likely) needs to be done in a loop to prevent the subtraction
+    # Calculate the pearson correlation coefficient between Z-LUT and current profiles.
+    # This (likely) needs to be done in a loop to prevent the
     # operation from taking too much memory at once.
-    dif = xp.empty((n_images, n_ref), dtype=xp.float64)
+    r = xp.empty((n_images, n_ref), dtype=xp.float64)
     for i in range(n_images):
         # Skip the first pixel
-        dif[i, :] = xp.sum(xp.abs(ref_profiles - profiles[1:, i:i + 1]), axis=0)
+        r[i, :] = pearson(ref_profiles, profiles[1:, i:i + 1])
 
-    # Find index of the minimum difference
-    z_int_idx = xp.argmin(dif, axis=1).astype(xp.float64)
+    # Find index of the max
+    z_int_idx = xp.argmax(r, axis=1).astype(xp.float64)
 
-    # Find the sub-planar index of the minimum difference
-    z_idx = parabolic_vertex(dif, z_int_idx, n_local)
+    # Find the sub-planar index of the max
+    z_idx = parabolic_vertex(r, z_int_idx, n_local)
 
     # Interpolate z from reference index
     z = xp.interp(z_idx, xp.arange(n_ref), ref_z, left=xp.nan, right=xp.nan)
