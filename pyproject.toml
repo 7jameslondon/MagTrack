@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "magtrack"
 description = "Analyzes images of magnetic tweezers beads"
-version = "0.3.0"
+version = "0.3.3"
 readme = "README.md"
 authors = [
     {name = "James London", email = "7jameslondon@gmail.com" }
