@@ -548,7 +548,7 @@ def radial_profile(stack, x, y):
     return profiles
 
 
-def fft_profile(stack, oversample=4, rmin=9):
+def fft_profile(stack, oversample=4, rmin=0.0, rmax=1.0):
     """
     oversample: int, >=1
 
@@ -562,7 +562,8 @@ def fft_profile(stack, oversample=4, rmin=9):
     n_images = stack.shape[2]
     width = stack.shape[0]
     center = width // 2
-    n_bins = (width // 20)  * oversample
+    n_bins = int(round(center * rmax  * oversample))
+    n_start = int(round(center * rmin  * oversample))
     grid = xp.indices((width, width), dtype=xp.float64)
     r_float = xp.round(xp.hypot(grid[1] - center, grid[0] - center).reshape(-1, 1) * oversample)
     r_int = r_float.astype('int')
@@ -573,7 +574,7 @@ def fft_profile(stack, oversample=4, rmin=9):
     fft = xp.abs(fft_cpx).reshape(-1, n_images)
 
     # Profile
-    profile = binmean(r, fft, n_bins)[rmin*oversample:]
+    profile = binmean(r, fft, n_bins)[n_start:]
 
     return profile
 
@@ -635,7 +636,7 @@ def lookup_z_para_fit(profiles, zlut, n_local=7):
     return z
 
 
-def stack_to_xyzp(stack, zlut=None):
+def stack_to_xyzp(stack, zlut=None, **kwargs):
     """
     Calculate image-stack XYZ and profiles (Z is None if Z-LUT is None)
 
@@ -664,21 +665,21 @@ def stack_to_xyzp(stack, zlut=None):
     # Move stack to GPU memory
     gpu_stack = cp.asarray(stack, dtype=cp.float64)
 
-    x, y = center_of_mass(gpu_stack)
+    x, y = center_of_mass(gpu_stack, **kwargs.get('center_of_mass', {}))
 
-    x, y = auto_conv(gpu_stack, x, y)
+    x, y = auto_conv(gpu_stack, x, y, **kwargs.get('auto_conv', {}))
 
     for _ in range(5):
         x, y = auto_conv_multiline_para_fit(
-            gpu_stack, x, y, n_local=5, line_ratio=0.05
+            gpu_stack, x, y, **kwargs.get('auto_conv_multiline_para_fit', {})
         )
 
-    profiles = fft_profile(gpu_stack, x, y)
+    profiles = fft_profile(gpu_stack, **kwargs.get('fft_profile', {}))
 
     if zlut is None:
         z = x * cp.nan
     else:
-        z = lookup_z_para_fit(profiles, zlut)
+        z = lookup_z_para_fit(profiles, zlut, **kwargs.get('lookup_z_para_fit', {}))
 
     # Return and move back to regular memory
     return cp.asnumpy(x), cp.asnumpy(y), cp.asnumpy(z), cp.asnumpy(profiles)
