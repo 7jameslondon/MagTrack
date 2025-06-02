@@ -77,13 +77,13 @@ def pearson(x, y):
     # GPU or CPU?
     xp = cp.get_array_module(x)
 
-    mean_x = xp.mean(x, axis=0)
-    mean_y = xp.mean(y, axis=0)
+    mean_x = xp.nanmean(x, axis=0)
+    mean_y = xp.nanmean(y, axis=0)
     dif_x = x - mean_x
     dif_y = y - mean_y
     dif_x2 = dif_x ** 2
     dif_y2 = dif_y ** 2
-    r = xp.sum(dif_x*dif_y, axis=0) / xp.sqrt(xp.sum(dif_x2, axis=0) * xp.sum(dif_y2, axis=0))
+    r = xp.nansum(dif_x*dif_y, axis=0) / xp.sqrt(xp.nansum(dif_x2, axis=0) * xp.nansum(dif_y2, axis=0))
 
     return r
 
@@ -548,6 +548,36 @@ def radial_profile(stack, x, y):
     return profiles
 
 
+def fft_profile(stack, oversample=4, rmin=9):
+    """
+    oversample: int, >=1
+
+    input images must be square and have an even width
+    """
+
+    # GPU or CPU?
+    xp = cp.get_array_module(stack)
+
+    # Radial distance
+    n_images = stack.shape[2]
+    width = stack.shape[0]
+    center = width // 2
+    n_bins = (width // 20)  * oversample
+    grid = xp.indices((width, width), dtype=xp.float64)
+    r_float = xp.round(xp.hypot(grid[1] - center, grid[0] - center).reshape(-1, 1) * oversample)
+    r_int = r_float.astype('int')
+    r = xp.tile(r_int, (1, n_images))
+
+    # FFT
+    fft_cpx = xp.fft.fftshift(xp.fft.fft2(stack, axes=(0, 1)), axes=(0, 1))
+    fft = xp.abs(fft_cpx).reshape(-1, n_images)
+
+    # Profile
+    profile = binmean(r, fft, n_bins)[rmin*oversample:]
+
+    return profile
+
+
 def lookup_z_para_fit(profiles, zlut, n_local=7):
     """
     Calculate the corresponding sub-planar z-coordinate of each profile by LUT
@@ -643,7 +673,7 @@ def stack_to_xyzp(stack, zlut=None):
             gpu_stack, x, y, n_local=5, line_ratio=0.05
         )
 
-    profiles = radial_profile(gpu_stack, x, y)
+    profiles = fft_profile(gpu_stack, x, y)
 
     if zlut is None:
         z = x * cp.nan

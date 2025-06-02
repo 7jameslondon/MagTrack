@@ -13,7 +13,10 @@ def split_gpu_apply(stack, n, func, *args, **kwargs):
     gpu_args = []
     for arg in args:
         gpu_args.append(cp.asarray(arg[0:n]))
-    results = list(func(gpu_substack, *gpu_args, **kwargs))
+    results = func(gpu_substack, *gpu_args, **kwargs)
+    if not isinstance(results, tuple):
+        results = (results,)
+    results = list(results)
     for i in range(len(results)):
         results[i] = cp.asnumpy(results[i])
 
@@ -25,6 +28,8 @@ def split_gpu_apply(stack, n, func, *args, **kwargs):
         for arg in args:
             gpu_args.append(cp.asarray(arg[(s * n):((s + 1) * n)]))
         sub_results = func(gpu_substack, *gpu_args, **kwargs)
+        if not isinstance(sub_results, tuple):
+            sub_results = (sub_results,)
         for i in range(len(results)):
             results[i] = np.concatenate((results[i], cp.asnumpy(sub_results[i])), axis=-1)
 
@@ -35,10 +40,15 @@ def split_gpu_apply(stack, n, func, *args, **kwargs):
         for arg in args:
             gpu_args.append(cp.asarray(arg[(n_splits * n):]))
         sub_results = func(gpu_substack, *gpu_args, **kwargs)
+        if not isinstance(sub_results, tuple):
+            sub_results = (sub_results,)
         for i in range(len(results)):
             results[i] = np.concatenate((results[i], cp.asnumpy(sub_results[i])), axis=-1)
 
-    return results
+    if len(results) == 1:
+        return results[0]
+    else:
+        return results
 
 def airy_disk(size=512, radius=50, wavelength=1.0):
     """ Generate an Airy disk pattern """
