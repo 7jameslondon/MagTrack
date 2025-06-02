@@ -640,7 +640,7 @@ def stack_to_xyzp(stack, zlut=None):
 
     for _ in range(5):
         x, y = auto_conv_multiline_para_fit(
-            gpu_stack, x, y, n_local=5, line_ratio=0.05
+            gpu_stack, x, y, n_local=7, line_ratio=0.10
         )
 
     profiles = radial_profile(gpu_stack, x, y)
@@ -648,7 +648,7 @@ def stack_to_xyzp(stack, zlut=None):
     if zlut is None:
         z = x * cp.nan
     else:
-        z = lookup_z_para_fit(profiles, zlut)
+        z = lookup_z_para_fit(profiles, zlut, n_local=5)
 
     # Return and move back to regular memory
     return cp.asnumpy(x), cp.asnumpy(y), cp.asnumpy(z), cp.asnumpy(profiles)
