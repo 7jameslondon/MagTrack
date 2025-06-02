@@ -11,7 +11,7 @@ Calculates the Z coordinates with Z-LUT (lookup table).
 * Documented and tested
 * Sub-pixel XYZ coordinates
 * GPU acceleration (optional, requires a CUDA GPU)
-* Only requires Numpy and Cupy
+* Only requires Numpy, Scipy and Cupy
 
 ## Install
 ### Pre-requisites
