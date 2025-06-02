@@ -673,7 +673,7 @@ def stack_to_xyzp(stack, zlut=None):
             gpu_stack, x, y, n_local=7, line_ratio=0.10
         )
 
-    profiles = fft_profile(gpu_stack, x, y)
+    profiles = fft_profile(gpu_stack)
 
     if zlut is None:
         z = x * cp.nan
