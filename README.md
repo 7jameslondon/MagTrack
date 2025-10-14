@@ -17,7 +17,7 @@ Calculates the Z coordinates with Z-LUT (lookup table).
 This project was developed with the follow versions. It may work with older versions of Python and the required packages but has not been tested.
 * Python >=3.11
 * Numpy >=2.2
-* Cupy-cuda12x >=13.4
+* Cupy-cuda12x >=13.4 (optional, but required for GPU acceleration)
 
 ```pip install git+https://github.com/7jameslondon/MagTrack```
 
