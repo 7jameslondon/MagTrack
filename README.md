@@ -1,23 +1,23 @@
 # MagTrack
 
 ## Overview
-A simple yet fast python package for tracking of symmetric beads in 
+A fast python package for tracking symmetric beads in 
 single-molecule magnetic tweezers experiments. Calculates the XY coordinates 
 using a variety of common methods such as: center-of-mass and auto-convolution.
 Calculates the Z coordinates with Z-LUT (lookup table).
 
-* Python notebook included with examples
-* Easy to read and modify code
-* Documented and tested
+* GPU accelerated (optional, requires a CUDA GPU)
 * Sub-pixel XYZ coordinates
-* GPU acceleration (optional, requires a CUDA GPU)
-* Only requires Numpy, Scipy and Cupy
+* Python notebook included with examples
+* Documented and tested
+* Only depends on Numpy, Scipy and Cupy
 
 ## Install
 ### Pre-requisites
-* Python >=3.12 (untested on older versions)
-* Numpy >=2.2.3
-* Cupy-cuda12x >=13.4.0
+This project was developed with the follow versions. It may work with older versions of Python and the required packages but has not been tested.
+* Python >=3.11
+* Numpy >=2.2
+* Cupy-cuda12x >=13.4
 
 ```pip install git+https://github.com/7jameslondon/MagTrack```
 
@@ -32,5 +32,7 @@ x, y, z, profiles = magtrack.stack_to_xyzp(stack)
 Download the notebook file to see more examples.
 
 ## Development
+
+To format python files run: ```yapf main.py -i``` ```yapf .\magtrack\ -i -r```
 
 To build the wheel: ```pip wheel . --no-deps```
