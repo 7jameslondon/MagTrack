@@ -1,6 +1,7 @@
 import cupy as cp
 import cupyx.scipy.signal
 
+# ---------- Helper functions ---------- #
 
 def binmean(x, weights, n_bins: int):
     """
@@ -95,6 +96,7 @@ def gaussian(x, mu, sigma):
     xp = cp.get_array_module(x)
 
     return xp.exp(-((x - mu) ** 2) / (2 * sigma ** 2))
+
 
 def gaussian_2d(x, y, mu_x, mu_y, sigma):
     """
@@ -238,6 +240,7 @@ def parabolic_vertex(data, vertex_est, n_local: int, weighted=True):
 
     return vertex
 
+# ---------- Center-of-Mass functions ---------- #
 
 def center_of_mass(stack, background='none'):
     """
@@ -298,6 +301,7 @@ def center_of_mass(stack, background='none'):
 
     return x, y
 
+# ---------- Auto-convolution functions ---------- #
 
 def auto_conv(stack, x_old, y_old, return_conv=False):
     """
@@ -551,6 +555,7 @@ def auto_conv_multiline_para_fit(
 
     return x, y
 
+# ---------- Radial profile functions ---------- #
 
 def radial_profile(stack, x, y, oversample=4):
     """
@@ -639,6 +644,7 @@ def fft_profile(stack, x, y, oversample=4, rmin=0.0, rmax=0.5, gaus_factor=6.):
 
     return profile
 
+# ---------- Z-Lookup functions ---------- #
 
 def lookup_z_para_fit(profiles, zlut, n_local=5):
     """
@@ -696,6 +702,7 @@ def lookup_z_para_fit(profiles, zlut, n_local=5):
 
     return z
 
+# ---------- Complete pipeline functions ---------- #
 
 def stack_to_xyzp(stack, zlut=None, **kwargs):
     """
