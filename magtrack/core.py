@@ -39,19 +39,21 @@ def binmean(x, weights, n_bins: int):
     i = xp.broadcast_to(i_base, x.shape)
 
     # Binning
-    bin_means = xp.zeros(
+    bin_sums = xp.zeros(
         (n_bins + 1, n_datasets), dtype=weights.dtype
     )  # Pre-allocate
-    xp.add.at(bin_means, (x, i), weights)
+    xp.add.at(bin_sums, (x, i), weights)
 
     bin_counts = xp.zeros(
         (n_bins + 1, n_datasets), dtype=xp.uint32
     )  # Pre-allocate
     xp.add.at(bin_counts, (x, i), 1)
 
-    bin_means /= bin_counts
+    nonzero = bin_counts != 0
+    result = xp.full(bin_sums.shape, xp.nan, dtype=weights.dtype)
+    xp.divide(bin_sums, bin_counts, out=result, where=nonzero)
 
-    return bin_means[:-1, :]  # Return without the overflow row
+    return result[:-1, :]  # Return without the overflow row
 
 
 def pearson(x, y):

@@ -144,7 +144,14 @@ class TestBinMean(unittest.TestCase):
             weights = xp.ones_like(x, dtype="float64")
             n_bins = 4
 
-            result = magtrack.binmean(x.copy(), weights, n_bins)
+            with warnings.catch_warnings(record=True) as caught:
+                warnings.simplefilter("always", RuntimeWarning)
+                result = magtrack.binmean(x.copy(), weights, n_bins)
+
+            self.assertFalse(
+                any(w.category is RuntimeWarning for w in caught),
+                "binmean emitted a RuntimeWarning despite empty bins",
+            )
 
             # Bins 1 and 2 have no contributions in either dataset
             for bin_idx in (1, 2):
