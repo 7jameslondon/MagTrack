@@ -1,5 +1,10 @@
-import cupy as cp
-import cupyx.scipy.signal
+from ._xp import (
+    asarray,
+    asnumpy,
+    fftconvolve,
+    get_array_module,
+    is_cupy_backend,
+)
 
 # ---------- Helper functions ---------- #
 
@@ -29,7 +34,7 @@ def binmean(x, weights, n_bins: int):
     n_datasets = x.shape[1]
 
     # GPU or CPU?
-    xp = cp.get_array_module(x)
+    xp = get_array_module(x)
 
     # Clip the maximum x value to nbins (we will discard them latter)
     xp.minimum(x, n_bins, out=x)
@@ -76,7 +81,7 @@ def pearson(x, y):
     """
 
     # GPU or CPU?
-    xp = cp.get_array_module(x)
+    xp = get_array_module(x)
 
     mean_x = xp.nanmean(x, axis=0)
     mean_y = xp.nanmean(y, axis=0)
@@ -93,7 +98,7 @@ def pearson(x, y):
 
 def gaussian(x, mu, sigma):
     # GPU or CPU?
-    xp = cp.get_array_module(x)
+    xp = get_array_module(x)
 
     return xp.exp(-((x - mu) ** 2) / (2 * sigma ** 2))
 
@@ -121,7 +126,7 @@ def gaussian_2d(x, y, mu_x, mu_y, sigma):
         2D array containing the gaussian evaluated at x,y coordinates
     """
     # GPU or CPU?
-    xp = cp.get_array_module(x)
+    xp = get_array_module(x)
 
     return xp.exp(-((x[:, xp.newaxis, xp.newaxis] - mu_x[xp.newaxis, xp.newaxis, :]) ** 2 / (2 * sigma ** 2) +
                     (y[xp.newaxis, :, xp.newaxis] - mu_y[xp.newaxis, xp.newaxis, :]) ** 2 / (2 * sigma ** 2)))
@@ -153,7 +158,7 @@ def crop_stack_to_rois(stack, rois):
         Same type as input stack
     """
     # GPU or CPU?
-    xp = cp.get_array_module(stack)
+    xp = get_array_module(stack)
 
     # Pre-allocate space for cropped stack
     n_images = stack.shape[2]
@@ -204,7 +209,7 @@ def parabolic_vertex(data, vertex_est, n_local: int, weighted=True):
     """
 
     # GPU or CPU?
-    xp = cp.get_array_module(data)
+    xp = get_array_module(data)
 
     # Setup
     n_local_half = (n_local // 2)
@@ -273,7 +278,7 @@ def center_of_mass(stack, background='none'):
     """
 
     # GPU or CPU?
-    xp = cp.get_array_module(stack)
+    xp = get_array_module(stack)
 
     # Correct background of each image
     if background == 'none':
@@ -349,8 +354,7 @@ def auto_conv(stack, x_old, y_old, return_conv=False):
             The row convolution
     """
     # GPU or CPU?
-    xp = cp.get_array_module(stack)
-    xpx = cupyx.scipy.get_array_module(stack)
+    xp = get_array_module(stack)
 
     # Get the row and column slices corresponding to the previous x & y
     frame_idx = xp.arange(stack.shape[2], dtype=xp.int64)
@@ -370,8 +374,8 @@ def auto_conv(stack, x_old, y_old, return_conv=False):
     rows *= gaussian(px_idx[xp.newaxis, :], x_old[:, xp.newaxis], width/6.)
 
     # Convolve the signals
-    col_con = xpx.signal.fftconvolve(cols, cols, 'same', axes=0)
-    row_con = xpx.signal.fftconvolve(rows, rows, 'same', axes=1)
+    col_con = fftconvolve(cols, cols, 'same', axes=0)
+    row_con = fftconvolve(rows, rows, 'same', axes=1)
 
     # Find the convolution maxima
     col_max = xp.argmax(col_con, axis=0)
@@ -484,8 +488,7 @@ def auto_conv_multiline(
             The row convolution
     """
     # GPU or CPU?
-    xp = cp.get_array_module(stack)
-    xpx = cupyx.scipy.get_array_module(stack)
+    xp = get_array_module(stack)
 
     # Get the row and column slices corresponding to the previous x & y
     half_n_lines = int(stack.shape[0] * line_ratio // 2)
@@ -521,8 +524,8 @@ def auto_conv_multiline(
     rows *= gaussian(px_idx[xp.newaxis, :], x_old[:, xp.newaxis], width / 6.)
 
     # Convolve the signals
-    col_con = xpx.signal.fftconvolve(cols, cols, 'same', axes=0)
-    row_con = xpx.signal.fftconvolve(rows, rows, 'same', axes=1)
+    col_con = fftconvolve(cols, cols, 'same', axes=0)
+    row_con = fftconvolve(rows, rows, 'same', axes=1)
 
     # Find the convolution maxima
     col_max = xp.argmax(col_con, axis=0)
@@ -588,7 +591,7 @@ def radial_profile(stack, x, y, oversample=4):
         The average radial profile of each image about the center
     """
     # GPU or CPU?
-    xp = cp.get_array_module(stack)
+    xp = get_array_module(stack)
 
     # Setup
     width = stack.shape[0]
@@ -618,7 +621,7 @@ def fft_profile(stack, x, y, oversample=4, rmin=0.0, rmax=0.5, gaus_factor=6.):
     """
 
     # GPU or CPU?
-    xp = cp.get_array_module(stack)
+    xp = get_array_module(stack)
 
     # Radial distance
     n_images = stack.shape[2]
@@ -676,7 +679,7 @@ def lookup_z_para_fit(profiles, zlut, n_local=5):
         z-coordinates
     """
     # GPU or CPU?
-    xp = cp.get_array_module(profiles)
+    xp = get_array_module(profiles)
 
     ref_z = zlut[0, :]
     ref_profiles = zlut[2:, :]  # Skip the first pixel
@@ -731,7 +734,10 @@ def stack_to_xyzp(stack, zlut=None, **kwargs):
         The average radial profile of each image about the center
     """
     # Move stack to GPU memory
-    gpu_stack = cp.asarray(stack, dtype=cp.float64)
+    if is_cupy_backend():
+        gpu_stack = asarray(stack, dtype='float64')
+    else:
+        gpu_stack = stack.astype('float64', copy=False)
 
     x, y = center_of_mass(gpu_stack, **kwargs.get('center_of_mass', {}))
 
@@ -748,11 +754,12 @@ def stack_to_xyzp(stack, zlut=None, **kwargs):
         profiles = radial_profile(gpu_stack, x, y, **kwargs.get('radial_profile', {}))
 
     if zlut is None:
-        z = x * cp.nan
+        xp = get_array_module(x)
+        z = x * xp.nan
     else:
         z = lookup_z_para_fit(
             profiles, zlut, **kwargs.get('lookup_z_para_fit', {})
         )
 
     # Return and move back to regular memory
-    return cp.asnumpy(x), cp.asnumpy(y), cp.asnumpy(z), cp.asnumpy(profiles)
+    return asnumpy(x), asnumpy(y), asnumpy(z), asnumpy(profiles)
