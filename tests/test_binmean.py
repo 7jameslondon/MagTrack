@@ -1,6 +1,7 @@
 import sys
 import types
 import unittest
+import warnings
 from pathlib import Path
 
 import numpy as np
@@ -68,6 +69,16 @@ import magtrack
 
 class TestBinMean(unittest.TestCase):
     xp_modules = (np, cp) if CP_AVAILABLE and cp is not None else (np,)
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        backend_names = ", ".join(xp.__name__ for xp in cls.xp_modules)
+        warnings.warn(
+            f"binmean tests exercising backends: {backend_names}",
+            category=UserWarning,
+            stacklevel=0,
+        )
 
     def _compute_expected(self, xp, x, weights, n_bins):
         """Compute expected bin means using the reference definition."""
