@@ -34,17 +34,17 @@ def binmean(x, weights, n_bins: int):
     xp.minimum(x, n_bins, out=x)
 
     # Create an index to keep track of each row/dataset of x
-    i_base = xp.arange(x.shape[1], dtype=xp.uint16)
+    i_base = xp.arange(x.shape[1], dtype=xp.min_scalar_type(x.shape[1]))
     i = xp.broadcast_to(i_base, x.shape)
 
     # Binning
     bin_means = xp.zeros(
-        (n_bins + 1, n_datasets), dtype=xp.float64
+        (n_bins + 1, n_datasets), dtype=weights.dtype
     )  # Pre-allocate
     xp.add.at(bin_means, (x, i), weights)
 
     bin_counts = xp.zeros(
-        (n_bins + 1, n_datasets), dtype=xp.float64
+        (n_bins + 1, n_datasets), dtype=xp.uint32
     )  # Pre-allocate
     xp.add.at(bin_counts, (x, i), 1)
 
@@ -81,11 +81,48 @@ def pearson(x, y):
     mean_y = xp.nanmean(y, axis=0)
     dif_x = x - mean_x
     dif_y = y - mean_y
-    dif_x2 = dif_x ** 2
-    dif_y2 = dif_y ** 2
-    r = xp.nansum(dif_x*dif_y, axis=0) / xp.sqrt(xp.nansum(dif_x2, axis=0) * xp.nansum(dif_y2, axis=0))
+    dif_x2 = dif_x**2
+    dif_y2 = dif_y**2
+    r = xp.nansum(dif_x * dif_y, axis=0) / xp.sqrt(
+        xp.nansum(dif_x2, axis=0) * xp.nansum(dif_y2, axis=0)
+    )
 
     return r
+
+
+def gaussian(x, mu, sigma):
+    # GPU or CPU?
+    xp = cp.get_array_module(x)
+
+    return xp.exp(-((x - mu) ** 2) / (2 * sigma ** 2))
+
+def gaussian_2d(x, y, mu_x, mu_y, sigma):
+    """
+    Calculate a 2D Gaussian function.
+
+    Parameters
+    ----------
+    x : array_like
+        x coordinates where to evaluate the gaussian
+    y : array_like  
+        y coordinates where to evaluate the gaussian
+    mu_x : float
+        Mean (center) in x direction
+    mu_y : float
+        Mean (center) in y direction 
+    sigma : float
+        Standard deviation in x and y direction
+
+    Returns
+    -------
+    array_like
+        2D array containing the gaussian evaluated at x,y coordinates
+    """
+    # GPU or CPU?
+    xp = cp.get_array_module(x)
+
+    return xp.exp(-((x[:, xp.newaxis, xp.newaxis] - mu_x[xp.newaxis, xp.newaxis, :]) ** 2 / (2 * sigma ** 2) +
+                    (y[xp.newaxis, :, xp.newaxis] - mu_y[xp.newaxis, xp.newaxis, :]) ** 2 / (2 * sigma ** 2)))
 
 
 def crop_stack_to_rois(stack, rois):
@@ -93,8 +130,7 @@ def crop_stack_to_rois(stack, rois):
     Takes a 3D image-stack and crops it to the region of interests (ROIs).
 
     Given a 3D image-stack and a list of ROIs, this function will crop around
-    each ROI and return a 4D array. Note the input stack must contain square
-    images and the ROIs must be squares.
+    each ROI and return a 4D array. Note the ROIs must be squares.
 
     Note: CPU or GPU: The code is agnostic of CPU and GPU usage. If the first
     parameter is on the GPU the computation/result will be on the GPU.
@@ -104,14 +140,14 @@ def crop_stack_to_rois(stack, rois):
 
     Parameters
     ----------
-    stack : 3D array of any type, shape (width, width, n_images)
+    stack : 3D ndarray of any type, shape (stack_width, stack_height, n_images)
         Note the images must be square.
-    rois : 2D int array, shape (n_roi, 4)
+    rois : 2D int ndarray, shape (n_roi, 4)
         Each row is an ROI. The columns are [left, right, top, bottom].
 
     Returns
     ----------
-    cropped_stack : 4D array, shape (width, width, n_images, n_roi)
+    cropped_stack : 4D ndarray, shape (cropped_width, cropped_width, n_images, n_roi)
         Same type as input stack
     """
     # GPU or CPU?
@@ -135,7 +171,7 @@ def crop_stack_to_rois(stack, rois):
     return cropped_stack
 
 
-def parabolic_vertex(data, vertex_est, n_local: int):
+def parabolic_vertex(data, vertex_est, n_local: int, weighted=True):
     """
     Refines a local min/max by parabolic interpolation.
 
@@ -156,6 +192,8 @@ def parabolic_vertex(data, vertex_est, n_local: int):
         The estimated location of the vertex.
     n_local : int
         The number of local datapoints to be fit. Must be an odd int >=3.
+    weighted : bool, optional
+        Whether to apply a simple weighting procedure to emphasize the more cental points in the fit. Default is True.
 
     Returns
     ----------
@@ -185,7 +223,11 @@ def parabolic_vertex(data, vertex_est, n_local: int):
     x = xp.arange(n_local, dtype=xp.float64)
 
     # Fit to parabola
-    p = xp.polyfit(x, y, 2)
+    if weighted:
+        w = n_local_half - xp.abs(xp.arange(n_local) - n_local_half) + 1
+        p = xp.polyfit(x, y, 2, w=w)
+    else:
+        p = xp.polyfit(x, y, 2)
 
     # Calculate the location of the vertex
     vertex = -p[1, :] / (2. * p[0, :]) + vertex_int - n_local // 2.  # -b/2a
@@ -316,6 +358,12 @@ def auto_conv(stack, x_old, y_old, return_conv=False):
     # Subtract means
     cols -= xp.mean(cols, axis=0, keepdims=True)
     rows -= xp.mean(rows, axis=1, keepdims=True)
+
+    # Apply gaussian weights to reduce edge effects
+    width = stack.shape[0]
+    px_idx = xp.arange(width)
+    cols *= gaussian(px_idx[:, xp.newaxis], y_old[xp.newaxis, :], width/6.)
+    rows *= gaussian(px_idx[xp.newaxis, :], x_old[:, xp.newaxis], width/6.)
 
     # Convolve the signals
     col_con = xpx.signal.fftconvolve(cols, cols, 'same', axes=0)
@@ -462,6 +510,12 @@ def auto_conv_multiline(
     cols -= xp.mean(cols, axis=0, keepdims=True)
     rows -= xp.mean(rows, axis=1, keepdims=True)
 
+    # Apply gaussian filter to reduce edge effects
+    width = stack.shape[0]
+    px_idx = xp.arange(width)
+    cols *= gaussian(px_idx[:, xp.newaxis], y_old[xp.newaxis, :], width / 6.)
+    rows *= gaussian(px_idx[xp.newaxis, :], x_old[:, xp.newaxis], width / 6.)
+
     # Convolve the signals
     col_con = xpx.signal.fftconvolve(cols, cols, 'same', axes=0)
     row_con = xpx.signal.fftconvolve(rows, rows, 'same', axes=1)
@@ -485,7 +539,7 @@ def auto_conv_multiline_para_fit(
     stack, x_old, y_old, line_ratio=0.05, n_local=5
 ):
     col_max, row_max, col_con, row_con = auto_conv_multiline(
-        stack, x_old, y_old, return_conv=True
+        stack, x_old, y_old, return_conv=True, line_ratio=line_ratio
     )
 
     x = parabolic_vertex(row_con, row_max, n_local)
@@ -498,7 +552,7 @@ def auto_conv_multiline_para_fit(
     return x, y
 
 
-def radial_profile(stack, x, y):
+def radial_profile(stack, x, y, oversample=4):
     """
     Calculate the average radial profile about a center
 
@@ -534,13 +588,16 @@ def radial_profile(stack, x, y):
     # Setup
     width = stack.shape[0]
     n_images = stack.shape[2]
-    n_bins = width // 4
-    grid = xp.indices((width, width), dtype=xp.float64)
+    n_bins = (width // 4) * oversample
+    grid = xp.indices((width, width), dtype=xp.float32)
     flat_stack = stack.reshape((width * width, n_images))
 
     # Calculate distance of each pixel from x and y
-    r = xp.hypot(grid[1][:, :, xp.newaxis] - x, grid[0][:, :, xp.newaxis] -
-                 y).reshape(-1, n_images).round().astype(xp.uint16)
+    # cast to uint16 because min and max r for 1024x1024 would be 0 and 1449
+    r = xp.round(
+        xp.hypot(grid[1][:, :, xp.newaxis] - x, grid[0][:, :, xp.newaxis] - y) *
+        oversample
+    ).astype(xp.uint16).reshape(-1, n_images)
 
     # Calculate profiles
     profiles = binmean(r, flat_stack, n_bins)
@@ -548,7 +605,7 @@ def radial_profile(stack, x, y):
     return profiles
 
 
-def fft_profile(stack, oversample=4, rmin=0.0, rmax=1.0):
+def fft_profile(stack, x, y, oversample=4, rmin=0.0, rmax=0.5, gaus_factor=6.):
     """
     oversample: int, >=1
 
@@ -562,15 +619,19 @@ def fft_profile(stack, oversample=4, rmin=0.0, rmax=1.0):
     n_images = stack.shape[2]
     width = stack.shape[0]
     center = width // 2
-    n_bins = int(round(center * rmax  * oversample))
-    n_start = int(round(center * rmin  * oversample))
-    grid = xp.indices((width, width), dtype=xp.float64)
-    r_float = xp.round(xp.hypot(grid[1] - center, grid[0] - center).reshape(-1, 1) * oversample)
-    r_int = r_float.astype('int')
+    n_bins = int(round(center * rmax * oversample))
+    n_start = int(round(center * rmin * oversample))
+    grid = xp.indices((width, center+1), dtype=xp.float32)
+    # cast to uint16 because min and max r for 1024x1024 would be 0 and 1449
+    r_int = xp.round(xp.hypot(grid[1], grid[0] - center) * oversample).astype(xp.uint16).reshape(-1, 1)
     r = xp.tile(r_int, (1, n_images))
 
+    # Gaussian weights
+    w = gaussian_2d(xp.arange(width), xp.arange(width), x, y, width/gaus_factor)
+    stack *= w
+
     # FFT
-    fft_cpx = xp.fft.fftshift(xp.fft.fft2(stack, axes=(0, 1)), axes=(0, 1))
+    fft_cpx = xp.fft.fftshift(xp.fft.rfft2(stack, axes=(0, 1)), axes=(0,))
     fft = xp.abs(fft_cpx).reshape(-1, n_images)
 
     # Profile
@@ -579,7 +640,7 @@ def fft_profile(stack, oversample=4, rmin=0.0, rmax=1.0):
     return profile
 
 
-def lookup_z_para_fit(profiles, zlut, n_local=7):
+def lookup_z_para_fit(profiles, zlut, n_local=5):
     """
     Calculate the corresponding sub-planar z-coordinate of each profile by LUT
 
@@ -669,17 +730,22 @@ def stack_to_xyzp(stack, zlut=None, **kwargs):
 
     x, y = auto_conv(gpu_stack, x, y, **kwargs.get('auto_conv', {}))
 
-    for _ in range(5):
+    for _ in range(kwargs.get('n auto_conv_multiline_para_fit', 5)):
         x, y = auto_conv_multiline_para_fit(
             gpu_stack, x, y, **kwargs.get('auto_conv_multiline_para_fit', {})
         )
 
-    profiles = fft_profile(gpu_stack, **kwargs.get('fft_profile', {}))
+    if kwargs.get('use fft_profile', True):
+        profiles = fft_profile(gpu_stack, x, y, **kwargs.get('fft_profile', {}))
+    else:
+        profiles = radial_profile(gpu_stack, x, y, **kwargs.get('radial_profile', {}))
 
     if zlut is None:
         z = x * cp.nan
     else:
-        z = lookup_z_para_fit(profiles, zlut, **kwargs.get('lookup_z_para_fit', {}))
+        z = lookup_z_para_fit(
+            profiles, zlut, **kwargs.get('lookup_z_para_fit', {})
+        )
 
     # Return and move back to regular memory
     return cp.asnumpy(x), cp.asnumpy(y), cp.asnumpy(z), cp.asnumpy(profiles)
