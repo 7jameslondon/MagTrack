@@ -1,9 +1,10 @@
-import cupy as cp
 import numpy as np
 import scipy as sp
 import tifffile
 import os
 import re
+
+from ._xp import asarray, asnumpy
 
 def split_gpu_apply(stack, n, func, splitargs, fullargs, **kwargs):
     n_images = stack.shape[2]
@@ -12,48 +13,50 @@ def split_gpu_apply(stack, n, func, splitargs, fullargs, **kwargs):
 
     full_gpu_args = []
     for arg in fullargs:
-        full_gpu_args.append(cp.asarray(arg))
+        full_gpu_args.append(asarray(arg))
 
     # First split
-    gpu_substack = cp.asarray(stack[:, :, 0:n]).astype('float64')
+    gpu_substack = asarray(stack[:, :, 0:n], dtype='float64')
     gpu_args = full_gpu_args.copy()
     for arg in splitargs:
-        gpu_args.append(cp.asarray(arg[0:n]))
+        gpu_args.append(asarray(arg[0:n]))
     results = func(gpu_substack, *gpu_args, **kwargs)
     if not isinstance(results, tuple):
         results = (results, )
     results = list(results)
     for i in range(len(results)):
-        results[i] = cp.asnumpy(results[i])
+        results[i] = asnumpy(results[i])
 
     # Middle splits
     for s in range(1, n_splits):
-        gpu_substack = cp.asarray(stack[:, :, (s * n):((s + 1) * n)]
-                                  ).astype('float64')
+        gpu_substack = asarray(
+            stack[:, :, (s * n):((s + 1) * n)], dtype='float64'
+        )
         gpu_args = full_gpu_args.copy()
         for arg in splitargs:
-            gpu_args.append(cp.asarray(arg[(s * n):((s + 1) * n)]))
+            gpu_args.append(asarray(arg[(s * n):((s + 1) * n)]))
         sub_results = func(gpu_substack, *gpu_args, **kwargs)
         if not isinstance(sub_results, tuple):
             sub_results = (sub_results, )
         for i in range(len(results)):
             results[i] = np.concatenate(
-                (results[i], cp.asnumpy(sub_results[i])), axis=-1
+                (results[i], asnumpy(sub_results[i])), axis=-1
             )
 
     # Last split
     if n_mod > 0:
-        gpu_substack = cp.asarray(stack[:, :,
-                                        (n_splits * n):]).astype('float64')
+        gpu_substack = asarray(
+            stack[:, :, (n_splits * n):], dtype='float64'
+        )
         gpu_args = full_gpu_args.copy()
         for arg in splitargs:
-            gpu_args.append(cp.asarray(arg[(n_splits * n):]))
+            gpu_args.append(asarray(arg[(n_splits * n):]))
         sub_results = func(gpu_substack, *gpu_args, **kwargs)
         if not isinstance(sub_results, tuple):
             sub_results = (sub_results, )
         for i in range(len(results)):
             results[i] = np.concatenate(
-                (results[i], cp.asnumpy(sub_results[i])), axis=-1
+                (results[i], asnumpy(sub_results[i])), axis=-1
             )
 
     if len(results) == 1:
