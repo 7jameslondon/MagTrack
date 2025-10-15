@@ -6,6 +6,7 @@ import numpy as np
 import cupy as cp
 from cupyx.profiler import benchmark as cupy_benchmark
 
+import confbenchmarks
 import magtrack
 
 
