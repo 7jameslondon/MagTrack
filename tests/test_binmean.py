@@ -1,11 +1,9 @@
-import sys
-import types
 import unittest
-import warnings
 from pathlib import Path
 import cupy as cp
 import numpy as np
 
+import conftests
 import magtrack
 
 
