@@ -1,8 +1,13 @@
+import warnings
+
 import cupy as cp
 try:
     import cupyx.scipy.signal
+    import cupyx.scipy.ndimage
 except ImportError:
     warnings.warn("GPU-acelleration with CuPy is not available. Will use CPU only.")
+
+import scipy.ndimage
 
 # ---------- Helper functions ---------- #
 
@@ -242,6 +247,135 @@ def parabolic_vertex(data, vertex_est, n_local: int, weighted=True):
     vertex[vertex_int == index_max] = xp.nan
 
     return vertex
+def _qi_sample_axis_profiles(stack, x, y, axis):
+    """Sample 1D profiles along ``axis`` using quadratic interpolation support.
+
+    Parameters
+    ----------
+    stack : 3D array_like
+        Image stack where the first two axes correspond to ``y`` and ``x`` and
+        the third axis indexes frames.
+    x, y : 1D array_like
+        Approximate center coordinates for each frame. They must have the same
+        length as the number of frames in ``stack``.
+    axis : int
+        Axis along which to collect the three-point profile. ``0`` samples the
+        column profile (varying ``y``); ``1`` samples the row profile (varying
+        ``x``).
+
+    Returns
+    -------
+    array_like
+        Samples of shape ``(n_frames, 3)`` corresponding to offsets of ``-1``,
+        ``0`` and ``+1`` pixels along the chosen axis.
+    """
+
+    xp = cp.get_array_module(stack)
+    if xp is cp:
+        ndimage = cupyx.scipy.ndimage
+    else:
+        ndimage = scipy.ndimage
+    stack_xp = stack
+    x = xp.asarray(x, dtype=xp.float64)
+    y = xp.asarray(y, dtype=xp.float64)
+
+    n_frames = stack.shape[2]
+    offsets = xp.array([-1.0, 0.0, 1.0], dtype=xp.float64)
+
+    frame_coords = xp.arange(n_frames, dtype=xp.float64)[:, xp.newaxis]
+    frame_coords = xp.broadcast_to(frame_coords, (n_frames, offsets.size))
+
+    if axis == 0:
+        primary = (y[:, xp.newaxis] + offsets[xp.newaxis, :])
+        secondary = xp.broadcast_to(x[:, xp.newaxis], primary.shape)
+    elif axis == 1:
+        primary = xp.broadcast_to(y[:, xp.newaxis], (n_frames, offsets.size))
+        secondary = (x[:, xp.newaxis] + offsets[xp.newaxis, :])
+    else:
+        raise ValueError("axis must be 0 (column) or 1 (row)")
+
+    coords = xp.stack(
+        (
+            primary.reshape(-1),
+            secondary.reshape(-1),
+            frame_coords.reshape(-1),
+        ),
+        axis=0,
+    )
+
+    samples = ndimage.map_coordinates(
+        stack_xp,
+        coords,
+        order=2,
+        mode="nearest",
+    )
+
+    return samples.reshape(n_frames, offsets.size)
+
+
+def _qi_quadratic_offsets(samples):
+    """Compute quadratic-interpolation offsets from three-point samples."""
+
+    xp = cp.get_array_module(samples)
+    values = xp.asarray(samples, dtype=xp.float64)
+
+    left = values[:, 0]
+    center = values[:, 1]
+    right = values[:, 2]
+
+    denom = left - 2.0 * center + right
+    eps = xp.finfo(values.dtype).eps
+    valid = xp.abs(denom) > eps
+
+    offsets = xp.full(left.shape, xp.nan, dtype=values.dtype)
+    offsets = xp.where(
+        valid,
+        0.5 * (left - right) / denom,
+        offsets,
+    )
+
+    return offsets
+
+
+def qi_refine_xy(stack, x_old, y_old):
+    """Refine centers using quadratic interpolation along x and y axes.
+
+    This routine samples the intensity profiles along the horizontal and
+    vertical axes through the supplied center estimates and performs quadratic
+    interpolation to recover sub-pixel offsets.
+
+    Note: CPU or GPU: The code is agnostic of CPU and GPU usage. If the first
+    parameter is on the GPU the computation/result will be on the GPU.
+    Otherwise, the computation/result will be on the CPU. Intermediate values
+    remain on the originating device and the function respects the caller's
+    backend.
+
+    Parameters
+    ----------
+    stack : 3D float array, shape (n_pixels, n_pixels, n_images)
+        Image stack containing square frames to refine.
+    x_old : 1D float array, shape (n_images)
+        Initial estimates of the x coordinates.
+    y_old : 1D float array, shape (n_images)
+        Initial estimates of the y coordinates.
+
+    Returns
+    -------
+    tuple of array_like
+        Refined ``(x, y)`` coordinates with sub-pixel precision.
+    """
+
+    xp = cp.get_array_module(stack)
+    x_old = xp.asarray(x_old, dtype=xp.float64)
+    y_old = xp.asarray(y_old, dtype=xp.float64)
+
+    row_samples = _qi_sample_axis_profiles(stack, x_old, y_old, axis=1)
+    col_samples = _qi_sample_axis_profiles(stack, x_old, y_old, axis=0)
+
+    dx = _qi_quadratic_offsets(row_samples)
+    dy = _qi_quadratic_offsets(col_samples)
+
+    return x_old + dx, y_old + dy
 
 # ---------- Center-of-Mass functions ---------- #
 
