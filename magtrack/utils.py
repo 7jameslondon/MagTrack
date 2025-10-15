@@ -1,9 +1,15 @@
 import cupy as cp
 import numpy as np
 import scipy as sp
-import tifffile
 import os
 import re
+
+def check_cupy():
+    try:
+        import cupy as cp
+        return cp.cuda.is_available()
+    except: # noqa E722
+        return False
 
 def split_gpu_apply(stack, n, func, splitargs, fullargs, **kwargs):
     n_images = stack.shape[2]
@@ -88,6 +94,12 @@ def join_videos(dir_path, pattern=None, output_filename=None):
     Returns:
         joined video: Numpy array containing the joined video frames
     """
+
+    try:
+        import tifffile
+    except ImportError:
+        raise ImportError("tifffile is required to use this function. Please install it via pip or conda.")
+
     filenames = os.listdir(dir_path)
     filenames = [f for f in filenames if f.lower().endswith(('.tif', '.tiff'))]
     if pattern is not None:

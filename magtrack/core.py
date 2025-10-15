@@ -1,5 +1,8 @@
 import cupy as cp
-import cupyx.scipy.signal
+try:
+    import cupyx.scipy.signal
+except ImportError:
+    warnings.warn("GPU-acelleration with CuPy is not available. Will use CPU only.")
 
 # ---------- Helper functions ---------- #
 

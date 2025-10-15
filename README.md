@@ -14,12 +14,15 @@ Calculates the Z coordinates with Z-LUT (lookup table).
 
 ## Install
 ### Pre-requisites
-This project was developed with the follow versions. It may work with older versions of Python and the required packages but has not been tested.
+This project was developed with the follow versions. It may work with older versions of Python and the required packages.
 * Python >=3.11
 * Numpy >=2.2
-* Cupy-cuda12x >=13.4 (optional, but required for GPU acceleration)
+* Cupy-cuda12x >=13.4
+* For GPU acceleration with CuPy you must have an CUDA complinat GPU and the CUDA toolkit installed. MagTrack can run without a GPU or toolkit but will only use the CPU.
 
-```pip install git+https://github.com/7jameslondon/MagTrack```
+### Instructions
+1. ```pip install git+https://github.com/7jameslondon/MagTrack```
+2. Setup Nvida GPU with Cupy https://docs.cupy.dev/en/stable/install.html
 
 ## Usage
 ```

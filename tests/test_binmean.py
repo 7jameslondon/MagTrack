@@ -3,82 +3,17 @@ import types
 import unittest
 import warnings
 from pathlib import Path
-
+import cupy as cp
 import numpy as np
-
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
-if str(PROJECT_ROOT) not in sys.path:
-    sys.path.insert(0, str(PROJECT_ROOT))
-
-sys.modules.setdefault("tifffile", types.ModuleType("tifffile"))
-
-try:
-    import cupy as cp  # type: ignore
-except ImportError:  # pragma: no cover - cupy not installed
-    cp = None  # type: ignore[misc]
-
-
-def _install_cupyx_stub():
-    """Provide a minimal stub for cupyx when CUDA libraries are unavailable."""
-    cupyx_module = types.ModuleType("cupyx")
-    scipy_module = types.ModuleType("cupyx.scipy")
-    signal_module = types.ModuleType("cupyx.scipy.signal")
-
-    def _get_array_module(x):
-        if cp is not None:
-            return cp.get_array_module(x)
-        return np
-
-    scipy_module.get_array_module = _get_array_module  # type: ignore[attr-defined]
-
-    def _fftconvolve_stub(*args, **kwargs):  # pragma: no cover - safety net only
-        raise RuntimeError("cupyx.scipy.signal.fftconvolve is unavailable in tests")
-
-    signal_module.fftconvolve = _fftconvolve_stub  # type: ignore[attr-defined]
-
-    scipy_module.signal = signal_module  # type: ignore[attr-defined]
-    cupyx_module.scipy = scipy_module  # type: ignore[attr-defined]
-
-    sys.modules.setdefault("cupyx", cupyx_module)
-    sys.modules["cupyx.scipy"] = scipy_module
-    sys.modules["cupyx.scipy.signal"] = signal_module
-
-
-if cp is None:
-    _install_cupyx_stub()
-else:
-    try:
-        import cupyx.scipy.signal  # type: ignore  # noqa: F401
-    except Exception as exc:  # pragma: no cover - depends on runtime GPU libs
-        if "cublas" in str(exc).lower():
-            _install_cupyx_stub()
-        else:
-            raise
-
-CP_AVAILABLE = False
-if cp is not None:
-    try:
-        cp.zeros((1,))
-    except Exception:  # pragma: no cover - depends on runtime GPU libs
-        CP_AVAILABLE = False
-    else:
-        CP_AVAILABLE = True
 
 import magtrack
 
 
 class TestBinMean(unittest.TestCase):
-    xp_modules = (np, cp) if CP_AVAILABLE and cp is not None else (np,)
-
-    @classmethod
-    def setUpClass(cls):
-        super().setUpClass()
-        backend_names = ", ".join(xp.__name__ for xp in cls.xp_modules)
-        warnings.warn(
-            f"binmean tests exercising backends: {backend_names}",
-            category=UserWarning,
-            stacklevel=0,
-        )
+    if magtrack.utils.check_cupy():
+        xp_modules = (np, cp)
+    else:
+        xp_modules = (np,)
 
     def _compute_expected(self, xp, x, weights, n_bins):
         """Compute expected bin means using the reference definition."""
@@ -95,10 +30,7 @@ class TestBinMean(unittest.TestCase):
         return expected
 
     def _assert_allclose(self, xp, result, expected):
-        if xp is np:
-            np.testing.assert_allclose(result, expected)
-        else:
-            cp.testing.assert_allclose(result, expected)
+        xp.testing.assert_allclose(result, expected)
 
     def test_binmean_computes_weighted_mean_for_multiple_datasets(self):
         for xp in self.xp_modules:
