@@ -56,7 +56,15 @@ def binmean(x, weights, n_bins: int):
     )  # Pre-allocate
     xp.add.at(bin_counts, (x, i), 1)
 
-    bin_means /= bin_counts
+    nonzero_mask = bin_counts != 0
+    safe_denominator = xp.where(
+        nonzero_mask,
+        bin_counts,
+        xp.ones_like(bin_counts),
+    )
+    bin_means /= safe_denominator
+    bin_means = bin_means.astype(weights.dtype, copy=False)
+    bin_means[~nonzero_mask] = xp.nan
 
     return bin_means[:-1, :]  # Return without the overflow row
 
