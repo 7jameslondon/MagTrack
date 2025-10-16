@@ -28,11 +28,11 @@ def _print_summary(label: str, times: np.ndarray) -> None:
 def benchmark_binmean(
     n_values: int = 1_000_000,
     n_datasets: int = 16,
-    n_bins: int = 128,
-    n_repeat: int = 10,
-    n_warmup_cpu: int = 3,
-    n_warmup_gpu: int = 5,
-    max_duration: float = 5.0,
+    n_bins: int = 64,
+    n_repeat: int = 100,
+    n_warmup_cpu: int = 10,
+    n_warmup_gpu: int = 10,
+    max_duration: float = 30.0,
 ) -> None:
     """Run CPU and GPU benchmarks for :func:`magtrack.binmean`."""
     # CPU benchmark
