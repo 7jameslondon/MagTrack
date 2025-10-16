@@ -11,7 +11,7 @@ def check_cupy():
         import cupy as cp
         if not cp.cuda.is_available():
             return False
-        cp.random.randint(0, 0, size=(1,)) # Test cupy
+        cp.random.randint(0, 1, size=(1,)) # Test cupy
     except: # noqa E722
         return False
     else:
