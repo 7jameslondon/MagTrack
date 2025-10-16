@@ -8,6 +8,7 @@ from cupyx.profiler import benchmark as cupy_benchmark
 
 import confbenchmarks
 import magtrack
+from benchmarks.cpu_benchmark import cpu_benchmark
 
 
 def _generate_inputs(xp, n_values: int, n_datasets: int, n_bins: int):
@@ -36,7 +37,7 @@ def benchmark_binmean(
     """Run CPU and GPU benchmarks for :func:`magtrack.binmean`."""
     # CPU benchmark
     x_cpu, weights_cpu = _generate_inputs(np, n_values, n_datasets, n_bins)
-    cpu_results = cupy_benchmark(
+    cpu_results = cpu_benchmark(
         magtrack.binmean,
         args=(x_cpu.copy(), weights_cpu, n_bins),
         max_duration=max_duration,
