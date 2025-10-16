@@ -1,5 +1,6 @@
 import warnings
 
+import numpy as np
 import cupy as cp
 import cupyx
 try:
@@ -56,7 +57,11 @@ def binmean(x, weights, n_bins: int):
     )  # Pre-allocate
     xp.add.at(bin_counts, (x, i), 1)
 
-    bin_means /= bin_counts
+    if xp is np:
+        with xp.errstate(divide='ignore', invalid='ignore'):
+            bin_means /= bin_counts
+    else:
+        bin_means /= bin_counts
 
     return bin_means[:-1, :]  # Return without the overflow row
 
