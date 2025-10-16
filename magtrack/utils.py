@@ -3,13 +3,19 @@ import numpy as np
 import scipy as sp
 import os
 import re
+from functools import lru_cache
 
+@lru_cache(maxsize=1)
 def check_cupy():
     try:
         import cupy as cp
-        return cp.cuda.is_available()
+        if not cp.cuda.is_available():
+            return False
+        cp.random.randint(0, 0, size=(1,)) # Test cupy
     except: # noqa E722
         return False
+    else:
+        return True
 
 def split_gpu_apply(stack, n, func, splitargs, fullargs, **kwargs):
     n_images = stack.shape[2]
