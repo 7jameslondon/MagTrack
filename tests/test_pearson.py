@@ -155,6 +155,35 @@ class TestPearson(unittest.TestCase):
 
             self.assertEqual(result.dtype, xp.float64)
 
+    def test_pearson_matches_gaussian_profiles(self):
+        for xp in self.xp_modules:
+            z_axis = xp.linspace(-3.0, 3.0, 61, dtype=xp.float64)
+            profile_centers = xp.arange(-1.5, 2.0, 1.0, dtype=xp.float64)
+            zlut_centers = xp.arange(-2.0, 2.5, 0.5, dtype=xp.float64)
+
+            sigma_profiles = xp.float64(0.8)
+            sigma_zlut = xp.float64(1.1)
+            two = xp.float64(2.0)
+
+            profiles = xp.exp(
+                -((z_axis[:, None] - profile_centers[None, :]) ** 2)
+                / (two * sigma_profiles**2)
+            )
+            zlut = xp.exp(
+                -((z_axis[:, None] - zlut_centers[None, :]) ** 2)
+                / (two * sigma_zlut**2)
+            )
+
+            expected_numpy = self._compute_expected_numpy(
+                self._to_numpy(xp, profiles),
+                self._to_numpy(xp, zlut),
+            )
+            expected = self._to_xp(xp, expected_numpy)
+            result = magtrack.pearson(profiles, zlut)
+
+            self._assert_allclose(xp, result, expected)
+            self.assertEqual(result.shape, (zlut.shape[1], profiles.shape[1]))
+
 
 if __name__ == "__main__":
     unittest.main()
