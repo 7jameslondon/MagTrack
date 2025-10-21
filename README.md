@@ -36,6 +36,4 @@ Download the notebook file to see more examples.
 
 ## Development
 
-To format python files run: ```yapf main.py -i``` ```yapf .\magtrack\ -i -r```
-
 To build the wheel: ```pip wheel . --no-deps```
