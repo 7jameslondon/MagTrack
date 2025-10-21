@@ -12,19 +12,23 @@ except ImportError:
 # ---------- Helper functions ---------- #
 
 def binmean(x, weights, n_bins: int):
-    """
-    Similar to numpy.bincount but for mean of 2D arrays
+    """Compute mean values per bin for 2D arrays, similar to ``numpy.bincount``.
 
     Note: CPU or GPU: The code is agnostic of CPU and GPU usage. If the first
     parameter is on the GPU the computation/result will be on the GPU.
     Otherwise, the computation/result will be on the CPU.
 
+    The input ``x`` is clipped *in place* so that values above ``n_bins`` fall
+    back within the valid bin range; entries clipped to ``n_bins`` are ignored
+    when returning the binned means.
+
     Parameters
     ----------
     x : 2D int array, shape (n_values, n_datasets)
-        Input array
-    weights : optional, 2D float array, shape (n_values, n_datasets)
-        Weights, same shape as x
+        Input array to bin.
+    weights : 2D float array, shape (n_values, n_datasets)
+        Weights associated with ``x``; should be floating point to allow
+        averaging.
     n_bins : int
         The number of bins to be used. Values will be binned as integers
         between 0 and n_bins.
