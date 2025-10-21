@@ -1,3 +1,7 @@
+<h1 align="center">
+<img src="https://raw.githubusercontent.com/7jameslondon/MagTrack/refs/heads/master/logo.png?token=GHSAT0AAAAAADKPHUGTZRAGRONMZMXHLN3I2HYA3ZA" width="300">
+</h1><br>
+
 # MagTrack
 
 ## Overview
