@@ -11,10 +11,10 @@ import magtrack
 from benchmarks.cpu_benchmark import cpu_benchmark
 
 
-def _generate_inputs(xp, n_bins: int, n_refs: int):
+def _generate_inputs(xp, n_bins: int, n_refs: int, n_profiles: int):
     """Create random test data on the requested array module."""
     x = xp.random.random((n_bins, n_refs)).astype(xp.float64)
-    y = xp.random.random((n_bins, 1)).astype(xp.float64)
+    y = xp.random.random((n_bins, n_profiles)).astype(xp.float64)
     return x, y
 
 
@@ -28,20 +28,26 @@ def _print_summary(label: str, times: np.ndarray) -> None:
 def benchmark_pearson(
     n_bins: int = 100,
     n_refs: int = 200,
+    n_profiles: int = 8,
     n_repeat: int = 10_000,
     n_warmup_cpu: int = 10,
     n_warmup_gpu: int = 10,
     max_duration: float = 30.0,
 ) -> None:
-    """Run CPU and GPU benchmarks for :func:`magtrack.pearson`."""
+    """Run CPU and GPU benchmarks for :func:`magtrack.pearson`.
+
+    Parameters default to a multi-profile target workload, mirroring common
+    deployments where multiple measurement profiles are correlated against the
+    reference LUTs.
+    """
 
     print('Benchmarking: magtrack.pearson')
-    print(f"n_bins: {n_bins}, n_refs: {n_refs}")
+    print(f"n_bins: {n_bins}, n_refs: {n_refs}, n_profiles: {n_profiles}")
     print(f"n_repeat: {n_repeat}, n_warmup_cpu: {n_warmup_cpu}, n_warmup_gpu: {n_warmup_gpu}, max_duration: {max_duration}")
     print('')
 
     # CPU benchmark
-    x_cpu, y_cpu = _generate_inputs(np, n_bins, n_refs)
+    x_cpu, y_cpu = _generate_inputs(np, n_bins, n_refs, n_profiles)
     cpu_results = cpu_benchmark(
         magtrack.pearson,
         args=(x_cpu.copy(), y_cpu.copy()),
@@ -56,7 +62,7 @@ def benchmark_pearson(
         print("CuPy with GPU support is not available; skipping GPU benchmark.")
         return
 
-    x_gpu, y_gpu = _generate_inputs(cp, n_bins, n_refs)
+    x_gpu, y_gpu = _generate_inputs(cp, n_bins, n_refs, n_profiles)
     gpu_results = cupy_benchmark(
         magtrack.pearson,
         args=(x_gpu.copy(), y_gpu.copy()),
