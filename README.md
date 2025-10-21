@@ -2,13 +2,8 @@
 <img src="https://raw.githubusercontent.com/7jameslondon/MagTrack/refs/heads/master/logo.png?token=GHSAT0AAAAAADKPHUGSZYWPLU2OLBOVHF742HYBBAA" width="300">
 </h1><br>
 
-# MagTrack
-
-## Overview
-A fast python package for tracking symmetric beads in 
-single-molecule magnetic tweezers experiments. Calculates the XY coordinates 
-using a variety of common methods such as: center-of-mass and auto-convolution.
-Calculates the Z coordinates with Z-LUT (lookup table).
+MagTrack is an optimized python package for tracking symmetric beads in 
+single-molecule magnetic tweezers experiments. 
 
 * GPU accelerated (optional, requires a CUDA GPU)
 * Sub-pixel XYZ coordinates
@@ -26,7 +21,7 @@ This project was developed with the follow versions. It may work with older vers
 
 ### Instructions
 1. ```pip install git+https://github.com/7jameslondon/MagTrack```
-2. Setup Nvida GPU with Cupy https://docs.cupy.dev/en/stable/install.html
+2. Setup CUDA GPU with Cupy https://docs.cupy.dev/en/stable/install.html
 
 ## Usage
 ```
