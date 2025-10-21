@@ -67,12 +67,13 @@ def binmean(x, weights, n_bins: int):
     else:
         bin_means /= bin_counts
 
-    return bin_means[:-1, :]  # Return without the overflow row
+    # Return without the overflow row
+    return bin_means[:-1, :]
 
 
 def pearson(x, y):
     """
-    Calculate the Pearson correlation coefficient.
+    Calculate the Pearson correlation coefficient between each row of x and y.
 
     Note: CPU or GPU: The code is agnostic of CPU and GPU usage. If the first
     parameter is on the GPU the computation/result will be on the GPU.
@@ -82,7 +83,7 @@ def pearson(x, y):
     ----------
     x : 2D array, shape (n, m)
         Input array
-    y : 1D array, shape (n,)
+    y : 1D array, shape (n, 1)
         Input array
 
     Returns
@@ -100,9 +101,7 @@ def pearson(x, y):
     dif_y = y - mean_y
     dif_x2 = dif_x**2
     dif_y2 = dif_y**2
-    r = xp.nansum(dif_x * dif_y, axis=0) / xp.sqrt(
-        xp.nansum(dif_x2, axis=0) * xp.nansum(dif_y2, axis=0)
-    )
+    r = xp.nansum(dif_x * dif_y, axis=0) / xp.sqrt(xp.nansum(dif_x2, axis=0) * xp.nansum(dif_y2, axis=0))
 
     return r
 
@@ -255,6 +254,8 @@ def parabolic_vertex(data, vertex_est, n_local: int, weighted=True):
     vertex[vertex_int == index_max] = xp.nan
 
     return vertex
+
+
 def _qi_sample_axis_profiles(stack, x, y, axis):
     """Sample 1D profiles along ``axis`` using quadratic interpolation support.
 
@@ -576,9 +577,7 @@ def auto_conv_para_fit(stack, x_old, y_old, n_local=5):
     return x, y
 
 
-def auto_conv_multiline(
-    stack, x_old, y_old, line_ratio=0.05, return_conv=False
-):
+def auto_conv_multiline(stack, x_old, y_old, line_ratio=0.05, return_conv=False):
     """
     Re-calculate center of symmetric object by auto-convolution
 
@@ -700,7 +699,7 @@ def auto_conv_multiline_para_fit(
 
 # ---------- Radial profile functions ---------- #
 
-def radial_profile(stack, x, y, oversample=4):
+def radial_profile(stack, x, y, oversample=1):
     """
     Calculate the average radial profile about a center
 
@@ -710,7 +709,7 @@ def radial_profile(stack, x, y, oversample=4):
     is calculated. The distance is then used to bin each pixel. The bin widths
     are 1 pixel wide. The bins are then normalized by the number of pixels in
     each bin to find the average intensity in each bin. The number of bins
-    (n_bins) is stack.shape[0] // 4.
+    (n_bins) is ((stack.shape[0] // 4) * oversample).
 
     Note: CPU or GPU: The code is agnostic of CPU and GPU usage. If the first
     parameter is on the GPU the computation/result will be on the GPU.
@@ -740,12 +739,10 @@ def radial_profile(stack, x, y, oversample=4):
     grid = xp.indices((width, width), dtype=xp.float32)
     flat_stack = stack.reshape((width * width, n_images))
 
-    # Calculate distance of each pixel from x and y
+    # Calculate the distance of each pixel from x and y
     # cast to uint16 because min and max r for 1024x1024 would be 0 and 1449
-    r = xp.round(
-        xp.hypot(grid[1][:, :, xp.newaxis] - x, grid[0][:, :, xp.newaxis] - y) *
-        oversample
-    ).astype(xp.uint16).reshape(-1, n_images)
+    r = xp.round(xp.hypot(grid[1][:, :, xp.newaxis] - x, grid[0][:, :, xp.newaxis] - y) * oversample)
+    r = r.astype(xp.uint16).reshape(-1, n_images)
 
     # Calculate profiles
     profiles = binmean(r, flat_stack, n_bins)
@@ -840,7 +837,7 @@ def lookup_z_para_fit(profiles, zlut, n_local=5):
     # Find the sub-planar index of the max
     z_idx = parabolic_vertex(r, z_int_idx, n_local)
 
-    # Interpolate z from reference index
+    # Interpolate z from the reference index
     z = xp.interp(z_idx, xp.arange(n_ref), ref_z, left=xp.nan, right=xp.nan)
 
     return z
