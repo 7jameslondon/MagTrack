@@ -83,25 +83,32 @@ def pearson(x, y):
     ----------
     x : 2D array, shape (n, m)
         Input array
-    y : 1D array, shape (n, 1)
+    y : 1D array, shape (n, k)
         Input array
 
     Returns
     ----------
-    r : 1D array, shape (m,)
+    r : 1D array, shape (k, m)
         Pearson correlation coefficient
     """
 
     # GPU or CPU?
     xp = cp.get_array_module(x)
 
+    m = x.shape[1]
+    k = y.shape[1]
     mean_x = xp.nanmean(x, axis=0)
     mean_y = xp.nanmean(y, axis=0)
     dif_x = x - mean_x
     dif_y = y - mean_y
     dif_x2 = dif_x**2
     dif_y2 = dif_y**2
-    r = xp.nansum(dif_x * dif_y, axis=0) / xp.sqrt(xp.nansum(dif_x2, axis=0) * xp.nansum(dif_y2, axis=0))
+
+    r = xp.empty((k, m), dtype=xp.float64)
+    for i in range(k):
+        a = xp.nansum(dif_x * dif_y[:, i:i + 1], axis=0)
+        b = xp.sqrt(xp.nansum(dif_x2, axis=0) * xp.nansum(dif_y2[:, i:i + 1], axis=0))
+        r[i, :] = a / b
 
     return r
 
@@ -681,9 +688,7 @@ def auto_conv_multiline(stack, x_old, y_old, line_ratio=0.05, return_conv=False)
 
 
 # TODO: Add documentation
-def auto_conv_multiline_para_fit(
-    stack, x_old, y_old, line_ratio=0.05, n_local=5
-):
+def auto_conv_multiline_para_fit(stack, x_old, y_old, line_ratio=0.05, n_local=5):
     col_max, row_max, col_con, row_con = auto_conv_multiline(
         stack, x_old, y_old, return_conv=True, line_ratio=line_ratio
     )
@@ -826,10 +831,8 @@ def lookup_z_para_fit(profiles, zlut, n_local=5):
     # Calculate the pearson correlation coefficient between Z-LUT and current profiles.
     # This (likely) needs to be done in a loop to prevent the
     # operation from taking too much memory at once.
-    r = xp.empty((n_images, n_ref), dtype=xp.float64)
-    for i in range(n_images):
-        # Skip the first pixel
-        r[i, :] = pearson(ref_profiles, profiles[1:, i:i + 1])
+    # Skip the first pixel
+    r = pearson(ref_profiles, profiles[1:, :])
 
     # Find index of the max
     z_int_idx = xp.argmax(r, axis=1).astype(xp.float64)
