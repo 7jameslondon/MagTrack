@@ -140,7 +140,7 @@ class TestPearson(unittest.TestCase):
                     [2.0, 3.0],
                     [3.0, 4.0],
                 ],
-                dtype=xp.float32,
+                dtype=xp.float64,
             )
             y = xp.array(
                 [
@@ -148,7 +148,7 @@ class TestPearson(unittest.TestCase):
                     [2.0],
                     [3.0],
                 ],
-                dtype=xp.float32,
+                dtype=xp.float64,
             )
 
             result = magtrack.pearson(x, y)
