@@ -28,18 +28,13 @@ def _print_summary(label: str, times: np.ndarray) -> None:
 def benchmark_pearson(
     n_bins: int = 100,
     n_refs: int = 200,
-    n_profiles: int = 8,
-    n_repeat: int = 10_000,
+    n_profiles: int = 1000,
+    n_repeat: int = 100,
     n_warmup_cpu: int = 10,
     n_warmup_gpu: int = 10,
     max_duration: float = 30.0,
 ) -> None:
-    """Run CPU and GPU benchmarks for :func:`magtrack.pearson`.
-
-    Parameters default to a multi-profile target workload, mirroring common
-    deployments where multiple measurement profiles are correlated against the
-    reference LUTs.
-    """
+    """Run CPU and GPU benchmarks for :func:`magtrack.pearson`."""
 
     print('Benchmarking: magtrack.pearson')
     print(f"n_bins: {n_bins}, n_refs: {n_refs}, n_profiles: {n_profiles}")
