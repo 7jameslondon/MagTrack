@@ -6,7 +6,7 @@ import numpy as np
 import cupy as cp
 from cupyx.profiler import benchmark as cupy_benchmark
 
-import confbenchmarks
+import confbenchmarks  # noqa: F401  # Ensures repository root on sys.path
 import magtrack
 from benchmarks.cpu_benchmark import cpu_benchmark
 
@@ -35,6 +35,12 @@ def benchmark_binmean(
     max_duration: float = 30.0,
 ) -> None:
     """Run CPU and GPU benchmarks for :func:`magtrack.binmean`."""
+
+    print('Benchmarking: magtrack.binmean')
+    print(f"n_values: {n_values}, n_datasets: {n_datasets}, n_bins: {n_bins}")
+    print(f"n_repeat: {n_repeat}, n_warmup_cpu: {n_warmup_cpu}, n_warmup_gpu: {n_warmup_gpu}, max_duration: {max_duration}")
+    print('')
+
     # CPU benchmark
     x_cpu, weights_cpu = _generate_inputs(np, n_values, n_datasets, n_bins)
     cpu_results = cpu_benchmark(
