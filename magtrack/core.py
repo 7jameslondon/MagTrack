@@ -687,8 +687,42 @@ def auto_conv_multiline(stack, x_old, y_old, line_ratio=0.05, return_conv=False)
         return x, y
 
 
-# TODO: Add documentation
 def auto_conv_multiline_para_fit(stack, x_old, y_old, line_ratio=0.05, n_local=5):
+    """
+    Re-calculate center of symmetric object by multi-line auto-convolution with sub-pixel fit
+
+    For each 2D image of a 3D image-stack: use the previous center to select
+    multiple rows and columns (determined by ``line_ratio``). Average the
+    resulting signals, convolve them against themselves (auto-convolution) and
+    use several points around the maximum to fit a parabola. The vertex of the
+    parabola is used to determine the sub-pixel coordinates of the center.
+
+    Note: CPU or GPU: The code is agnostic of CPU and GPU usage. If the first
+    parameter is on the GPU the computation/result will be on the GPU.
+    Otherwise, the computation/result will be on the CPU.
+
+    Parameters
+    ----------
+    stack : 3D float array, shape (n_pixels, n_pixels, n_images)
+        The image-stack. The images must be square.
+    x_old : 1D float array, shape (n_images)
+        Estimated x coordinates near the true centers.
+    y_old : 1D float array, shape (n_images)
+        Estimated y coordinates near the true centers.
+    line_ratio : float, optional
+        The ratio relative to the total image width of lines to be used in the
+        convolutions.
+    n_local : int, optional
+        The number of local points around the vertex to be used in parabolic
+        fitting. Must be an odd int >=3.
+
+    Returns
+    ----------
+    x : 1D float array, shape (n_images,)
+        The x coordinates of the center.
+    y : 1D float array, shape (n_images,)
+        The y coordinates of the center.
+    """
     col_max, row_max, col_con, row_con = auto_conv_multiline(
         stack, x_old, y_old, return_conv=True, line_ratio=line_ratio
     )
