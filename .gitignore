@@ -6,3 +6,4 @@ dev*
 *.whl
 __pycache__
 .vscode/
+*.ipynb*
