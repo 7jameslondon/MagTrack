@@ -17,6 +17,7 @@ def check_cupy():
     else:
         return True
 
+
 def split_gpu_apply(stack, n, func, splitargs, fullargs, **kwargs):
     n_images = stack.shape[2]
     n_splits = n_images // n
@@ -89,6 +90,7 @@ def airy_disk(size=512, radius=50, wavelength=1.0):
     intensity[r >= radius * 4] = 0
 
     return intensity
+
 
 def join_videos(dir_path, pattern=None, output_filename=None):
     """ Join TIFF files from a directory into a single video file
