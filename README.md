@@ -11,16 +11,20 @@ single-molecule magnetic tweezers experiments.
 * Documented and tested
 * Only depends on Numpy, Scipy and Cupy
 
+Try a demo in a Google Colab notebook:
+[![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](
+  https://colab.research.google.com/github/7jameslondon/MagTrack/blob/master/examples/examples.ipynb)
+
 ## Install
 ### Pre-requisites
-This project was developed with the follow versions. It may work with older versions of Python and the required packages.
+This project was developed with the following versions. It may work with older versions of Python and the required packages.
 * Python >=3.11
 * Numpy >=2.2
 * Cupy-cuda12x >=13.4
 * For GPU acceleration with CuPy you must have an CUDA complinat GPU and the CUDA toolkit installed. MagTrack can run without a GPU or toolkit but will only use the CPU.
 
 ### Instructions
-1. ```pip install git+https://github.com/7jameslondon/MagTrack```
+1. ```pip install magtrack```
 2. Setup CUDA GPU with Cupy https://docs.cupy.dev/en/stable/install.html
 
 ## Usage
@@ -36,3 +40,14 @@ Download the notebook file to see more examples.
 ## Development
 
 To build the wheel: ```pip wheel . --no-deps```
+
+To publish on PyPI
+https://packaging.python.org/en/latest/tutorials/packaging-projects/
+In a development environment (no particular packages are required), run the following:
+```
+python3 -m pip install --upgrade pip
+python3 -m pip install --upgrade build
+python3 -m build
+python3 -m pip install --upgrade twine
+python3 -m twine upload --repository testpypi dist/*
+```

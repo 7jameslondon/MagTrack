@@ -1,25 +1,27 @@
 [build-system]
-requires = ["setuptools >= 61.0"]
+requires = ["setuptools >= 77.0.3"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "magtrack"
-description = "Analyzes images of magnetic tweezers beads"
-version = "0.3.2"
+description = "Convert images of beads into XYZ positions"
+version = "0.4.0"
 readme = "README.md"
 authors = [
     {name = "James London", email = "7jameslondon@gmail.com" }
 ]
 requires-python = ">=3.11"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
+license = "GPL-3.0"
+license-files = ["license"]
 dependencies = ["numpy", "scipy", "cupy-cuda12x"]
+
+[project.urls]
+Homepage = "https://github.com/7jameslondon/MagTrack"
+Issues = "https://github.com/7jameslondon/MagTrack/issues"
 
 [tool.setuptools]
 packages = ["magtrack"]
-
-[project.optional-dependencies]
-dev = ["yapf"]
-
-[tool.yapf]
-column_limit = 80
-split_arguments_when_comma_terminated = true
-dedent_closing_brackets = true

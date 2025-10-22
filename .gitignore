@@ -2,6 +2,7 @@
 build/
 dev/
 dev*
+dist/
 *.egg-info/
 *.whl
 __pycache__
