@@ -37,7 +37,7 @@ import tifffile # use your prefered library to import a video
 # Import a video
 stack = tifffile.imread('my_video.tiff')
 
-# Run the full defualt XYZ pipeline
+# Run the full default XYZ pipeline
 x, y, z, profiles = magtrack.stack_to_xyzp(stack)
 
 # Or make your own pipeline from algorithms your prefer
