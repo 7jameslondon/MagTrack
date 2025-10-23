@@ -3,7 +3,7 @@ import unittest
 import cupy as cp
 import numpy as np
 
-import conftests  # noqa: F401  # Ensure test package path setup
+import tests.conftests  # noqa: F401  # Ensure test package path setup
 import magtrack
 
 
