@@ -37,10 +37,17 @@ class TestGaussian2D(unittest.TestCase):
         return np.exp(-(x_term + y_term))
 
     def _assert_allclose(self, xp, result, expected, rtol=1e-7, atol=1e-12, equal_nan=False):
-        if xp is cp:
-            cp.testing.assert_allclose(result, expected, rtol=rtol, atol=atol, equal_nan=equal_nan)
-        else:
-            np.testing.assert_allclose(result, expected, rtol=rtol, atol=atol, equal_nan=equal_nan)
+        if equal_nan:
+            a, b = xp.broadcast_arrays(result, expected)
+            na, nb = xp.isnan(a), xp.isnan(b)
+
+            xp.testing.assert_array_equal(na, nb)
+
+            z_a = xp.zeros((), dtype=a.dtype)
+            z_b = xp.zeros((), dtype=b.dtype)
+            result = xp.where(na, z_a, a)
+            expected = xp.where(nb, z_b, b)
+        xp.testing.assert_allclose(result, expected, rtol=rtol, atol=atol)
 
     def test_gaussian_2d_matches_reference_values_for_grid_input(self):
         for xp in self.xp_modules:

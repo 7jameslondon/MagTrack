@@ -27,10 +27,7 @@ class TestGaussian(unittest.TestCase):
         return np.exp(-((x_np - mu_np) ** 2) / (2.0 * sigma_np ** 2))
 
     def _assert_allclose(self, xp, result, expected, rtol=1e-7, atol=1e-12):
-        if xp is cp:
-            cp.testing.assert_allclose(result, expected, rtol=rtol, atol=atol)
-        else:
-            np.testing.assert_allclose(result, expected, rtol=rtol, atol=atol)
+        xp.testing.assert_allclose(result, expected, rtol=rtol, atol=atol)
 
     def test_gaussian_matches_reference_values_for_array_input(self):
         for xp in self.xp_modules:
@@ -39,9 +36,9 @@ class TestGaussian(unittest.TestCase):
             sigma = xp.float64(0.75)
 
             expected_numpy = self._compute_expected_numpy(
-                self._to_numpy(xp, x),
-                self._to_numpy(xp, mu),
-                self._to_numpy(xp, sigma),
+                xp.asnumpy(x),
+                xp.asnumpy(mu),
+                xp.asnumpy(sigma),
             )
             expected = self._to_xp(xp, expected_numpy)
 
