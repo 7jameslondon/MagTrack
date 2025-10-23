@@ -1,5 +1,4 @@
 import warnings
-
 import numpy as np
 import cupy as cp
 import cupyx
@@ -8,6 +7,8 @@ try:
     import cupyx.scipy.ndimage
 except ImportError:
     warnings.warn("GPU-acelleration with CuPy is not available. Will use CPU only.")
+
+np.seterr(divide='ignore', invalid='ignore')
 
 # ---------- Helper functions ---------- #
 
@@ -61,11 +62,7 @@ def binmean(x, weights, n_bins: int):
     )  # Pre-allocate
     xp.add.at(bin_counts, (x, i), 1)
 
-    if xp is np:
-        with xp.errstate(divide='ignore', invalid='ignore'):
-            bin_means /= bin_counts
-    else:
-        bin_means /= bin_counts
+    bin_means /= bin_counts
 
     # Return without the overflow row
     return bin_means[:-1, :]
@@ -95,25 +92,40 @@ def pearson(x, y):
     # GPU or CPU?
     xp = cp.get_array_module(x)
 
-    m = x.shape[1]
-    k = y.shape[1]
-    mean_x = xp.nanmean(x, axis=0)
-    mean_y = xp.nanmean(y, axis=0)
-    dif_x = x - mean_x
-    dif_y = y - mean_y
-    dif_x2 = dif_x**2
-    dif_y2 = dif_y**2
+    X = x - xp.nanmean(x, axis=0, keepdims=True)
+    Y = y - xp.nanmean(y, axis=0, keepdims=True)
+    X = xp.nan_to_num(X, copy=False)
+    Y = xp.nan_to_num(Y, copy=False)
+    print(f'X shape: {X.shape}, Y shape: {Y.shape}')
+    sx = xp.sqrt((X * X).sum(axis=0))  # (m,)
+    sy = xp.sqrt((Y * Y).sum(axis=0))  # (k,)
+    num = Y.T @ X  # (k,m)
+    den = sy[:, None] * sx[None, :]  # (k,m)
 
-    r = xp.empty((k, m), dtype=xp.float64)
-    for i in range(k):
-        a = xp.nansum(dif_x * dif_y[:, i:i + 1], axis=0)
-        b = xp.sqrt(xp.nansum(dif_x2, axis=0) * xp.nansum(dif_y2[:, i:i + 1], axis=0))
-        r[i, :] = a / b
+    r = num / den
 
     return r
 
 
 def gaussian(x, mu, sigma):
+    """
+    Calculate a 1D Gaussian function.
+
+    Parameters
+    ----------
+    x : array_like
+        x coordinates where to evaluate the gaussian
+    mu : float
+        Mean (center)
+    sigma : float
+        Standard deviation
+
+    Returns
+    -------
+    array_like
+        1D array containing the gaussian evaluated at x coordinates
+    """
+
     # GPU or CPU?
     xp = cp.get_array_module(x)
 
@@ -262,6 +274,7 @@ def parabolic_vertex(data, vertex_est, n_local: int, weighted=True):
 
     return vertex
 
+# ---------- QI functions ---------- #
 
 def _qi_sample_axis_profiles(stack, x, y, axis):
     """Sample 1D profiles along ``axis`` using quadratic interpolation support.
@@ -644,8 +657,8 @@ def auto_conv_multiline(stack, x_old, y_old, line_ratio=0.05, return_conv=False)
     n_images = stack.shape[2]
     frame_idx = xp.arange(n_images, dtype=xp.int64)
     frame_idx = xp.repeat(frame_idx, n_lines)
-    x_idx = xp.round(x_old).astype(xp.int64)
-    y_idx = xp.round(y_old).astype(xp.int64)
+    x_idx = xp.round(xp.nan_to_num(x_old)).astype(xp.int64)
+    y_idx = xp.round(xp.nan_to_num(y_old)).astype(xp.int64)
     x_idx = x_idx[:, xp.newaxis] + line_idx
     y_idx = y_idx[:, xp.newaxis] + line_idx
     x_idx = x_idx.flatten()
@@ -859,7 +872,6 @@ def lookup_z_para_fit(profiles, zlut, n_local=5):
 
     ref_z = zlut[0, :]
     ref_profiles = zlut[2:, :]  # Skip the first pixel
-    n_images = profiles.shape[1]
     n_ref = ref_profiles.shape[1]
 
     # Calculate the pearson correlation coefficient between Z-LUT and current profiles.
@@ -881,7 +893,7 @@ def lookup_z_para_fit(profiles, zlut, n_local=5):
 
 # ---------- Complete pipeline functions ---------- #
 
-def stack_to_xyzp(stack, zlut=None, **kwargs):
+def stack_to_xyzp_advanced(stack, zlut=None, **kwargs):
     """
     Calculate image-stack XYZ and profiles (Z is None if Z-LUT is None)
 
@@ -933,3 +945,20 @@ def stack_to_xyzp(stack, zlut=None, **kwargs):
 
     # Return and move back to regular memory
     return cp.asnumpy(x), cp.asnumpy(y), cp.asnumpy(z), cp.asnumpy(profiles)
+
+
+def stack_to_xyzp(stack, zlut):
+    # GPU or CPU?
+    xp = cp.get_array_module(stack)
+
+    # XY
+    x, y = center_of_mass(stack)
+    x, y = auto_conv(stack, x, y)
+    for _ in range(5): # Repeat 5 times
+        x, y = auto_conv_multiline_para_fit(stack, x, y)
+
+    # Z
+    profiles = fft_profile(stack, x, y)
+    z = lookup_z_para_fit(profiles, zlut)
+
+    return x, y, z, profiles
