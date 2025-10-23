@@ -40,9 +40,9 @@ stack = tifffile.imread('my_video.tiff')
 # Run the full defualt XYZ pipeline
 x, y, z, profiles = magtrack.stack_to_xyzp(stack)
 
-# Or mix and match algorithms your prefer
-x, y = center_of_mass(stack)
-x, y = auto_conv(stack)
+# Or make your own pipeline from algorithms your prefer
+x, y = magtrack.center_of_mass(stack)
+x, y = magtrack.auto_conv(stack, x, y)
 profiles = magtrack.fft_profile(stack)
 
 ```
