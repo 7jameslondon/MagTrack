@@ -32,7 +32,7 @@ Optional: For GPU acceleration on a computer with an NVIDA CUDA GPU you may need
 ## Usage
 ```
 import magtrack
-import tifffile # use whatever library you prefer to prepare/import your video into Python as an 3D-array
+import tifffile # use your prefered library to import a video
 
 # Import a video
 stack = tifffile.imread('my_video.tiff')
