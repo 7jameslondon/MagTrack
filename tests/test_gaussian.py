@@ -36,9 +36,9 @@ class TestGaussian(unittest.TestCase):
             sigma = xp.float64(0.75)
 
             expected_numpy = self._compute_expected_numpy(
-                xp.asnumpy(x),
-                xp.asnumpy(mu),
-                xp.asnumpy(sigma),
+                self._to_numpy(xp, x),
+                self._to_numpy(xp, mu),
+                self._to_numpy(xp, sigma),
             )
             expected = self._to_xp(xp, expected_numpy)
 
