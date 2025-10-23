@@ -1,6 +1,5 @@
 import cupy as cp
 import numpy as np
-import scipy as sp
 import os
 import re
 from functools import lru_cache
@@ -73,23 +72,6 @@ def split_gpu_apply(stack, n, func, splitargs, fullargs, **kwargs):
         return results[0]
     else:
         return results
-
-
-def airy_disk(size=512, radius=50, wavelength=1.0):
-    """ Generate an Airy disk pattern """
-    x = np.linspace(-size / 2, size / 2, size)
-    y = np.linspace(-size / 2, size / 2, size)
-    xx, yy = np.meshgrid(x, y)
-    r = np.sqrt(xx**2 + yy**2)
-    r = np.where(r == 0, 1e-10, r)  # Avoid division by zero
-
-    k = 2 * np.pi / wavelength
-    kr = k * r / radius
-    intensity = (2 * sp.special.j1(kr) / kr)**0.8
-
-    intensity[r >= radius * 4] = 0
-
-    return intensity
 
 
 def join_videos(dir_path, pattern=None, output_filename=None):
