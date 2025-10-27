@@ -46,9 +46,6 @@ jobs:
         # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     - name: Show versions
-      run: python - <<'PY'
-import sys, numpy as np; print(sys.version); print("NumPy:", np.__version__)
-PY
+      run: python -c "import numpy as np; print('NumPy:', np.__version__)"
     - name: Test with pytest
-      run: |
-        pytest
+      run: pytest
