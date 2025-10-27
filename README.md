@@ -3,7 +3,7 @@
 </h1><br>
 
 [![PyPi](https://img.shields.io/pypi/v/magtrack.svg)](https://pypi.org/project/magtrack/)
-[![Docs](https://readthedocs.org/projects/magtrack/badge/?version=latest)](https://magtrack.readthedocs.io/en/latest/?badge=latest)
+[![Docs](https://img.shields.io/readthedocs/magtrack/latest.svg)](https://magtrack.readthedocs.io/en/latest/)
 [![Paper](https://img.shields.io/badge/DOI-INSERTDOI-blue)](
 https://doi.org/DOI-INSERTDOI)
 
