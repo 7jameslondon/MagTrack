@@ -6,6 +6,7 @@
 [![Docs](https://img.shields.io/readthedocs/magtrack/latest.svg)](https://magtrack.readthedocs.io/en/latest/)
 [![Paper](https://img.shields.io/badge/DOI-INSERTDOI-blue)](
 https://doi.org/DOI-INSERTDOI)
+[![Python package](https://github.com/7jameslondon/MagTrack/actions/workflows/python-package.yml/badge.svg)](https://github.com/7jameslondon/MagTrack/actions/workflows/python-package.yml)
 
 MagTrack is a Python package for tracking symmetric beads in single-molecule magnetic tweezers experiments. 
 
@@ -58,4 +59,7 @@ You can download it and run it on your computer.
 Or try it out with Google Colab. [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/7jameslondon/MagTrack/blob/master/examples/examples.ipynb)
 
 ## Documentation
-View the full documentation here: https://magtrack.readthedocs.io/en/latest/
+View the full documentation at [magtrack.readthedocs.io](https://magtrack.readthedocs.io/en/latest/)
+
+## Support
+Report issues and ask questions on the [GitHub issue tracker](https://github.com/7jameslondon/MagTrack/issues)
