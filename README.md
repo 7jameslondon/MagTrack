@@ -58,7 +58,4 @@ You can download it and run it on your computer.
 Or try it out with Google Colab. [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/7jameslondon/MagTrack/blob/master/examples/examples.ipynb)
 
 ## Documentation
-### User Guide
-Coming soon
-### Documentation
-Coming soon
+View the full documentation here: https://magtrack.readthedocs.io/en/latest/
