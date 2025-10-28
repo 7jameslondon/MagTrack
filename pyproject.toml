@@ -27,6 +27,7 @@ dependencies = [
     "scipy",
 ]
 
+[project.optional-dependencies]
 cpu = []
 gpu = ["cupy-cuda12x>=13.0; sys_platform != 'darwin'"]
 
