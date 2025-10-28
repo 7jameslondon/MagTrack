@@ -20,7 +20,8 @@ class TestAutoConvParaFit(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.xyz_um = np.array(
+        cls.xyz_nm = (
+            np.array(
             [
                 [-0.02, 0.015, -0.05],
                 [0.018, -0.022, 0.02],
@@ -34,9 +35,11 @@ class TestAutoConvParaFit(unittest.TestCase):
                 [-0.01, 0.0, -0.04],
             ],
             dtype=np.float64,
+            )
+            * 1e3
         )
         cls.stack_np = simulate_beads(
-            cls.xyz_um,
+            cls.xyz_nm,
             nm_per_px=cls.nm_per_px,
             size_px=cls.size_px,
         ).astype(np.float64)
@@ -45,9 +48,9 @@ class TestAutoConvParaFit(unittest.TestCase):
     @classmethod
     def _compute_expected_centers(cls):
         base = cls.size_px / 2.0
-        scale = cls.nm_per_px * 1e-3
-        expected_x = base + cls.xyz_um[:, 0] / scale
-        expected_y = base + cls.xyz_um[:, 1] / scale
+        scale = cls.nm_per_px
+        expected_x = base + cls.xyz_nm[:, 0] / scale
+        expected_y = base + cls.xyz_nm[:, 1] / scale
         return expected_x.astype(np.float64), expected_y.astype(np.float64)
 
     def _to_numpy(self, xp, value):
