@@ -93,6 +93,31 @@ class TestCenterOfMass(unittest.TestCase):
     def test_center_of_mass_matches_simulated_centers_with_median_background(self):
         self._run_center_of_mass_test(background="median", tolerance=0.8)
 
+    def test_center_of_mass_rejects_unknown_background(self):
+        with self.assertRaises(NotImplementedError):
+            magtrack.center_of_mass(self.stack_np, background="unsupported")
+
+    def test_center_of_mass_does_not_modify_input_stack(self):
+        for background in ("none", "mean", "median"):
+            for xp in self.xp_modules:
+                stack = self._to_xp(xp, self.stack_np.copy())
+                original = stack.copy()
+                magtrack.center_of_mass(stack, background=background)
+                difference = self._to_numpy(xp, stack - original)
+                self.assertTrue(
+                    np.allclose(difference, 0.0),
+                    msg=f"Stack modified for background '{background}' using {xp.__name__}",
+                )
+
+    def test_center_of_mass_returns_nan_for_zero_mass_images(self):
+        for xp in self.xp_modules:
+            zero_stack = self._to_xp(xp, np.zeros_like(self.stack_np))
+            centers_x, centers_y = magtrack.center_of_mass(zero_stack, background="none")
+            centers_x_np = self._to_numpy(xp, centers_x)
+            centers_y_np = self._to_numpy(xp, centers_y)
+            self.assertTrue(np.isnan(centers_x_np).all())
+            self.assertTrue(np.isnan(centers_y_np).all())
+
 
 if __name__ == "__main__":
     unittest.main()
