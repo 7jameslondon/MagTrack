@@ -33,6 +33,10 @@ jobs:
             python-version: "3.12"
             scipy_spec: "scipy==1.11.1"
             numpy_spec: "numpy==1.26.*"
+          - os: macos-latest
+            python-version: "3.12"
+            scipy_spec: "scipy"
+            numpy_spec: "numpy==1.26.*"
 
     steps:
     - uses: actions/checkout@v4
