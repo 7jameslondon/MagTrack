@@ -105,7 +105,6 @@ def pearson(x, y):
     Y = y - xp.nanmean(y, axis=0, keepdims=True)
     X = xp.nan_to_num(X, copy=False)
     Y = xp.nan_to_num(Y, copy=False)
-    print(f'X shape: {X.shape}, Y shape: {Y.shape}')
     sx = xp.sqrt((X * X).sum(axis=0))  # (m,)
     sy = xp.sqrt((Y * Y).sum(axis=0))  # (k,)
     num = Y.T @ X  # (k,m)
