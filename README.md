@@ -20,7 +20,7 @@ MagTrack is a Python package for tracking symmetric beads in single-molecule mag
 Try a demo in a Google Colab notebook:
 [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/7jameslondon/MagTrack/blob/master/examples/examples.ipynb)
 
-## Install
+## ⏳ Install
 ### Pre-requisites
 MagTrack has been tested with the following requirements (but it may work with older versions):
 * Windows or Linux (MacOS support coming soon)
@@ -37,7 +37,7 @@ pip install magtrack
 
 Optional: For GPU acceleration on a computer with an NVIDIA CUDA GPU, you may need to install the CUDA Toolkit for CuPy. See details at https://docs.cupy.dev/en/stable/install.html
 
-## Usage
+## ⚒ Usage
 ```
 import magtrack
 import tifffile # use your preferred library to import a video
@@ -59,8 +59,8 @@ You can see more examples of how to use MagTrack in [this notebook](https://gith
 You can download it and run it on your computer.
 Or try it out with Google Colab. [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/7jameslondon/MagTrack/blob/master/examples/examples.ipynb)
 
-## Documentation
+## 📖 Documentation
 View the full documentation at [magtrack.readthedocs.io](https://magtrack.readthedocs.io/en/latest/)
 
-## Support
+## 💬 Support
 Report issues and ask questions on the [GitHub issue tracker](https://github.com/7jameslondon/MagTrack/issues)
