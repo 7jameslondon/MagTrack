@@ -23,6 +23,11 @@ jobs:
         scipy_spec:
           - "scipy==1.11.1"
           - "scipy"
+        exclude:
+          - python-version: "3.13"
+            scipy_spec: "scipy==1.11.1"
+          - python-version: "3.14"
+            scipy_spec: "scipy==1.11.1"
 
     steps:
     - uses: actions/checkout@v4
