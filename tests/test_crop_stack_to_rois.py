@@ -1,10 +1,10 @@
 import unittest
 
-import cupy as cp
 import numpy as np
 
 from tests import conftests  # noqa: F401  # Ensure test package path setup
 import magtrack
+from magtrack._cupy import cp
 
 
 class TestCropStackToRois(unittest.TestCase):

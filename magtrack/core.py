@@ -1,12 +1,21 @@
 import warnings
 import numpy as np
-import cupy as cp
-import cupyx
-try:
-    import cupyx.scipy.signal
-    import cupyx.scipy.ndimage
-except ImportError:
-    warnings.warn("GPU-acelleration with CuPy is not available. Will use CPU only.")
+
+from ._cupy import cp, cupyx, is_cupy_available
+
+if is_cupy_available():
+    try:  # pragma: no cover - exercised when CuPy is installed without SciPy extras
+        import cupyx.scipy.signal  # type: ignore
+        import cupyx.scipy.ndimage  # type: ignore
+    except ImportError:
+        warnings.warn(
+            "GPU-acceleration with CuPy SciPy extensions is unavailable. "
+            "Falling back to CPU implementations."
+        )
+else:
+    warnings.warn(
+        "GPU-acceleration with CuPy is not available. Will use CPU only."
+    )
 
 np.seterr(divide='ignore', invalid='ignore')
 
