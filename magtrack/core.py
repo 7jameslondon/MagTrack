@@ -709,7 +709,7 @@ def auto_conv_multiline(stack, x_old, y_old, line_ratio=0.05, return_conv=False)
         return x, y
 
 
-def auto_conv_multiline_para_fit(stack, x_old, y_old, line_ratio=0.05, n_local=5):
+def auto_conv_multiline_para_fit(stack, x_old, y_old, line_ratio=0.1, n_local=5):
     """
     Re-calculate center of symmetric object by multi-line auto-convolution with sub-pixel fit
 
@@ -956,18 +956,21 @@ def stack_to_xyzp_advanced(stack, zlut=None, **kwargs):
     return cp.asnumpy(x), cp.asnumpy(y), cp.asnumpy(z), cp.asnumpy(profiles)
 
 
-def stack_to_xyzp(stack, zlut):
+def stack_to_xyzp(stack, zlut=None):
     # GPU or CPU?
     xp = cp.get_array_module(stack)
 
     # XY
     x, y = center_of_mass(stack)
     x, y = auto_conv(stack, x, y)
-    for _ in range(5): # Repeat 5 times
+    for _ in range(5): # Repeat
         x, y = auto_conv_multiline_para_fit(stack, x, y)
 
     # Z
     profiles = fft_profile(stack, x, y)
-    z = lookup_z_para_fit(profiles, zlut)
+    if zlut is None:
+        z = x * xp.nan
+    else:
+        z = lookup_z_para_fit(profiles, zlut)
 
     return x, y, z, profiles
