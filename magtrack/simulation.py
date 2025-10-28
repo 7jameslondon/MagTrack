@@ -1,9 +1,9 @@
 """ Various methods of simulating images of beads for testing """
 
-import cupy as cp
-import cupyx
 import numpy as np
 import scipy as sp
+
+from ._cupy import cp, cupyx
 
 def airy_disk(xp=np, size=64, radius=10, wavelength=1.0):
     """ Generate an Airy disk pattern """
