@@ -66,4 +66,4 @@ Or try it out with Google Colab. [![Open in Colab](https://colab.research.google
 View the full documentation at [magtrack.readthedocs.io](https://magtrack.readthedocs.io/en/latest/)
 
 ## 💬 Support
-Report issues and ask questions on the [GitHub issue tracker](https://github.com/7jameslondon/MagTrack/issues)
+Report issues, make requests, and ask questions on the [GitHub issue tracker](https://github.com/7jameslondon/MagTrack/issues)
