@@ -23,10 +23,10 @@ Try a demo in a Google Colab notebook:
 ## Install
 ### Pre-requisites
 MagTrack has been tested with the following requirements (but it may work with older versions):
-* Python >=3.11
-* NumPy >=2.2
-* SciPy >=1.16
-* CuPy-CUDA12x >=13.4
+* Python >=3.8
+* NumPy >=1.26
+* SciPy >=1.11.1
+* CuPy-CUDA12x >=13.0
 * MagTrack can run on a CPU or GPU. But GPU execution requires a CUDA-compliant GPU with the CUDA Toolkit installed. This is free and easy to install for most NVIDIA GPUs.
 
 ### Instructions
