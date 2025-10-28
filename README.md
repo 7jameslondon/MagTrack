@@ -23,7 +23,7 @@ Try a demo in a Google Colab notebook:
 ## Install
 ### Pre-requisites
 MagTrack has been tested with the following requirements (but it may work with older versions):
-* Python >=3.8
+* Python >=3.9
 * NumPy >=1.26
 * SciPy >=1.11.1
 * CuPy-CUDA12x >=13.0
