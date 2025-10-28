@@ -3,12 +3,11 @@
 from __future__ import annotations
 
 import numpy as np
-import cupy as cp
-from cupyx.profiler import benchmark as cupy_benchmark
 
 import confbenchmarks  # noqa: F401  # Ensures repository root on sys.path
 import magtrack
 from benchmarks.cpu_benchmark import cpu_benchmark
+from magtrack._cupy import cp
 
 
 def _generate_inputs(xp, n_values: int, n_datasets: int, n_bins: int):
@@ -56,6 +55,8 @@ def benchmark_binmean(
     if not magtrack.utils.check_cupy():
         print("CuPy with GPU support is not available; skipping GPU benchmark.")
         return
+
+    from cupyx.profiler import benchmark as cupy_benchmark  # type: ignore
 
     x_gpu, weights_gpu = _generate_inputs(cp, n_values, n_datasets, n_bins)
     gpu_results = cupy_benchmark(
