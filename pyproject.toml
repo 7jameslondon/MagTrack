@@ -17,7 +17,11 @@ classifiers = [
 ]
 license = "GPL-3.0"
 license-files = ["license"]
-dependencies = ["numpy", "scipy", "cupy-cuda12x"]
+dependencies = [
+    "numpy",
+    "scipy",
+    "cupy-cuda12x; sys_platform != 'darwin'"
+]
 
 [project.urls]
 Homepage = "https://github.com/7jameslondon/MagTrack"
