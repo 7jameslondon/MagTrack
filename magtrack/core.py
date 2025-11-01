@@ -846,7 +846,7 @@ def fft_profile(stack, x, y, oversample=4, rmin=0.0, rmax=0.5, gaus_factor=6.):
 
 # ---------- Z-Lookup functions ---------- #
 
-def lookup_z_para_fit(profiles, zlut, n_local=5):
+def lookup_z(profiles, zlut, n_local=5):
     """
     Calculate the corresponding sub-planar z-coordinate of each profile by LUT
 
@@ -899,6 +899,7 @@ def lookup_z_para_fit(profiles, zlut, n_local=5):
 
     return z
 
+
 # ---------- Complete pipeline functions ---------- #
 
 def stack_to_xyzp_advanced(stack, zlut=None, **kwargs):
@@ -947,8 +948,8 @@ def stack_to_xyzp_advanced(stack, zlut=None, **kwargs):
     if zlut is None:
         z = x * cp.nan
     else:
-        z = lookup_z_para_fit(
-            profiles, zlut, **kwargs.get('lookup_z_para_fit', {})
+        z = lookup_z(
+            profiles, zlut, **kwargs.get('lookup_z', {})
         )
 
     # Return and move back to regular memory
@@ -970,6 +971,6 @@ def stack_to_xyzp(stack, zlut=None):
     if zlut is None:
         z = x * xp.nan
     else:
-        z = lookup_z_para_fit(profiles, zlut)
+        z = lookup_z(profiles, zlut)
 
     return x, y, z, profiles
