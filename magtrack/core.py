@@ -418,10 +418,14 @@ def center_of_mass(stack, background='none'):
     """
     Calculate center-of-mass
 
-    For each 2D image of a 3D image-stack: the mean background is
-    subtracted, the absolute value is taken and then the center-of-mass in
-    along the x- and y-axis is calculated. This function is faster than the
-    version from scipy or cupyx.scipy.
+    For each 2D image of a 3D image-stack, the background can optionally be
+    removed before computing the center-of-mass along the x- and y-axes. By
+    default, ``background='none'`` leaves the data unchanged and no absolute
+    value is applied. When ``background='mean'`` the per-frame mean is
+    subtracted and the absolute value of the mean-centered data is taken.
+    Likewise, ``background='median'`` subtracts the per-frame median and then
+    uses the absolute value of the median-centered data. This function is
+    faster than the version from ``scipy`` or ``cupyx.scipy``.
 
     Note: CPU or GPU: The code is agnostic of CPU and GPU usage. If the first
     parameter is on the GPU the computation/result will be on the GPU.
@@ -432,9 +436,10 @@ def center_of_mass(stack, background='none'):
     stack : 3D float array, shape (n_pixels, n_pixels, n_images)
         The image-stack. The images must be square.
     background : str, optional
-        The method to subtract background. 'mean' subtracts the mean. 'median'
-        subtracts the median. Otherwise, no background is subtracted. Default
-        is 'mean'.
+        Background handling strategy. ``'none'`` (default) uses the raw data
+        without taking absolute values. ``'mean'`` subtracts the per-image mean
+        and applies ``abs`` to the result. ``'median'`` subtracts the
+        per-image median and applies ``abs`` to the result.
 
     Returns
     ----------
