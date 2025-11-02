@@ -619,7 +619,7 @@ def auto_conv_sub_pixel(stack, x_old, y_old, n_local=5):
 
 def auto_conv_multiline(stack, x_old, y_old, line_ratio=0.05, return_conv=False):
     """
-    Re-calculate center of symmetric object by auto-convolution
+    Re-calculate center of symmetric object by multi-line auto-convolution
 
     For each 2D image of a 3D image-stack: use the previous center to select
     the central row and column. Convolve these against reversed versions of
@@ -639,9 +639,9 @@ def auto_conv_multiline(stack, x_old, y_old, line_ratio=0.05, return_conv=False)
         Estimated x coordinates near the true centers.
     y_old : 1D float array, shape (n_images)
         Estimated y coordinates near the true centers.
-    line_ratio : int, optional
-        The ratio relative to the total image width of lines to be used in the
-        convolutions.
+    line_ratio : float, optional
+        Fraction of the frame width that determines how many neighbouring
+        lines are averaged before convolution.
     return_conv : bool, optional
         Whether to return the convolution or return the new center.
         The default is False.
@@ -656,13 +656,13 @@ def auto_conv_multiline(stack, x_old, y_old, line_ratio=0.05, return_conv=False)
         y : 1D float array, shape (n_images,)
             The y coordinates of the center
     If return_conv is True:
-        col_max : 1D float array, shape (n_images,)
+        col_max : 1D int array, shape (n_images,)
             The index of the maximum of the column convolution
-        row_max : 1D float array, shape (n_images,)
+        row_max : 1D int array, shape (n_images,)
             The index of the maximum of the row convolution
         col_con : 2D float array, shape (n_pixels, n_images)
             The column convolution
-        row_con : 2D float array, shape (n_pixels, n_images)
+        row_con : 2D float array, shape (n_images, n_pixels)
             The row convolution
     """
     # GPU or CPU?
