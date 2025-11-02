@@ -766,10 +766,12 @@ def radial_profile(stack, x, y, oversample=1):
     For each 2D image of a 3D image-stack: calculate the average radial profile
     about the corresponding center (x and y). The profile is calculated by
     binning. For each pixel in an image the Euclidean distance from the center
-    is calculated. The distance is then used to bin each pixel. The bin widths
-    are 1 pixel wide. The bins are then normalized by the number of pixels in
-    each bin to find the average intensity in each bin. The number of bins
-    (n_bins) is ((stack.shape[0] // 2) * oversample).
+    is calculated. The distance is then used to bin each pixel. When
+    ``oversample`` equals 1 the bin widths are 1 pixel wide; higher values split
+    each native bin into finer ``1 / oversample`` pixel slices. The bins are
+    then normalized by the number of pixels in each bin to find the average
+    intensity in each bin. The number of bins (n_bins) is
+    ((stack.shape[0] // 2) * oversample).
 
     Note: CPU or GPU: The code is agnostic of CPU and GPU usage. If the first
     parameter is on the GPU the computation/result will be on the GPU.
@@ -783,6 +785,11 @@ def radial_profile(stack, x, y, oversample=1):
         x-coordinates of the center.
     y : 1D float array, shape (n_images)
         y-coordinates of the center.
+    oversample : int, optional
+        Oversampling factor applied to the radial distances before binning.
+        Increasing the factor multiplies the number of radial bins and thus the
+        resolution of the profile by the same amount. Must be an integer
+        greater than or equal to 1.
 
     Returns
     ----------
