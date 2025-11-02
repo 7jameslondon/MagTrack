@@ -769,7 +769,7 @@ def radial_profile(stack, x, y, oversample=1):
     is calculated. The distance is then used to bin each pixel. The bin widths
     are 1 pixel wide. The bins are then normalized by the number of pixels in
     each bin to find the average intensity in each bin. The number of bins
-    (n_bins) is ((stack.shape[0] // 4) * oversample).
+    (n_bins) is ((stack.shape[0] // 2) * oversample).
 
     Note: CPU or GPU: The code is agnostic of CPU and GPU usage. If the first
     parameter is on the GPU the computation/result will be on the GPU.
@@ -795,7 +795,7 @@ def radial_profile(stack, x, y, oversample=1):
     # Setup
     width = stack.shape[0]
     n_images = stack.shape[2]
-    n_bins = (width // 4) * oversample
+    n_bins = (width // 2) * oversample
     grid = xp.indices((width, width), dtype=xp.float32)
     flat_stack = stack.reshape((width * width, n_images))
 
