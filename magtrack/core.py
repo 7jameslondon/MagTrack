@@ -87,15 +87,16 @@ def pearson(x, y):
 
     Parameters
     ----------
-    x : 2D array, shape (n, m)
-        Input array
-    y : 1D array, shape (n, k)
-        Input array
+    x : array, shape (n, m)
+        2D array whose columns are correlated with the columns of ``y``.
+    y : array, shape (n, k)
+        2D array whose columns are correlated with the columns of ``x``.
 
     Returns
-    ----------
-    r : 1D array, shape (k, m)
-        Pearson correlation coefficient
+    -------
+    r : array, shape (k, m)
+        Pearson correlation coefficients between each column of ``y`` and each
+        column of ``x``.
     """
 
     # GPU or CPU?
