@@ -708,7 +708,7 @@ def auto_conv_multiline(stack, x_old, y_old, line_ratio=0.05, return_conv=False)
         return x, y
 
 
-def auto_conv_multiline_para_fit(stack, x_old, y_old, line_ratio=0.1, n_local=5):
+def auto_conv_multiline_sub_pixel(stack, x_old, y_old, line_ratio=0.1, n_local=5):
     """
     Re-calculate center of symmetric object by multi-line auto-convolution with sub-pixel fit
 
@@ -935,9 +935,9 @@ def stack_to_xyzp_advanced(stack, zlut=None, **kwargs):
 
     x, y = auto_conv(gpu_stack, x, y, **kwargs.get('auto_conv', {}))
 
-    for _ in range(kwargs.get('n auto_conv_multiline_para_fit', 5)):
-        x, y = auto_conv_multiline_para_fit(
-            gpu_stack, x, y, **kwargs.get('auto_conv_multiline_para_fit', {})
+    for _ in range(kwargs.get('n auto_conv_multiline_sub_pixel', 5)):
+        x, y = auto_conv_multiline_sub_pixel(
+            gpu_stack, x, y, **kwargs.get('auto_conv_multiline_sub_pixel', {})
         )
 
     if kwargs.get('use fft_profile', True):
@@ -964,7 +964,7 @@ def stack_to_xyzp(stack, zlut=None):
     x, y = center_of_mass(stack)
     x, y = auto_conv(stack, x, y)
     for _ in range(5): # Repeat
-        x, y = auto_conv_multiline_para_fit(stack, x, y)
+        x, y = auto_conv_multiline_sub_pixel(stack, x, y)
 
     # Z
     profiles = fft_profile(stack, x, y)
