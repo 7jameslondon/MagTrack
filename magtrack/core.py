@@ -830,10 +830,39 @@ def radial_profile(stack, x, y, oversample=1):
 
 
 def fft_profile(stack, x, y, oversample=4, rmin=0.0, rmax=0.5, gaus_factor=6.):
-    """
-    oversample: int, >=1
+    """Compute FFT-based radial intensity profiles for a stack of images.
 
-    input images must be square and have an even width
+    The images are first weighted in-place by a 2D Gaussian centered at the
+    requested locations. A real 2D FFT is then evaluated for each weighted
+    image, and the magnitude spectrum is azimuthally averaged into
+    oversampled radial bins.
+
+    Parameters
+    ----------
+    stack : array_like, shape (n_pixels, n_pixels, n_images)
+        Image stack to profile. The images must be square with an even width.
+        This array is modified in-place by Gaussian weighting prior to the
+        FFT step.
+    x : array_like, shape (n_images,)
+        X-coordinates of the Gaussian centers in pixel units.
+    y : array_like, shape (n_images,)
+        Y-coordinates of the Gaussian centers in pixel units.
+    oversample : int, default=4
+        Radial oversampling factor (>=1) applied when binning FFT magnitudes.
+    rmin : float, default=0.0
+        Minimum normalized radial frequency (0–0.5 Nyquist) to keep in the
+        returned profile.
+    rmax : float, default=0.5
+        Maximum normalized radial frequency (0–0.5 Nyquist) considered when
+        building the radial profile.
+    gaus_factor : float, default=6.0
+        Divisor controlling the Gaussian width relative to the image size.
+
+    Returns
+    -------
+    profile : array_like, shape (n_selected_bins, n_images)
+        Oversampled radial magnitude profiles for each image, sliced to the
+        bins corresponding to the radial range ``[rmin, rmax]``.
     """
 
     # GPU or CPU?
