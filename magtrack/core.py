@@ -416,12 +416,16 @@ def qi(stack, x_old, y_old):
 
 def center_of_mass(stack, background='none'):
     """
-    Calculate center-of-mass
+    Calculate x and y by center-of-mass
 
-    For each 2D image of a 3D image-stack: the mean background is
-    subtracted, the absolute value is taken and then the center-of-mass in
-    along the x- and y-axis is calculated. This function is faster than the
-    version from scipy or cupyx.scipy.
+    For each 2D image of a 3D image-stack compute the center-of-mass along the
+    x- and y-axes. To avoid bias from the images' background, a pre-processing
+    step can be taken to remove the background with the ``background`` keyword
+    argument. The default, ``background='none'`` leaves the data unchanged.
+    When ``background='mean'`` the per-frame mean is subtracted before
+    calculating the center-of-mass. Likewise, ``background='median'``
+    subtracts the per-frame median. This function is faster than the version
+    from ``scipy`` or ``cupyx.scipy``.
 
     Note: CPU or GPU: The code is agnostic of CPU and GPU usage. If the first
     parameter is on the GPU the computation/result will be on the GPU.
@@ -432,9 +436,9 @@ def center_of_mass(stack, background='none'):
     stack : 3D float array, shape (n_pixels, n_pixels, n_images)
         The image-stack. The images must be square.
     background : str, optional
-        The method to subtract background. 'mean' subtracts the mean. 'median'
-        subtracts the median. Otherwise, no background is subtracted. Default
-        is 'mean'.
+        Background pre-processing. ``'none'`` (default) uses the raw data.
+        ``'mean'`` subtracts the per-image mean. ``'median'`` subtracts the
+        per-image median.
 
     Returns
     ----------
