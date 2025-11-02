@@ -967,7 +967,7 @@ def stack_to_xyzp(stack, zlut=None):
         x, y = auto_conv_multiline_sub_pixel(stack, x, y)
 
     # Z
-    profiles = fft_profile(stack, x, y)
+    profiles = radial_profile(stack, x, y)
     if zlut is None:
         z = x * xp.nan
     else:
