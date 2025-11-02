@@ -6,9 +6,20 @@
 MagTrack documentation
 ======================
 
+MagTrack is a Python package for tracking symmetric beads in single-molecule magnetic tweezers experiments. It combines
+fast lateral and axial localization with optional GPU acceleration, delivering sub-pixel XYZ coordinates from
+experimental recordings. The project ships with a comprehensive example notebook, automated tests, and benchmarking
+utilities to help you validate results on your own data.
+
 .. toctree::
    :maxdepth: 2
-   :glob:
+   :caption: Guides
 
-   pages/*
-   api/**
+   getting_started
+   user_guide
+
+.. toctree::
+   :maxdepth: 2
+   :caption: API Reference
+
+   api/index
