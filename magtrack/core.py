@@ -142,18 +142,21 @@ def gaussian(x, mu, sigma):
 
 def gaussian_2d(x, y, mu_x, mu_y, sigma):
     """
-    Calculate a 2D Gaussian function.
+    Calculate a 2D Gaussian image.
 
-    Notes
-    -----
-    Evaluates an unnormalized Gaussian surface for multiple centers provided
+    Calculates a 2D Gaussian image for each center (mu_x, mu_y) provided along
+    the grid (x, y) all sharing the same sigma in x and y (sigma).
     across images.
+
+    Note: CPU or GPU: The code is agnostic of CPU and GPU usage. If the first
+    parameter is on the GPU the computation/result will be on the GPU.
+    Otherwise, the computation/result will be on the CPU.
 
     Parameters
     ----------
-    x : array_like
+    x : 1D array
         x coordinates where to evaluate the gaussian
-    y : array_like
+    y : 1D array
         y coordinates where to evaluate the gaussian
     mu_x : 1D array
         Mean (center) in x direction for each image (one center per image)
