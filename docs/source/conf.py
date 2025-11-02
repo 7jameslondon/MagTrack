@@ -16,8 +16,15 @@ extensions = [
     "sphinx_autodoc_typehints",
     "sphinx.ext.intersphinx",
     "sphinx_design",
-    'sphinx.ext.inheritance_diagram',
+    'autoapi.extension',
 ]
+
+autoapi_type = "python"
+autoapi_dirs = ["../../magtrack"]
+autoapi_add_toctree_entry = True
+autoapi_root = "api"
+
+autodoc_mock_imports = ["cupy"]
 
 templates_path = ['_templates']
 exclude_patterns = []
@@ -25,8 +32,7 @@ exclude_patterns = []
 html_theme = 'alabaster'
 html_static_path = ['_static']
 
-autoapi_type = "python"
-autoapi_dirs = ["../../magtrack"]
+
 autosummary_generate = True
 napoleon_google_docstring = False
 napoleon_numpy_docstring = True
