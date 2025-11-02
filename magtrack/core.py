@@ -85,17 +85,22 @@ def pearson(x, y):
     parameter is on the GPU the computation/result will be on the GPU.
     Otherwise, the computation/result will be on the CPU.
 
+    The routine works with either NumPy or CuPy arrays, centring each column
+    with :func:`nanmean` and replacing NaNs via :func:`nan_to_num` before
+    computing the ``(k, m)`` correlation matrix.
+
     Parameters
     ----------
-    x : 2D array, shape (n, m)
-        Input array
-    y : 1D array, shape (n, k)
-        Input array
+    x : array, shape (n, m)
+        2D array whose columns are correlated with the columns of ``y``.
+    y : array, shape (n, k)
+        2D array whose columns are correlated with the columns of ``x``.
 
     Returns
-    ----------
-    r : 1D array, shape (k, m)
-        Pearson correlation coefficient
+    -------
+    r : array, shape (k, m)
+        Pearson correlation coefficients between each column of ``y`` and each
+        column of ``x``.
     """
 
     # GPU or CPU?
