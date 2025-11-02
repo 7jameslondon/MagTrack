@@ -559,7 +559,7 @@ def auto_conv(stack, x_old, y_old, return_conv=False):
         return x, y
 
 
-def auto_conv_para_fit(stack, x_old, y_old, n_local=5):
+def auto_conv_sub_pixel(stack, x_old, y_old, n_local=5):
     """
     Re-calculate center of symmetric object by auto-convolution sub-pixel fit
 
