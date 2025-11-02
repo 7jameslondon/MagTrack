@@ -8,7 +8,7 @@ from magtrack._cupy import cp
 from magtrack.simulation import simulate_beads
 
 
-class TestAutoConvMultilineParaFit(unittest.TestCase):
+class TestAutoConvMultilineSubPixel(unittest.TestCase):
     if magtrack.utils.check_cupy():
         xp_modules = (np, cp)
     else:
@@ -83,7 +83,7 @@ class TestAutoConvMultilineParaFit(unittest.TestCase):
             msg=f"Maximum offset {max_offset:.3f} exceeded tolerance {tolerance}",
         )
 
-    def test_auto_conv_multiline_para_fit_reaches_subpixel_accuracy(self):
+    def test_auto_conv_multiline_sub_pixel_reaches_subpixel_accuracy(self):
         tolerance = 0.1
         for xp in self.xp_modules:
             stack = self._to_xp(xp, self.stack_np)
@@ -91,21 +91,21 @@ class TestAutoConvMultilineParaFit(unittest.TestCase):
             expected_y = self._to_xp(xp, self.expected_y_np)
             guess_x, guess_y = self._initial_guesses(xp, expected_x, expected_y)
 
-            centers_x, centers_y = magtrack.auto_conv_multiline_para_fit(
+            centers_x, centers_y = magtrack.auto_conv_multiline_sub_pixel(
                 stack, guess_x, guess_y
             )
             offsets = self._compute_offsets(xp, centers_x, centers_y, expected_x, expected_y)
 
             self._assert_within_tolerance(xp, offsets, tolerance)
 
-    def test_auto_conv_multiline_para_fit_improves_over_auto_conv_multiline(self):
+    def test_auto_conv_multiline_sub_pixel_improves_over_auto_conv_multiline(self):
         for xp in self.xp_modules:
             stack = self._to_xp(xp, self.stack_np)
             expected_x = self._to_xp(xp, self.expected_x_np)
             expected_y = self._to_xp(xp, self.expected_y_np)
             guess_x, guess_y = self._initial_guesses(xp, expected_x, expected_y)
 
-            refined_x, refined_y = magtrack.auto_conv_multiline_para_fit(
+            refined_x, refined_y = magtrack.auto_conv_multiline_sub_pixel(
                 stack, guess_x, guess_y
             )
             coarse_x, coarse_y = magtrack.auto_conv_multiline(stack, guess_x, guess_y)
@@ -129,7 +129,7 @@ class TestAutoConvMultilineParaFit(unittest.TestCase):
                 msg="Refined offsets are not uniformly better than coarse offsets",
             )
 
-    def test_auto_conv_multiline_para_fit_does_not_modify_inputs(self):
+    def test_auto_conv_multiline_sub_pixel_does_not_modify_inputs(self):
         for xp in self.xp_modules:
             stack = self._to_xp(xp, self.stack_np.copy())
             expected_x = self._to_xp(xp, self.expected_x_np)
@@ -140,7 +140,7 @@ class TestAutoConvMultilineParaFit(unittest.TestCase):
             guess_x_copy = guess_x.copy()
             guess_y_copy = guess_y.copy()
 
-            magtrack.auto_conv_multiline_para_fit(stack, guess_x, guess_y)
+            magtrack.auto_conv_multiline_sub_pixel(stack, guess_x, guess_y)
 
             stack_diff = self._to_numpy(xp, stack - stack_copy)
             guess_x_diff = self._to_numpy(xp, guess_x - guess_x_copy)
