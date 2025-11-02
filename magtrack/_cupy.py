@@ -6,6 +6,7 @@ CuPy modules (when available) or provide lightweight NumPy/SciPy fallbacks.
 
 from __future__ import annotations
 
+from functools import lru_cache
 from types import SimpleNamespace
 from typing import Any
 
@@ -82,3 +83,21 @@ def is_cupy_available() -> bool:
     """Return ``True`` when the real CuPy package is importable."""
 
     return _cupy_available
+
+
+@lru_cache(maxsize=1)
+def check_cupy() -> bool:
+    """Perform a more thorough check to ensure CuPy and CUDA are usable."""
+
+    if not is_cupy_available():
+        return False
+
+    try:
+        if not _cupy.cuda.is_available():  # type: ignore[union-attr]
+            return False
+
+        _cupy.random.randint(0, 1, size=(1,))  # type: ignore[union-attr]
+    except Exception:  # pragma: no cover - defensive fallback
+        return False
+    else:
+        return True
