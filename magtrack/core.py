@@ -372,7 +372,7 @@ def _qi_quadratic_offsets(samples):
     return offsets
 
 
-def qi_refine_xy(stack, x_old, y_old):
+def qi(stack, x_old, y_old):
     """Refine centers using quadratic interpolation along x and y axes.
 
     This routine samples the intensity profiles along the horizontal and

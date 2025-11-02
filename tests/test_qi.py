@@ -8,7 +8,7 @@ from magtrack._cupy import cp
 from magtrack.simulation import simulate_beads
 
 
-class TestQiRefineXY(unittest.TestCase):
+class TestQi(unittest.TestCase):
     if magtrack.utils.check_cupy():
         xp_modules = (np, cp)
     else:
@@ -83,7 +83,7 @@ class TestQiRefineXY(unittest.TestCase):
             msg=f"Maximum offset {max_offset:.3f} exceeded tolerance {tolerance}",
         )
 
-    def test_qi_refine_xy_reaches_subpixel_accuracy(self):
+    def test_qi_reaches_subpixel_accuracy(self):
         tolerance = 0.1
         for xp in self.xp_modules:
             stack = self._to_xp(xp, self.stack_np)
@@ -91,19 +91,19 @@ class TestQiRefineXY(unittest.TestCase):
             expected_y = self._to_xp(xp, self.expected_y_np)
             guess_x, guess_y = self._initial_guesses(xp, expected_x, expected_y)
 
-            refined_x, refined_y = magtrack.qi_refine_xy(stack, guess_x, guess_y)
+            refined_x, refined_y = magtrack.qi(stack, guess_x, guess_y)
             offsets = self._compute_offsets(xp, refined_x, refined_y, expected_x, expected_y)
 
             self._assert_within_tolerance(xp, offsets, tolerance)
 
-    def test_qi_refine_xy_improves_initial_guess(self):
+    def test_qi_improves_initial_guess(self):
         for xp in self.xp_modules:
             stack = self._to_xp(xp, self.stack_np)
             expected_x = self._to_xp(xp, self.expected_x_np)
             expected_y = self._to_xp(xp, self.expected_y_np)
             guess_x, guess_y = self._initial_guesses(xp, expected_x, expected_y)
 
-            refined_x, refined_y = magtrack.qi_refine_xy(stack, guess_x, guess_y)
+            refined_x, refined_y = magtrack.qi(stack, guess_x, guess_y)
 
             refined_offsets = self._compute_offsets(
                 xp, refined_x, refined_y, expected_x, expected_y
@@ -124,7 +124,7 @@ class TestQiRefineXY(unittest.TestCase):
                 msg="Refined offsets are not uniformly better than initial offsets",
             )
 
-    def test_qi_refine_xy_does_not_modify_inputs(self):
+    def test_qi_does_not_modify_inputs(self):
         for xp in self.xp_modules:
             stack = self._to_xp(xp, self.stack_np.copy())
             expected_x = self._to_xp(xp, self.expected_x_np)
@@ -135,7 +135,7 @@ class TestQiRefineXY(unittest.TestCase):
             guess_x_copy = guess_x.copy()
             guess_y_copy = guess_y.copy()
 
-            magtrack.qi_refine_xy(stack, guess_x, guess_y)
+            magtrack.qi(stack, guess_x, guess_y)
 
             stack_diff = self._to_numpy(xp, stack - stack_copy)
             guess_x_diff = self._to_numpy(xp, guess_x - guess_x_copy)
