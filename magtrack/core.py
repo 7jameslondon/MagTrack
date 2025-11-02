@@ -960,19 +960,22 @@ def stack_to_xyzp(stack, zlut=None):
     """Estimate XYZ coordinates and radial profiles from an image stack.
 
     This convenience wrapper orchestrates the CPU/GPU-agnostic pipeline used
-    throughout MagTrack: the stack is first centroided with
-    :func:`center_of_mass`, refined with :func:`auto_conv`, further sharpened by
-    five fixed iterations of :func:`auto_conv_multiline_sub_pixel`, and then
+    throughout MagTrack: the x and y are first estimated with
+    :func:`center_of_mass`, refined with :func:`auto_conv`, further refined by
+    five iterations of :func:`auto_conv_multiline_sub_pixel`, and then
     converted into radial profiles via :func:`radial_profile`. When a Z-look-up
     table is provided, :func:`lookup_z` translates those profiles into axial
-    coordinates; otherwise, NaNs are returned for the Z channel.
+    coordinates; otherwise, NaNs are returned for the z.
+
+    Note: CPU or GPU: The code is agnostic of CPU and GPU usage. If the first
+    parameter is on the GPU the computation/result will be on the GPU.
+    Otherwise, the computation/result will be on the CPU.
 
     Parameters
     ----------
     stack : array-like, shape (n_pixels, n_pixels, n_images)
-        3-D image stack containing square frames. The array can reside on the
-        CPU (NumPy) or GPU (CuPy); the routine automatically dispatches the
-        computation using :func:`cupy.get_array_module`.
+        3-D image stack containing square images. The array can reside on the
+        CPU (NumPy) or GPU (CuPy).
     zlut : array-like, shape (1 + n_bins, n_ref), optional
         Radial-profile look-up table whose first row stores the reference
         z-positions and remaining rows contain the corresponding template
@@ -980,11 +983,14 @@ def stack_to_xyzp(stack, zlut=None):
 
     Returns
     -------
-    tuple of array-like
-        ``(x, y, z, profiles)`` where ``x`` and ``y`` are the lateral
-        center-of-mass coordinates, ``z`` is either the interpolated axial
-        position derived from ``zlut`` or a NaN array when ``zlut`` is absent,
-        and ``profiles`` holds the radial intensity profiles for each frame.
+    x : 1D float array, shape (n_images)
+        x-coordinates
+    y : 1D float array, shape (n_images)
+        y-coordinates
+    z : 1D float array, shape (n_images)
+        z-coordinates or a NaN array when ``zlut`` is None
+    profiles : 2D float array, shape (n_bins, n_images)
+        The average radial profile of each image about the center
     """
     # GPU or CPU?
     xp = cp.get_array_module(stack)
