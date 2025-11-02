@@ -216,7 +216,7 @@ def crop_stack_to_rois(stack, rois):
 
 
 def parabolic_vertex(data, vertex_est, n_local: int, weighted=True):
-    """Refine local extrema using parabolic interpolation.
+    """Refine local min/max using parabolic interpolation.
 
     Given an estimated location of a local minimum or maximum, this function
     fits the surrounding datapoints to a parabola and interpolates the vertex.
@@ -227,14 +227,10 @@ def parabolic_vertex(data, vertex_est, n_local: int, weighted=True):
 
     Parameters
     ----------
-    data : array_like of float, shape (n_datasets, n_datapoints)
-        Sequence of datasets arranged row-wise for fitting. Accepts inputs on
-        either the NumPy or CuPy backend; the computation follows the module
-        that backs ``data``.
-    vertex_est : array_like of float, shape (n_datasets,)
-        Initial vertex estimates corresponding to each dataset. The values may
-        come from either NumPy or CuPy arrays and should reside on the same
-        backend as ``data``.
+    data : array of float, shape (n_datasets, n_datapoints)
+        Sequence of datasets arranged row-wise for fitting.
+    vertex_est : array of float, shape (n_datasets,)
+        Initial vertex estimates corresponding to each dataset.
     n_local : int
         The number of local datapoints to be fit. Must be an odd integer >= 3.
     weighted : bool, optional
@@ -243,9 +239,8 @@ def parabolic_vertex(data, vertex_est, n_local: int, weighted=True):
 
     Returns
     -------
-    vertex : array_like of float, shape (n_datasets,)
-        Refined vertex locations returned on the same array module that backs
-        ``data``.
+    vertex : array of float, shape (n_datasets,)
+        Refined vertex locations
     """
 
     # GPU or CPU?
