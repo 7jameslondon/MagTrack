@@ -488,14 +488,13 @@ def center_of_mass(stack, background='none'):
 # ---------- Auto-convolution functions ---------- #
 
 def auto_conv(stack, x_old, y_old, return_conv=False):
-    """
-    Re-calculate center of symmetric object by auto-convolution
+    """Recalculate the center of a symmetric object using auto-convolution.
 
-    For each 2D image of a 3D image-stack: use the previous center to select
+    For each 2D image of a 3D image stack, use the previous center to select
     the central row and column. Convolve these against reversed versions of
     themselves (auto-convolution). Then take the maximum as the new center.
-    Optionally, by setting return_conv to True the convolution results can be
-    returned directly. This is useful for sub-pixel fitting.
+    Optionally, by setting ``return_conv`` to ``True`` the convolution results
+    can be returned directly, which is useful for sub-pixel fitting.
 
     Note: CPU or GPU: The code is agnostic of CPU and GPU usage. If the first
     parameter is on the GPU the computation/result will be on the GPU.
@@ -504,33 +503,36 @@ def auto_conv(stack, x_old, y_old, return_conv=False):
     Parameters
     ----------
     stack : 3D float array, shape (n_pixels, n_pixels, n_images)
-        The image-stack. The images must be square.
-    x_old : 1D float array, shape (n_images)
+        The image stack. The images must be square.
+    x_old : 1D float array, shape (n_images,)
         Estimated x coordinates near the true centers.
-    y_old : 1D float array, shape (n_images)
+    y_old : 1D float array, shape (n_images,)
         Estimated y coordinates near the true centers.
     return_conv : bool, optional
-        Whether to return the convolution or return the new center.
-        The default is False.
+        Whether to return the convolutions instead of the updated centers.
+        The default is ``False``.
 
     Returns
-    ----------
-    tuple
-        see information below
-    If return_conv is False:
-        x : 1D float array, shape (n_images,)
-            The x coordinates of the center
-        y : 1D float array, shape (n_images,)
-            The y coordinates of the center
-    If return_conv is True:
-        col_max : 1D float array, shape (n_images,)
-            The index of the maximum of the column convolution
-        row_max : 1D float array, shape (n_images,)
-            The index of the maximum of the row convolution
-        col_con : 2D float array, shape (n_pixels, n_images)
-            The column convolution
-        row_con : 2D float array, shape (n_pixels, n_images)
-            The row convolution
+    -------
+    tuple of ndarray
+        Return values differ depending on ``return_conv``:
+
+        If ``return_conv`` is ``False``
+            x : 1D float array, shape (n_images,)
+                The x coordinates of the center.
+            y : 1D float array, shape (n_images,)
+                The y coordinates of the center.
+
+        If ``return_conv`` is ``True``
+            col_max : 1D int array, shape (n_images,)
+                Indices of the maxima of the column convolutions.
+            row_max : 1D int array, shape (n_images,)
+                Indices of the maxima of the row convolutions.
+            col_con : 2D float array, shape (n_pixels, n_images)
+                Column convolutions (unchanged orientation).
+            row_con : 2D float array, shape (n_images, n_pixels)
+                Row convolutions; note the axes are ordered
+                ``(n_images, n_pixels)``.
     """
     # GPU or CPU?
     xp = cp.get_array_module(stack)
