@@ -43,19 +43,15 @@ Optional: For GPU acceleration on a computer with an NVIDIA CUDA GPU, you may ne
 ## ⚒ Usage
 ```
 import magtrack
-import tifffile # use your preferred library to import a video
-
-# Import a video
-stack = tifffile.imread('my_video.tiff')
 
 # Run the full default XYZ pipeline
 x, y, z, profiles = magtrack.stack_to_xyzp(stack)
 
 # Or make your own pipeline from algorithms you prefer
 x, y = magtrack.center_of_mass(stack)
-x, y = magtrack.auto_conv(stack, x, y)
+x, y = magtrack.auto_conv_sub_pixel(stack, x, y)
 profiles = magtrack.fft_profile(stack)
-
+...
 ```
 ### More Examples
 You can see more examples of how to use MagTrack in [this notebook](https://github.com/7jameslondon/MagTrack/blob/master/examples/examples.ipynb).
