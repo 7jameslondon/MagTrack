@@ -226,12 +226,10 @@ def crop_stack_to_rois(stack, rois):
 
 
 def parabolic_vertex(data, vertex_est, n_local: int, weighted=True):
-    """
-    Refines a local min/max by parabolic interpolation.
+    """Refine local min/max using parabolic interpolation.
 
-    Given an estimated location of a local min/max, this function will find a
-    more precise location of the vertex by fitting the local datapoints to a
-    parabola and interpolating the vertex.
+    Given an estimated location of a local minimum or maximum, this function
+    fits the surrounding datapoints to a parabola and interpolates the vertex.
 
     Note: CPU or GPU: The code is agnostic of CPU and GPU usage. If the first
     parameter is on the GPU the computation/result will be on the GPU.
@@ -239,20 +237,20 @@ def parabolic_vertex(data, vertex_est, n_local: int, weighted=True):
 
     Parameters
     ----------
-    data : 2D cupy float array, shape (n_datasets, n_datapoints)
-        The data to be fit where each row is a dataset and columns are the data
-        points.
-    vertex_est : 1D cupy float, shape (n_datasets)
-        The estimated location of the vertex.
+    data : array of float, shape (n_datasets, n_datapoints)
+        Sequence of datasets arranged row-wise for fitting.
+    vertex_est : array of float, shape (n_datasets,)
+        Initial vertex estimates corresponding to each dataset.
     n_local : int
-        The number of local datapoints to be fit. Must be an odd int >=3.
+        The number of local datapoints to be fit. Must be an odd integer >= 3.
     weighted : bool, optional
-        Whether to apply a simple weighting procedure to emphasize the more cental points in the fit. Default is True.
+        Whether to apply a simple weighting procedure to emphasize the more
+        central points in the fit. Default is True.
 
     Returns
-    ----------
-    vertex : 1D cupy float array
-        The precise location of the vertex.
+    -------
+    vertex : array of float, shape (n_datasets,)
+        Refined vertex locations
     """
 
     # GPU or CPU?
