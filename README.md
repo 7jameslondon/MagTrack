@@ -3,7 +3,7 @@
 </h1><br>
 
 [![PyPi](https://img.shields.io/pypi/v/magtrack.svg)](https://pypi.org/project/magtrack/)
-[![Docs](https://img.shields.io/readthedocs/magtrack/latest.svg)](https://magtrack.readthedocs.io/en/latest/)
+[![Docs](https://img.shields.io/readthedocs/magtrack/stable.svg)](https://magtrack.readthedocs.io/en/stable/)
 [![Paper](https://img.shields.io/badge/DOI-INSERTDOI-blue)](
 https://doi.org/DOI-INSERTDOI)
 [![Python package](https://github.com/7jameslondon/MagTrack/actions/workflows/python-package.yml/badge.svg)](https://github.com/7jameslondon/MagTrack/actions/workflows/python-package.yml)
@@ -59,7 +59,7 @@ You can download it and run it on your computer.
 Or try it out with Google Colab. [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/7jameslondon/MagTrack/blob/master/examples/examples.ipynb)
 
 ## 📖 Documentation
-View the full documentation at [magtrack.readthedocs.io](https://magtrack.readthedocs.io/en/latest/)
+View the full documentation at [magtrack.readthedocs.io](https://magtrack.readthedocs.io/en/stable/)
 
 ## 💬 Support
 Report issues, make requests, and ask questions on the [GitHub issue tracker](https://github.com/7jameslondon/MagTrack/issues)
