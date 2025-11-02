@@ -961,6 +961,41 @@ def stack_to_xyzp_advanced(stack, zlut=None, **kwargs):
 
 
 def stack_to_xyzp(stack, zlut=None):
+    """Estimate XYZ coordinates and radial profiles from an image stack.
+
+    This convenience wrapper orchestrates the CPU/GPU-agnostic pipeline used
+    throughout MagTrack: the x and y are first estimated with
+    :func:`center_of_mass`, refined with :func:`auto_conv`, further refined by
+    five iterations of :func:`auto_conv_multiline_sub_pixel`, and then
+    converted into radial profiles via :func:`radial_profile`. When a Z-look-up
+    table is provided, :func:`lookup_z` translates those profiles into axial
+    coordinates; otherwise, NaNs are returned for the z.
+
+    Note: CPU or GPU: The code is agnostic of CPU and GPU usage. If the first
+    parameter is on the GPU the computation/result will be on the GPU.
+    Otherwise, the computation/result will be on the CPU.
+
+    Parameters
+    ----------
+    stack : array-like, shape (n_pixels, n_pixels, n_images)
+        3-D image stack containing square images. The array can reside on the
+        CPU (NumPy) or GPU (CuPy).
+    zlut : array-like, shape (1 + n_bins, n_ref), optional
+        Radial-profile look-up table whose first row stores the reference
+        z-positions and remaining rows contain the corresponding template
+        profiles. If omitted, the axial coordinate output is filled with NaNs.
+
+    Returns
+    -------
+    x : 1D float array, shape (n_images)
+        x-coordinates
+    y : 1D float array, shape (n_images)
+        y-coordinates
+    z : 1D float array, shape (n_images)
+        z-coordinates or a NaN array when ``zlut`` is None
+    profiles : 2D float array, shape (n_bins, n_images)
+        The average radial profile of each image about the center
+    """
     # GPU or CPU?
     xp = cp.get_array_module(stack)
 
