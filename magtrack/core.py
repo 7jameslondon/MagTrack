@@ -148,7 +148,6 @@ def gaussian_2d(x, y, mu_x, mu_y, sigma):
 
     Calculates a 2D Gaussian image for each center (mu_x, mu_y) provided along
     the grid (x, y) all sharing the same sigma in x and y (sigma).
-    across images.
 
     Note: CPU or GPU: The code is agnostic of CPU and GPU usage. If the first
     parameter is on the GPU the computation/result will be on the GPU.
@@ -198,7 +197,7 @@ def crop_stack_to_rois(stack, rois):
     stack : 3D ndarray of any type, shape (stack_width, stack_height, n_images)
         Note the images must be square.
     rois : 2D int ndarray, shape (n_roi, 4)
-        Each row is an ROI. The columns are [left, right, top, bottom].
+        Each row is an ROI. The columns are [top, bottom, left, right].
 
     Returns
     ----------
@@ -625,8 +624,9 @@ def auto_conv_multiline(stack, x_old, y_old, line_ratio=0.05, return_conv=False)
     Re-calculate center of symmetric object by multi-line auto-convolution
 
     For each 2D image of a 3D image-stack: use the previous center to select
-    the central row and column. Convolve these against reversed versions of
-    themselves (auto-convolution). Then take the maximum as the new center.
+    multiple rows and columns (determined by ``line_ratio``). Average the
+    resulting signals, convolve them against themselves (auto-convolution)
+    Then take the maximum as the new center.
     Optionally, by setting return_conv to True the convolution results can be
     returned directly. This is useful for sub-pixel fitting.
 
@@ -960,7 +960,7 @@ def lookup_z(profiles, zlut, n_local=5):
 
 def stack_to_xyzp_advanced(stack, zlut=None, **kwargs):
     """
-    Calculate image-stack XYZ and profiles (Z is None if Z-LUT is None)
+    Calculate image-stack XYZ and profiles (Z is nan if Z-LUT is None)
 
     Parameters
     ----------
