@@ -30,6 +30,15 @@ dependencies = [
 [project.optional-dependencies]
 cpu = []
 gpu = ["cupy-cuda12x>=13.0; sys_platform != 'darwin'"]
+docs = [
+    "sphinx>=7",
+    "furo",
+    "myst-parser",
+    "sphinx-autoapi",
+    "sphinx-copybutton",
+    "sphinx-design",
+    "sphinx-autodoc-typehints",
+]
 
 [project.urls]
 Homepage = "https://github.com/7jameslondon/MagTrack"
