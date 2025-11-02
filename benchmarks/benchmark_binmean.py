@@ -7,7 +7,7 @@ import numpy as np
 import confbenchmarks  # noqa: F401  # Ensures repository root on sys.path
 import magtrack
 from benchmarks.cpu_benchmark import cpu_benchmark
-from magtrack._cupy import cp
+from magtrack._cupy import cp, check_cupy
 
 
 def _generate_inputs(xp, n_values: int, n_datasets: int, n_bins: int):
@@ -52,7 +52,7 @@ def benchmark_binmean(
     _print_summary("CPU", cpu_results.cpu_times)
 
     # GPU benchmark
-    if not magtrack.utils.check_cupy():
+    if not check_cupy():
         print("CuPy with GPU support is not available; skipping GPU benchmark.")
         return
 

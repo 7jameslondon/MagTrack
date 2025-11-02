@@ -4,11 +4,11 @@ import numpy as np
 
 import tests.conftests  # noqa: F401  # Ensure test package path setup
 import magtrack
-from magtrack._cupy import cp
+from magtrack._cupy import cp, check_cupy
 
 
 class TestBinMean(unittest.TestCase):
-    if magtrack.utils.check_cupy():
+    if check_cupy():
         xp_modules = (np, cp)
     else:
         xp_modules = (np,)
