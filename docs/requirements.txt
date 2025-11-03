@@ -2,3 +2,5 @@ Sphinx
 sphinx-autoapi
 sphinx-autodoc-typehints
 sphinx-design
+sphinx-book-theme
+sphinx_copybutton

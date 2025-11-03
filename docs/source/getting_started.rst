@@ -4,19 +4,17 @@ Getting Started
 What is MagTrack?
 -----------------
 MagTrack is a Python package for tracking symmetric beads in single-molecule magnetic tweezers experiments. The
-library focuses on fast, accurate bead localization and includes an optional GPU pipeline for labs with CUDA-capable
-hardware. Out of the box it provides documented, benchmarked algorithms that return sub-pixel XYZ coordinates and the
-underlying radial intensity profiles used during axial fitting.
+library focuses on fast, accurate bead localization and includes an optional GPU acceleration for labs with CUDA-capable
+hardware.
 
 Key features
 ------------
 
-* GPU accelerated (optional, requires a CUDA GPU)
 * Sub-pixel XYZ coordinates
-* Python notebook included with examples
-* Documented, tested, and benchmarked
-* Only depends on NumPy, SciPy, and CuPy
-* Actively maintained
+* GPU accelerated (optional, requires a CUDA GPU)
+* Python notebook included with `examples <https://colab.research.google.com/github/7jameslondon/MagTrack/blob/master/examples/examples.ipynb>`_
+* `Documented <https://magtrack.readthedocs.io/en/stable/>`_, `tested <https://github.com/7jameslondon/MagTrack/actions/workflows/python-package.yml>`_, and `benchmarked <https://github.com/7jameslondon/MagTrack/tree/master/benchmarks>`_
+* Only depends on `NumPy <https://numpy.org/>`_, `SciPy <https://scipy.org/>`_, and `CuPy <https://cupy.dev/>`_
 
 System requirements
 -------------------
@@ -25,10 +23,15 @@ MagTrack requires Python 3.9 or newer as well as recent versions of NumPy and Sc
 available through CuPy (CUDA 12.x builds). The package works on Windows, Linux, and macOS. macOS can run the CPU
 algorithms, but NVIDIA GPU acceleration is only available on platforms with CUDA support.
 
+* Python >=3.9
+* NumPy >=1.26
+* SciPy >=1.11.1
+* (Optional) CuPy-CUDA12x >=13.0
+
 Installation
 ------------
 
-Install the latest release from PyPI. Include the ``[gpu]`` extra if you plan to use CuPy-based acceleration:
+Install the latest release from PyPI. Include the ``[gpu]`` extra if you plan to use CuPy-based GPU acceleration:
 
 .. code-block:: console
 
@@ -55,21 +58,21 @@ locate the package and that the compiled extensions were installed correctly:
    import magtrack
    print(magtrack.__version__)
 
-You can also execute the quick-start pipeline, which converts an image stack into lateral and axial bead coordinates:
+You can also try a function like center-of-mass, which converts an image stack into x,y bead coordinates:
 
 .. code-block:: python
 
    import magtrack
+   import numpy as np
 
-   x, y, z, profiles = magtrack.stack_to_xyzp(stack)
+   stack = np.zeros((10, 10, 3))
+   x, y = magtrack.center_of_mass(stack)
 
-Here ``stack`` is a 3D NumPy array of bead images (frames × rows × columns). The function returns the fitted lateral
-coordinates ``x`` and ``y``, axial positions ``z``, and the radial profiles ``profiles`` that were used in the axial fit.
+   print(f'x: {x}')
+   print(f'y: {y}')
 
 Explore the examples
 --------------------
 
 The ``examples/examples.ipynb`` notebook walks through the core functionality, including simulation, tracking, and GPU
-acceleration. Download the notebook to run it locally or open it in Google Colab from the README badge. The notebook's
-scenarios are mirrored throughout the :doc:`user_guide`, so reading both side-by-side provides an effective first tour of
-MagTrack.
+acceleration. `Download <https://github.com/7jameslondon/MagTrack/blob/master/examples/examples.ipynb>`_ the notebook to run it locally or open it in `Google Colab <https://colab.research.google.com/github/7jameslondon/MagTrack/blob/master/examples/examples.ipynb>`_.

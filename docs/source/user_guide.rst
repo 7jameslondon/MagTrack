@@ -1,8 +1,7 @@
 User Guide
 ==========
 
-This guide mirrors the walkthrough in ``examples/examples.ipynb`` and demonstrates the core algorithms provided by
-MagTrack. All snippets below assume the following imports:
+To start import magtrack. Here we will also import a simulation and NumPy.
 
 .. code-block:: python
 
