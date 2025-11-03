@@ -32,10 +32,12 @@ exclude_patterns = []
 
 html_theme = 'sphinx_book_theme'
 html_static_path = ['_static']
+html_logo = "../../logo.png"
 
 html_theme_options = {
     "repository_url": "https://github.com/7jameslondon/MagTrack",
     "use_repository_button": True,
+    "path_to_docs": "docs/source",
 }
 
 autosummary_generate = True

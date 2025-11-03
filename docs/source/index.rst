@@ -3,7 +3,7 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-MagTrack documentation
+MagTrack Documentation
 ======================
 
 |pypi| |docs| |doi| |git|
@@ -26,15 +26,45 @@ MagTrack documentation
 
 MagTrack is a Python package for tracking symmetric beads in single-molecule magnetic tweezers experiments.
 
-.. toctree::
-   :maxdepth: 2
-   :caption: Guides
+.. grid:: 2
+   :gutter: 2
 
-   getting_started
-   user_guide
+   .. grid-item-card:: Guides
+      :link: getting_started
+      :link-type: doc
+      :text-align: center
+      :shadow: md
 
-.. toctree::
-   :maxdepth: 1
-   :caption: API Reference
+      :octicon:`rocket;3rem;sd-text-info`
 
-   api/index
+      Quick starts and tutorials.
+
+   .. grid-item-card:: User Guide
+      :link: user_guide
+      :link-type: doc
+      :text-align: center
+      :shadow: md
+
+      :octicon:`book;3rem;sd-text-success`
+
+      Examples and tips.
+
+   .. grid-item-card:: API Reference
+      :link: api/index
+      :link-type: doc
+      :text-align: center
+      :shadow: md
+
+      :octicon:`code;3rem;sd-text-primary`
+
+      Full module documentation.
+
+   .. grid-item-card:: GitHub
+      :link: https://github.com/7jameslondon/MagTrack
+      :link-type: url
+      :text-align: center
+      :shadow: md
+
+      :octicon:`mark-github;3rem;sd-text-dark`
+
+      Source code, issues, and releases.

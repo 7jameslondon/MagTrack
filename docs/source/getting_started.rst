@@ -50,7 +50,7 @@ instructions.
 Verify the installation
 -----------------------
 
-After installing, import :mod:`magtrack` in a Python session and print the version string. This confirms that Python can
+After installing, import MagTrack in a Python session and print the version string. This confirms that Python can
 locate the package and that the compiled extensions were installed correctly:
 
 .. code-block:: python

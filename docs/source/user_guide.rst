@@ -1,6 +1,32 @@
 User Guide
 ==========
 
+.. admonition:: Run this guide
+   :class: tip
+
+   .. grid:: 2
+      :gutter: 2
+      :margin: 2 0 0 0
+
+      .. grid-item::
+         .. button-link:: https://colab.research.google.com/github/7jameslondon/MagTrack/blob/master/examples/examples.ipynb
+            :color: primary
+            :shadow:
+            :expand:
+
+            Open in Google Colab
+
+      .. grid-item::
+         .. button-link:: https://github.com/7jameslondon/MagTrack/blob/master/examples/examples.ipynb
+            :color: secondary
+            :shadow:
+            :expand:
+
+            Or download and run
+
+Import MagTrack
+----------------------
+
 To start import magtrack. Here we will also import a simulation and NumPy.
 
 .. code-block:: python
@@ -13,7 +39,7 @@ Simulating bead stacks
 ----------------------
 
 The :mod:`magtrack.simulation` module can synthesize bead image stacks for testing and benchmarking. The snippet below
-matches the notebook's opening cell and generates a stack of 100 frames where the bead drifts laterally while oscillating
+matches generates a stack of 100 frames where the bead drifts laterally while oscillating
 in the vertical direction:
 
 .. code-block:: python
@@ -47,7 +73,7 @@ frame mean, and ``"median"`` subtracts the frame median for the most robust accu
    y_com_nm = y_com_px * nm_per_px
 
 Because the simulated data provides the ground-truth positions, you can compute the per-frame localization error and
-plot it alongside the measured trajectories as shown in the notebook.
+plot it alongside the measured trajectories.
 
 Refining XY positions
 ---------------------
@@ -73,7 +99,7 @@ result multiple times to progressively reduce the residual error:
    x_qi3_px, y_qi3_px = magtrack.qi(stack, x_qi2_px, y_qi2_px)
 
 Each pass returns a new set of sub-pixel coordinates. Comparing the error traces from the center-of-mass, auto
-convolution, and QI routines highlights the accuracy/throughput trade-offs discussed in the notebook.
+convolution, and QI routines highlights the accuracy/throughput trade-offs.
 
 Working with radial profiles and axial lookup
 ---------------------------------------------
@@ -131,26 +157,18 @@ Accelerating with GPUs
 ----------------------
 
 All MagTrack functions operate on either NumPy arrays (CPU) or CuPy arrays (GPU). To use the GPU, move the stack to
-device memory and call the same functions. The example notebook benchmarks the center-of-mass algorithm on both
-architectures:
+device memory and call the same functions.
 
 .. code-block:: python
 
    import cupy as cp
-   from time import perf_counter
 
+   # Move stack to GPU
    stack_gpu = cp.asarray(stack)
 
-   # Warm up the GPU kernels
-   for _ in range(10):
-       magtrack.center_of_mass(stack_gpu, background="median")
+   x_com_px_gpu, y_com_px_gpu = magtrack.center_of_mass(stack_gpu, background="median")
 
-   start = perf_counter()
-   for _ in range(1000):
-       magtrack.center_of_mass(stack_gpu, background="median")
-   gpu_time = (perf_counter() - start) / 1000
+   # Move values back to CPU
+   x_com_px = cp.asnumpy(x_com_px_gpu)
+   y_com_px = cp.asnumpy(y_com_px_gpu)
 
-   print(f"GPU took an average of {gpu_time:.6f} seconds")
-
-Use ``cp.cuda.runtime.getDeviceCount()`` to confirm that CUDA devices are available before launching GPU workloads.
-When running inside Google Colab, ensure that the runtime type is set to GPU in order to access the accelerated kernels.
