@@ -151,20 +151,19 @@ for func_name in BENCH_FUNCS:
             kwargs = {}
 
             # choose arguments
-            match func_name:
-                case 'center_of_mass':
-                    args_cpu = (stack_cpu, )
-                case 'auto_conv' | "auto_conv_para_fit" | "radial_profile" | "fft_profile":
-                    x = size/2 * np.ones((n_img, ), dtype=np.float64)
-                    y = size/2 * np.ones((n_img,), dtype=np.float64)
-                    args_cpu = (stack_cpu, x, y)
-                case 'lookup_z_para_fit':
-                    profiles = np.random.uniform(0.001, 1.3, size=((size//4) * 1, n_img)).astype(np.float64)
-                    zlut = np.random.uniform(0.001, 1.3, size=(1 + (size // 4) * 1, 200)).astype(np.float64)
-                    args_cpu = (profiles, zlut)
-                case 'stack_to_xyzp':
-                    zlut = np.random.uniform(0.001, 1.3, size=(1 + (size // 4) * 1, 200)).astype(np.float64)
-                    args_cpu = (stack_cpu, zlut)
+            if func_name == 'center_of_mass':
+                args_cpu = (stack_cpu, )
+            elif func_name in ['auto_conv', "auto_conv_para_fit", "radial_profile", "fft_profile"]:
+                x = size/2 * np.ones((n_img, ), dtype=np.float64)
+                y = size/2 * np.ones((n_img,), dtype=np.float64)
+                args_cpu = (stack_cpu, x, y)
+            elif func_name == 'lookup_z_para_fit':
+                profiles = np.random.uniform(0.001, 1.3, size=((size//4) * 1, n_img)).astype(np.float64)
+                zlut = np.random.uniform(0.001, 1.3, size=(1 + (size // 4) * 1, 200)).astype(np.float64)
+                args_cpu = (profiles, zlut)
+            elif func_name == 'stack_to_xyzp':
+                zlut = np.random.uniform(0.001, 1.3, size=(1 + (size // 4) * 1, 200)).astype(np.float64)
+                args_cpu = (stack_cpu, zlut)
 
             # ---------- CPU benchmark ----------
             result_cpu = cpu_benchmark(func, args=args_cpu, kwargs=kwargs, n_repeat=N_REPEAT)
