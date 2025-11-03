@@ -9,12 +9,12 @@
 
 MagTrack is a Python package for tracking symmetric beads in single-molecule magnetic tweezers experiments. 
 
-* GPU accelerated (optional, requires a CUDA GPU)
 * Sub-pixel XYZ coordinates
-* Python notebook included with examples
-* Documented, tested, and benchmarked
-* Only depends on NumPy, SciPy, and CuPy
-* Actively maintained
+* GPU accelerated (optional, requires a CUDA GPU)
+* Python notebook included with [examples](https://colab.research.google.com/github/7jameslondon/MagTrack/blob/master/examples/examples.ipynb)
+* [Documented](https://magtrack.readthedocs.io/en/stable/), [tested](https://github.com/7jameslondon/MagTrack/actions/workflows/python-package.yml), and [benchmarked](https://github.com/7jameslondon/MagTrack/tree/master/benchmarks)
+* Only depends on [NumPy](https://numpy.org/), [SciPy](https://scipy.org/), and [CuPy](https://cupy.dev/)
+* Actively maintained until at least end of 2026
 
 Try a demo in a Google Colab notebook:
 [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/7jameslondon/MagTrack/blob/master/examples/examples.ipynb)
@@ -61,5 +61,6 @@ Or try it out with Google Colab. [![Open in Colab](https://colab.research.google
 View the full documentation at [magtrack.readthedocs.io](https://magtrack.readthedocs.io/en/stable/)
 
 ## 💬 Support
-Report issues, make requests, and ask questions on the [GitHub issue tracker](https://github.com/7jameslondon/MagTrack/issues)<br>
+Having trouble? Need help? Have suggestions? Or want to contribute code?
+Report issues and make requests on the [GitHub issue tracker](https://github.com/7jameslondon/MagTrack/issues)<br>
 Or email us at magtrackandmagscope@gmail.com
