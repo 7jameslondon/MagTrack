@@ -14,7 +14,6 @@ MagTrack is a Python package for tracking symmetric beads in single-molecule mag
 * Python notebook included with [examples](https://colab.research.google.com/github/7jameslondon/MagTrack/blob/master/examples/examples.ipynb)
 * [Documented](https://magtrack.readthedocs.io/en/stable/), [tested](https://github.com/7jameslondon/MagTrack/actions/workflows/python-package.yml), and [benchmarked](https://github.com/7jameslondon/MagTrack/tree/master/benchmarks)
 * Only depends on [NumPy](https://numpy.org/), [SciPy](https://scipy.org/), and [CuPy](https://cupy.dev/)
-* Actively maintained until at least end of 2026
 
 Try a demo in a Google Colab notebook:
 [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/7jameslondon/MagTrack/blob/master/examples/examples.ipynb)
