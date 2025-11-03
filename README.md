@@ -4,7 +4,7 @@
 
 [![PyPi](https://img.shields.io/pypi/v/magtrack.svg)](https://pypi.org/project/magtrack/)
 [![Docs](https://img.shields.io/readthedocs/magtrack/stable.svg)](https://magtrack.readthedocs.io/en/stable/)
-[![Paper](https://img.shields.io/badge/DOI-INSERTDOI-blue)](https://doi.org/10.1101/2025.10.31.685671)
+[![Paper](https://img.shields.io/badge/DOI-10.1101/2025.10.31.685671-blue)](https://doi.org/10.1101/2025.10.31.685671)
 [![Python package](https://github.com/7jameslondon/MagTrack/actions/workflows/python-package.yml/badge.svg)](https://github.com/7jameslondon/MagTrack/actions/workflows/python-package.yml)
 
 MagTrack is a Python package for tracking symmetric beads in single-molecule magnetic tweezers experiments. 
