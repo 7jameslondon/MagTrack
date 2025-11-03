@@ -173,20 +173,19 @@ for func_name in BENCH_FUNCS:
 
             # ---------- GPU benchmark ----------
             stack_gpu = cp.asarray(stack_cpu)
-            match func_name:
-                case 'center_of_mass':
-                    args_gpu = (stack_gpu,)
-                case 'auto_conv' | "auto_conv_para_fit" | "radial_profile" | "fft_profile":
-                    x_gpu = cp.asarray(x)
-                    y_gpu = cp.asarray(y)
-                    args_gpu = (stack_gpu, x_gpu, y_gpu)
-                case 'lookup_z_para_fit':
-                    profiles_gpu = cp.asarray(profiles)
-                    zlut_gpu = cp.asarray(zlut)
-                    args_gpu = (profiles_gpu, zlut_gpu)
-                case 'stack_to_xyzp':
-                    zlut_gpu = cp.asarray(zlut)
-                    args_gpu = (stack_gpu, zlut_gpu)
+            if func_name == 'center_of_mass':
+                args_gpu = (stack_gpu,)
+            elif func_name in ['auto_conv', "auto_conv_para_fit", "radial_profile", "fft_profile"]:
+                x_gpu = cp.asarray(x)
+                y_gpu = cp.asarray(y)
+                args_gpu = (stack_gpu, x_gpu, y_gpu)
+            elif func_name == 'lookup_z_para_fit':
+                profiles_gpu = cp.asarray(profiles)
+                zlut_gpu = cp.asarray(zlut)
+                args_gpu = (profiles_gpu, zlut_gpu)
+            elif func_name == 'stack_to_xyzp':
+                zlut_gpu = cp.asarray(zlut)
+                args_gpu = (stack_gpu, zlut_gpu)
             result_gpu = cupy_benchmark(func, args=args_gpu, kwargs=kwargs, n_repeat=N_REPEAT, n_warmup=10)
             mean_gpu = float(np.nanmean(result_gpu.gpu_times))
             sd_gpu = float(np.nanstd(result_gpu.gpu_times))
