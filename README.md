@@ -3,6 +3,7 @@
 </h1><br>
 
 [![PyPi](https://img.shields.io/pypi/v/magtrack.svg)](https://pypi.org/project/magtrack/)
+![Downloads](https://img.shields.io/pypi/dm/MagTrack)
 [![Docs](https://img.shields.io/readthedocs/magtrack/stable.svg)](https://magtrack.readthedocs.io/en/stable/)
 [![Paper](https://img.shields.io/badge/DOI-10.1101/2025.10.31.685671-blue)](https://doi.org/10.1101/2025.10.31.685671)
 [![Python package](https://github.com/7jameslondon/MagTrack/actions/workflows/python-package.yml/badge.svg)](https://github.com/7jameslondon/MagTrack/actions/workflows/python-package.yml)
