@@ -1,5 +1,5 @@
 <h1 align="center">
-<img src="https://raw.githubusercontent.com/7jameslondon/MagTrack/refs/heads/master/logo.png" width="300">
+<img src="https://raw.githubusercontent.com/7jameslondon/MagTrack/refs/heads/master/assets/logo.png" width="300">
 </h1><br>
 
 [![PyPi](https://img.shields.io/pypi/v/magtrack.svg)](https://pypi.org/project/magtrack/)
@@ -20,7 +20,7 @@ Try a demo in a Google Colab notebook:
 [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/7jameslondon/MagTrack/blob/master/examples/examples.ipynb)
 
 <h3 align="center">
-<img src="https://raw.githubusercontent.com/7jameslondon/MagTrack/refs/heads/master/demo.gif" width="600">
+<img src="https://raw.githubusercontent.com/7jameslondon/MagTrack/refs/heads/master/assets/demo.gif" width="600">
 </h3>
 
 ## ⏳ Install
