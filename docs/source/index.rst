@@ -7,8 +7,8 @@ MagTrack Documentation
    :target: https://pypi.org/project/magtrack/
    :alt: PyPI
 
-.. |docs| image:: https://img.shields.io/readthedocs/magtrack/stable.svg
-   :target: https://magtrack.readthedocs.io/en/stable/
+.. |docs| image:: https://img.shields.io/readthedocs/magtrack/latest.svg
+   :target: https://magtrack.readthedocs.io
    :alt: Docs
 
 .. |doi| image:: https://img.shields.io/badge/DOI-10.1101/2025.10.31.685671-blue

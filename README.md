@@ -4,7 +4,7 @@
 
 [![PyPi](https://img.shields.io/pypi/v/magtrack.svg)](https://pypi.org/project/magtrack/)
 [![Downloads](https://img.shields.io/pypi/dm/MagTrack)](https://pypi.org/project/magtrack/)
-[![Docs](https://img.shields.io/readthedocs/magtrack/stable.svg)](https://magtrack.readthedocs.io/en/stable/)
+[![Docs](https://img.shields.io/readthedocs/magtrack/latest.svg)](https://magtrack.readthedocs.io)
 [![Paper](https://img.shields.io/badge/DOI-10.1101/2025.10.31.685671-blue)](https://doi.org/10.1101/2025.10.31.685671)
 [![Python package](https://github.com/7jameslondon/MagTrack/actions/workflows/python-package.yml/badge.svg)](https://github.com/7jameslondon/MagTrack/actions/workflows/python-package.yml)
 
@@ -62,7 +62,7 @@ You can download it and run it on your computer.
 Or try it out with Google Colab. [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/7jameslondon/MagTrack/blob/master/examples/examples.ipynb)
 
 ## 📖 Documentation
-View the full documentation at [magtrack.readthedocs.io](https://magtrack.readthedocs.io/en/stable/)
+View the full documentation at [magtrack.readthedocs.io](https://magtrack.readthedocs.io)
 
 ## 💬 Support
 Having trouble? Need help? Have suggestions? Or want to contribute code?<br>
