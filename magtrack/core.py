@@ -1,7 +1,7 @@
 import warnings
 import numpy as np
 
-from ._cupy import cp, cupyx, is_cupy_available
+from magtrack._cupy import cp, cupyx, is_cupy_available
 
 if is_cupy_available():
     try:  # pragma: no cover - exercised when CuPy is installed without SciPy extras
