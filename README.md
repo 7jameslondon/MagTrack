@@ -13,7 +13,7 @@ MagTrack is a Python package for tracking symmetric beads in single-molecule mag
 * Sub-pixel XYZ coordinates
 * GPU accelerated (optional, requires a CUDA GPU)
 * Python notebook included with [examples](https://colab.research.google.com/github/7jameslondon/MagTrack/blob/master/examples/examples.ipynb)
-* [Documented](https://magtrack.readthedocs.io/en/stable/), [tested](https://github.com/7jameslondon/MagTrack/actions/workflows/python-package.yml), and [benchmarked](https://github.com/7jameslondon/MagTrack/tree/master/benchmarks)
+* [Documented](https://magtrack.readthedocs.io/en/stable/), [tested](https://github.com/7jameslondon/MagTrack/actions/workflows/python-package.yml), and [benchmarked](https://magtrack.readthedocs.io/en/stable/benchmarking.html)
 * Only depends on [NumPy](https://numpy.org/), [SciPy](https://scipy.org/), and [CuPy](https://cupy.dev/)
 
 Try a demo in a Google Colab notebook:
