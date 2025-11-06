@@ -18,6 +18,12 @@ def _mean(values: Sequence[float | None]) -> float:
     return float(np.mean(finite)) if finite else float("nan")
 
 
+def _normalize(value: float, baseline: float) -> float:
+    if np.isnan(value) or np.isnan(baseline) or baseline == 0:
+        return float("nan")
+    return float(value / baseline)
+
+
 def _resolve_run_id(log_root: Path, run_directory: Path | None, rows: Sequence[dict[str, object]]) -> str | None:
     if run_directory is not None:
         try:
@@ -76,8 +82,15 @@ def plot_benchmark_history(
             and row.get("benchmark") == benchmark
             and row.get("backend") == backend
         ]
-        latest_values.append(_mean(latest))
-        historical_values.append(_mean(historical))
+        combined = [v for v in latest + historical if v is not None]
+        baseline = _mean(combined)
+        latest_mean = _mean(latest)
+        historical_mean = _mean(historical)
+
+        latest_values.append(_normalize(latest_mean, baseline) if combined else float("nan"))
+        historical_values.append(
+            _normalize(historical_mean, baseline) if historical and combined else float("nan")
+        )
 
     if not labels:
         print("No benchmark entries were found to plot.")
@@ -87,13 +100,14 @@ def plot_benchmark_history(
     width = 0.38
 
     fig, ax = plt.subplots(figsize=(max(8, len(labels) * 0.8), 6))
-    ax.bar(x - width / 2, historical_values, width, label="Historical mean")
-    ax.bar(x + width / 2, latest_values, width, label="Latest run")
-    ax.set_ylabel("Mean runtime (s)")
-    ax.set_title("Benchmark runtime comparison")
+    ax.bar(x - width / 2, historical_values, width, label="Historical mean (relative)")
+    ax.bar(x + width / 2, latest_values, width, label="Latest run (relative)")
+    ax.set_ylabel("Relative runtime (× average)")
+    ax.set_title("Benchmark runtime comparison (normalised)")
     ax.set_xticks(x, labels, rotation=45, ha="right")
     ax.legend()
     ax.grid(axis="y", linestyle=":", alpha=0.4)
+    ax.axhline(1.0, color="black", linewidth=1, linestyle="--", alpha=0.6)
     fig.tight_layout()
 
     return fig

@@ -69,23 +69,3 @@ Having trouble? Need help? Have suggestions? Or want to contribute code?<br>
 Report issues and make requests on the [GitHub issue tracker](https://github.com/7jameslondon/MagTrack/issues)<br>
 Or email us at magtrackandmagscope@gmail.com
 
-## 📈 Benchmarks and performance tracking
-
-Run the automated benchmark orchestrator to execute every available benchmark suite, capture
-system metadata, and generate a comparison plot against previous runs:
-
-```bash
-python -m benchmarks.run_all
-```
-
-Each invocation records CPU and GPU runtimes (when CuPy is available) alongside host metadata
-(hostname, OS, Python and dependency versions, and optional `psutil`/CuPy hardware details).
-The results are written to JSON logs inside `benchmarks/logs/<system-id>/<timestamp>/results.json`,
-where `<system-id>` encodes the hostname, platform, and Python version, and `<timestamp>` uses a
-UTC timestamp such as `20240521T154500Z`.
-
-After every run the orchestrator also refreshes a consolidated CSV at
-`benchmarks/logs/combined_results.csv` that aggregates every historical benchmark entry. When a
-GUI backend is available a Matplotlib bar chart is displayed comparing the most recent run against
-the historical mean for each benchmark/backend pair. The raw log files can be version-controlled to
-track long-term performance regressions or improvements.

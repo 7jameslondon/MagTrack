@@ -67,7 +67,7 @@ def collect_system_metadata() -> tuple[str, str, dict[str, Any]]:
     }
 
     # Dependency versions via importlib.metadata when available.
-    for package in ("magtrack", "numpy", "cupy"):
+    for package in ("magtrack", "numpy", "scipy", "cupy"):
         try:
             metadata_dict["dependencies"][package] = metadata.version(package)
         except metadata.PackageNotFoundError:
