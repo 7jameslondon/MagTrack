@@ -26,7 +26,8 @@ Each invocation gathers host information so historical runs can be compared on
 equal footing. The metadata includes the hostname, operating system, CPU and
 memory (via :mod:`psutil` when available), GPU model details (via CuPy), the
 Python implementation, and installed versions of ``magtrack``, ``numpy``,
-``scipy``, and ``cupy``. The results are stored as JSON inside::
+``scipy``, and any distribution whose name contains ``cupy`` (for example,
+``cupy-cuda12x``). The results are stored as JSON inside::
 
    benchmarks/logs/<system-id>/<timestamp>/results.json
 

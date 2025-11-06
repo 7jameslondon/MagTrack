@@ -67,9 +67,29 @@ def collect_system_metadata() -> tuple[str, str, dict[str, Any]]:
     }
 
     # Dependency versions via importlib.metadata when available.
-    for package in ("magtrack", "numpy", "scipy", "cupy"):
+    dependencies = metadata_dict["dependencies"]
+
+    for package in ("magtrack", "numpy", "scipy"):
         try:
-            metadata_dict["dependencies"][package] = metadata.version(package)
+            dependencies[package] = metadata.version(package)
+        except metadata.PackageNotFoundError:
+            continue
+
+    # Capture any installed CuPy distributions, regardless of suffix.
+    try:
+        cupy_packages: set[str] = set()
+        for dist in metadata.distributions():
+            name = dist.metadata.get("Name")
+            if name and "cupy" in name.lower():
+                cupy_packages.add(name)
+    except Exception:  # noqa: BLE001 - fallback gracefully if metadata scan fails
+        cupy_packages = set()
+
+    for package in sorted(cupy_packages):
+        if package in dependencies:
+            continue
+        try:
+            dependencies[package] = metadata.version(package)
         except metadata.PackageNotFoundError:
             continue
 
