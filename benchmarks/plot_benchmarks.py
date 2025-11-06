@@ -159,6 +159,8 @@ def plot_benchmark_history(
     else:
         axes_list = list(axes)
 
+    legend_entries: dict[str, object] = {}
+
     for axis, backend in zip(axes_list, ordered_backends):
         labels = backend_labels[backend]
         per_system_values = backend_per_system_values[backend]
@@ -234,11 +236,27 @@ def plot_benchmark_history(
             title += "\n(latest run outlined with dashed bars)"
         axis.set_title(title)
         axis.set_xticks(x, labels, rotation=45, ha="right")
-        axis.legend(title="System ID", fontsize="small", title_fontsize="medium")
         axis.grid(axis="y", linestyle=":", alpha=0.4)
         axis.axhline(1.0, color="black", linewidth=1, linestyle="--", alpha=0.6)
 
-    fig.tight_layout()
+        handles, labels = axis.get_legend_handles_labels()
+        for label, handle in zip(labels, handles):
+            if label and label not in legend_entries:
+                legend_entries[label] = handle
+
+    fig.tight_layout(rect=(0, 0.12, 1, 1))
+
+    if legend_entries:
+        fig.legend(
+            list(legend_entries.values()),
+            list(legend_entries.keys()),
+            loc="lower center",
+            ncol=min(len(legend_entries), 4),
+            title="System ID",
+            fontsize="small",
+            title_fontsize="medium",
+            frameon=False,
+        )
 
     return fig
 
