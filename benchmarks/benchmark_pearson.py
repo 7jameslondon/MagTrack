@@ -38,7 +38,6 @@ def benchmark_pearson(
     print('Benchmarking: magtrack.pearson')
     print(f"n_bins: {n_bins}, n_refs: {n_refs}, n_profiles: {n_profiles}")
     print(f"n_repeat: {n_repeat}, n_warmup_cpu: {n_warmup_cpu}, n_warmup_gpu: {n_warmup_gpu}, max_duration: {max_duration}")
-    print('')
 
     # CPU benchmark
     x_cpu, y_cpu = _generate_inputs(np, n_bins, n_refs, n_profiles)
