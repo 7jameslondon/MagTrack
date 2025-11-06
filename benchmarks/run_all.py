@@ -220,7 +220,7 @@ def run_benchmarks(selected_modules: Iterable[str] | None = None) -> dict[str, A
 
         functions = discover_benchmark_functions(module)
         for func_name, func in functions:
-            print(f"Running {module_name}.{func_name}()")
+            print(f"\nRunning {module_name}.{func_name}()")
             recorder.begin(module_name, func_name)
             try:
                 with recorder.activate(module):
@@ -259,7 +259,7 @@ def main(argv: list[str] | None = None) -> int:
     run_data["timestamp"] = timestamp
 
     run_dir = log_utils.write_run_log(system_id, timestamp, metadata_dict, run_data["results"])
-    print(f"Benchmark results written to {run_dir}")
+    print(f"\n\n\nBenchmark results written to {run_dir}")
 
     aggregated_rows = log_utils.aggregate_logs()
     aggregate_path = log_utils.LOG_ROOT / "combined_results.csv"
