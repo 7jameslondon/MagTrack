@@ -80,7 +80,7 @@ def _print_summary(label: str, times: np.ndarray) -> None:
 
 def benchmark_center_of_mass(
     *,
-    n_images: int = 50,
+    n_images: int = 1000,
     nm_per_px: float = 100.0,
     size_px: int = 64,
     background: str = "mean",
