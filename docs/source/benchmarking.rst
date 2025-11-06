@@ -51,10 +51,16 @@ Interpreting the runtime plot
 Once the logs are written the orchestrator calls
 :func:`benchmarks.plot_benchmarks.plot_benchmark_history`. The function loads
 all historical entries, computes the average runtime for each
-benchmark/backend pair, and then plots the latest run *relative* to that
-average. Values above ``1.0`` indicate that the latest run was slower than the
-historical mean, while numbers below ``1.0`` are faster. A dashed horizontal
-line at ``1.0`` marks the long-term average so deviations stand out clearly.
+benchmark/backend pair, and then renders a grouped bar chart where every bar is
+the *average* runtime recorded on a particular system. All values are plotted
+*relative* to the cross-system mean so numbers above ``1.0`` indicate that a
+machine typically runs that benchmark slower than the overall average, while
+values below ``1.0`` are faster. The system that produced the most recent run
+is highlighted with a bold outline, and a dashed horizontal line at ``1.0``
+marks the long-term average so deviations stand out clearly. To make it easy to
+spot how the latest execution compares against its host's historical average,
+an additional dashed outline overlays the exact measurements from the newest
+run.
 
 If Matplotlib is running in a non-interactive environment the figure object is
 still returned, allowing you to save it manually (for example with
