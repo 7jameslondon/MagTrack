@@ -113,7 +113,6 @@ def benchmark_center_of_mass(
             seed=seed,
         )
     )
-    print("")
 
     stack_cpu = _generate_inputs(
         np,

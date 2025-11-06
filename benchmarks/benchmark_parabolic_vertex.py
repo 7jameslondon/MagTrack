@@ -90,7 +90,6 @@ def benchmark_parabolic_vertex(
         f"n_repeat: {n_repeat}, n_warmup_cpu: {n_warmup_cpu}, "
         f"n_warmup_gpu: {n_warmup_gpu}, max_duration: {max_duration}"
     )
-    print("")
 
     # CPU benchmark
     data_cpu, vertex_cpu = _generate_inputs(np, n_datasets, n_datapoints, n_local)
