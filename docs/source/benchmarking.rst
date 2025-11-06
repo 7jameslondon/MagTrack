@@ -65,3 +65,36 @@ run.
 If Matplotlib is running in a non-interactive environment the figure object is
 still returned, allowing you to save it manually (for example with
 ``figure.savefig("latest_benchmarks.png")``).
+
+Publishing benchmark results
+----------------------------
+
+MagTrack welcomes contributions that track performance trends over time. When
+you want to share a new set of logs, follow the same Git workflow you would for
+code changes:
+
+1. Run the orchestrator and confirm the results appear under
+   ``benchmarks/logs/<system-id>/<timestamp>``.
+2. Create a new branch and stage the generated artifacts::
+
+      git checkout -b benchmark/<short-description>
+      git add benchmarks/logs
+
+3. Commit the changes with a message that summarizes the run, including any
+   noteworthy hardware or software details::
+
+      git commit -m "Add benchmark results from <system-id> (<date>)"
+
+4. Push your branch and open a pull request against ``main``. Publish the
+   branch to your fork (or the upstream repository, if you have permission)
+   with::
+
+      git push -u origin benchmark/<short-description>
+
+   Then visit the repository on GitHub, click **Compare & pull request**, and
+   target ``main``. In the PR body, mention the date of the run, the hardware
+   you used, and any observations that might help reviewers interpret the
+   numbers.
+
+Following these steps keeps benchmarking history transparent and makes it easy
+for maintainers to review and merge performance data alongside code updates.
