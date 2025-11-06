@@ -71,9 +71,9 @@ def plot_benchmark_history(
         print("No system identifiers found in benchmark logs; skipping plot generation.")
         return None
 
-    labels: list[str] = []
-    per_system_values: dict[str, list[float]] = {system: [] for system in systems}
-    latest_values: list[float] = []
+    backend_labels: dict[str, list[str]] = {}
+    backend_per_system_values: dict[str, dict[str, list[float]]] = {}
+    backend_latest_values: dict[str, list[float]] = {}
     latest_system_id: str | None = None
     if latest_run_id:
         latest_system_id = str(latest_run_id).split("/", 1)[0]
@@ -81,7 +81,14 @@ def plot_benchmark_history(
     for benchmark, backend in categories:
         if benchmark is None or backend is None:
             continue
-        label = f"{benchmark} ({str(backend).upper()})"
+        backend_key = str(backend)
+        label = str(benchmark)
+
+        backend_labels.setdefault(backend_key, [])
+        backend_per_system_values.setdefault(
+            backend_key, {system: [] for system in systems}
+        )
+        backend_latest_values.setdefault(backend_key, [])
 
         category_rows = [
             row
@@ -96,7 +103,7 @@ def plot_benchmark_history(
         if np.isnan(baseline) or baseline == 0:
             continue
 
-        labels.append(label)
+        backend_labels[backend_key].append(label)
         for system in systems:
             system_values = [
                 row.get("mean_time")
@@ -104,93 +111,133 @@ def plot_benchmark_history(
                 if row.get("system_id") == system and row.get("mean_time") is not None
             ]
             mean_value = _mean(system_values)
-            per_system_values[system].append(_normalize(mean_value, baseline))
+            backend_per_system_values[backend_key][system].append(
+                _normalize(mean_value, baseline)
+            )
 
         latest_times = [
             row.get("mean_time")
             for row in category_rows
             if row.get("run_id") == latest_run_id and row.get("mean_time") is not None
         ]
-        latest_values.append(_normalize(_mean(latest_times), baseline))
+        backend_latest_values[backend_key].append(
+            _normalize(_mean(latest_times), baseline)
+        )
 
-    if not labels:
+    if not any(backend_labels.values()):
         print("No benchmark entries were found to plot.")
         return None
 
-    series: list[dict[str, object]] = []
     cmap = plt.get_cmap("tab20")
 
-    for index, system in enumerate(systems):
-        values = per_system_values.get(system, [])
-        if len(values) < len(labels):
-            values = values + [float("nan")] * (len(labels) - len(values))
+    ordered_backends: list[str] = []
+    for candidate in ("cpu", "gpu"):
+        if backend_labels.get(candidate):
+            ordered_backends.append(candidate)
+    remaining_backends = [
+        backend
+        for backend in backend_labels
+        if backend not in ordered_backends and backend_labels[backend]
+    ]
+    ordered_backends.extend(sorted(remaining_backends))
 
-        series.append(
-            {
-                "label": system,
-                "values": values,
-                "facecolor": cmap(index % cmap.N),
-                "edgecolor": "black" if system == latest_system_id else None,
-                "linewidth": 1.5 if system == latest_system_id else 0,
-                "linestyle": "-",
-                "zorder": 2 if system == latest_system_id else 1,
-            }
-        )
+    if not ordered_backends:
+        print("No benchmark entries were found to plot.")
+        return None
 
-    latest_label: str | None = None
-    if latest_run_id:
-        if len(latest_values) < len(labels):
-            latest_values = latest_values + [float("nan")] * (len(labels) - len(latest_values))
-        if any(not np.isnan(value) for value in latest_values):
-            latest_label = (
-                f"{latest_system_id} (latest run)" if latest_system_id else "Latest run"
-            )
+    max_label_count = max(len(backend_labels[backend]) for backend in ordered_backends)
+    fig_height = 4 * len(ordered_backends)
+    fig, axes = plt.subplots(
+        nrows=len(ordered_backends),
+        ncols=1,
+        figsize=(max(8, max_label_count * 0.9), fig_height),
+        sharex=False,
+    )
+
+    if not isinstance(axes, np.ndarray):
+        axes_list = [axes]
+    else:
+        axes_list = list(axes)
+
+    for axis, backend in zip(axes_list, ordered_backends):
+        labels = backend_labels[backend]
+        per_system_values = backend_per_system_values[backend]
+        latest_values = backend_latest_values[backend]
+
+        series: list[dict[str, object]] = []
+
+        for index, system in enumerate(systems):
+            values = per_system_values.get(system, [])
+            if len(values) < len(labels):
+                values = values + [float("nan")] * (len(labels) - len(values))
+
             series.append(
                 {
-                    "label": latest_label,
-                    "values": latest_values,
-                    "facecolor": "none",
-                    "edgecolor": "black",
-                    "linewidth": 2.0,
-                    "linestyle": "--",
-                    "zorder": 3,
+                    "label": system,
+                    "values": values,
+                    "facecolor": cmap(index % cmap.N),
+                    "edgecolor": "black" if system == latest_system_id else None,
+                    "linewidth": 1.5 if system == latest_system_id else 0,
+                    "linestyle": "-",
+                    "zorder": 2 if system == latest_system_id else 1,
                 }
             )
 
-    x = np.arange(len(labels))
-    bar_count = len(series)
-    width = 0.8 / max(bar_count, 1)
-    offsets = (
-        np.arange(bar_count) * width - (width * (bar_count - 1) / 2)
-        if bar_count > 1
-        else np.array([0.0])
-    )
+        latest_label: str | None = None
+        if latest_run_id:
+            if len(latest_values) < len(labels):
+                latest_values = latest_values + [
+                    float("nan")
+                ] * (len(labels) - len(latest_values))
+            if any(not np.isnan(value) for value in latest_values):
+                latest_label = (
+                    f"{latest_system_id} (latest run)" if latest_system_id else "Latest run"
+                )
+                series.append(
+                    {
+                        "label": latest_label,
+                        "values": latest_values,
+                        "facecolor": "none",
+                        "edgecolor": "black",
+                        "linewidth": 2.0,
+                        "linestyle": "--",
+                        "zorder": 3,
+                    }
+                )
 
-    fig, ax = plt.subplots(figsize=(max(8, len(labels) * 0.9), 6))
-
-    for index, config in enumerate(series):
-        values = cast(Sequence[float], config["values"])
-        ax.bar(
-            x + offsets[index],
-            values,
-            width,
-            label=config["label"],
-            facecolor=config["facecolor"],
-            edgecolor=config["edgecolor"],
-            linewidth=config["linewidth"],
-            linestyle=config["linestyle"],
-            zorder=config["zorder"],
+        x = np.arange(len(labels))
+        bar_count = len(series)
+        width = 0.8 / max(bar_count, 1)
+        offsets = (
+            np.arange(bar_count) * width - (width * (bar_count - 1) / 2)
+            if bar_count > 1
+            else np.array([0.0])
         )
 
-    ax.set_ylabel("Relative runtime (× average)")
-    title = "Benchmark runtime comparison by system (normalised)"
-    if latest_label:
-        title += "\n(latest run outlined with dashed bars)"
-    ax.set_title(title)
-    ax.set_xticks(x, labels, rotation=45, ha="right")
-    ax.legend(title="System ID", fontsize="small", title_fontsize="medium")
-    ax.grid(axis="y", linestyle=":", alpha=0.4)
-    ax.axhline(1.0, color="black", linewidth=1, linestyle="--", alpha=0.6)
+        for index, config in enumerate(series):
+            values = cast(Sequence[float], config["values"])
+            axis.bar(
+                x + offsets[index],
+                values,
+                width,
+                label=config["label"],
+                facecolor=config["facecolor"],
+                edgecolor=config["edgecolor"],
+                linewidth=config["linewidth"],
+                linestyle=config["linestyle"],
+                zorder=config["zorder"],
+            )
+
+        axis.set_ylabel("Relative runtime (× average)")
+        title = f"{backend.upper()} benchmark runtime comparison by system (normalised)"
+        if latest_label:
+            title += "\n(latest run outlined with dashed bars)"
+        axis.set_title(title)
+        axis.set_xticks(x, labels, rotation=45, ha="right")
+        axis.legend(title="System ID", fontsize="small", title_fontsize="medium")
+        axis.grid(axis="y", linestyle=":", alpha=0.4)
+        axis.axhline(1.0, color="black", linewidth=1, linestyle="--", alpha=0.6)
+
     fig.tight_layout()
 
     return fig
