@@ -85,9 +85,16 @@ code changes:
 
       git commit -m "Add benchmark results from <system-id> (<date>)"
 
-4. Push your branch and open a pull request against ``main``. In the PR body,
-   mention the date of the run, the hardware you used, and any observations
-   that might help reviewers interpret the numbers.
+4. Push your branch and open a pull request against ``main``. Publish the
+   branch to your fork (or the upstream repository, if you have permission)
+   with::
+
+      git push -u origin benchmark/<short-description>
+
+   Then visit the repository on GitHub, click **Compare & pull request**, and
+   target ``main``. In the PR body, mention the date of the run, the hardware
+   you used, and any observations that might help reviewers interpret the
+   numbers.
 
 Following these steps keeps benchmarking history transparent and makes it easy
 for maintainers to review and merge performance data alongside code updates.
