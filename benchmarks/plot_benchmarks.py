@@ -151,7 +151,7 @@ def plot_benchmark_history(
         nrows=len(ordered_backends),
         ncols=1,
         figsize=(max(8, max_label_count * 0.9), fig_height),
-        sharex=False,
+        sharex=True,
     )
 
     if not isinstance(axes, np.ndarray):
@@ -243,6 +243,13 @@ def plot_benchmark_history(
         for label, handle in zip(labels, handles):
             if label and label not in legend_entries:
                 legend_entries[label] = handle
+
+    # Ensure the shared x-axis span accommodates the largest backend and hide
+    # duplicated tick labels on all but the bottom subplot.
+    if axes_list:
+        axes_list[-1].set_xlim(-0.5, max_label_count - 0.5)
+        for axis in axes_list[:-1]:
+            axis.tick_params(labelbottom=False)
 
     fig.tight_layout(rect=(0, 0.12, 1, 1))
 
