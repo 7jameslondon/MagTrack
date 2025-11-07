@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
 from typing import Sequence, cast
 
@@ -11,6 +12,14 @@ import numpy as np
 from benchmarks import log_utils
 
 __all__ = ["plot_benchmark_history"]
+
+
+def _strip_benchmark(label: str) -> str:
+    """Remove the substring "benchmark" (case-insensitive) from tick labels."""
+
+    cleaned = re.sub("(?i)benchmark", "", label)
+    # Collapse extra whitespace introduced by removal and trim the result.
+    return " ".join(cleaned.split())
 
 
 def _mean(values: Sequence[float | None]) -> float:
@@ -233,7 +242,8 @@ def plot_benchmark_history(
         axis.set_ylabel("Relative Runtime")
         title = f"{backend.upper()} Benchmark"
         axis.set_title(title)
-        axis.set_xticks(x, labels, rotation=45, ha="right")
+        display_labels = [_strip_benchmark(str(label)) for label in labels]
+        axis.set_xticks(x, display_labels, rotation=45, ha="right")
         axis.grid(axis="y", linestyle=":", alpha=0.4)
         axis.axhline(1.0, color="black", linewidth=1, linestyle="--", alpha=0.6)
 
