@@ -6,6 +6,8 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 import json
 import math
+import re
+import subprocess
 from importlib import metadata
 from pathlib import Path
 import platform
@@ -31,11 +33,168 @@ def _sanitize_component(component: str) -> str:
     return "".join(safe).strip("-") or "unknown"
 
 
-def make_system_id(hostname: str, system: str, machine: str, python_version: str) -> str:
+def _raw_cpu_string() -> str | None:
+    """Return a descriptive CPU brand string when available."""
+
+    system = platform.system()
+
+    if system == "Windows":
+        try:  # pragma: no cover - exercised via unit tests through fallbacks
+            import winreg  # type: ignore
+
+            with winreg.OpenKey(
+                winreg.HKEY_LOCAL_MACHINE,
+                r"HARDWARE\DESCRIPTION\System\CentralProcessor\0",
+            ) as key:
+                value, _ = winreg.QueryValueEx(key, "ProcessorNameString")
+                if value:
+                    return str(value).strip()
+        except Exception:  # noqa: BLE001
+            pass
+
+        try:
+            output = subprocess.check_output(
+                ["wmic", "cpu", "get", "Name"],
+                text=True,
+                stderr=subprocess.DEVNULL,
+            )
+            lines = [line.strip() for line in output.splitlines() if line.strip()]
+            for line in lines:
+                if line.lower() != "name":
+                    return line
+        except Exception:  # noqa: BLE001
+            pass
+
+    elif system == "Darwin":
+        try:
+            output = subprocess.check_output(
+                ["sysctl", "-n", "machdep.cpu.brand_string"],
+                text=True,
+                stderr=subprocess.DEVNULL,
+            )
+            if output:
+                return output.strip()
+        except Exception:  # noqa: BLE001
+            pass
+
+    elif system == "Linux":
+        try:
+            cpuinfo = Path("/proc/cpuinfo")
+            if cpuinfo.exists():
+                for line in cpuinfo.read_text(errors="ignore").splitlines():
+                    key, _, value = line.partition(":")
+                    if key.strip().lower() == "model name":
+                        value = value.strip()
+                        if value:
+                            return value
+        except Exception:  # noqa: BLE001
+            pass
+
+        try:
+            output = subprocess.check_output(
+                ["lscpu"], text=True, stderr=subprocess.DEVNULL
+            )
+            for line in output.splitlines():
+                if line.lower().startswith("model name"):
+                    _, _, value = line.partition(":")
+                    value = value.strip()
+                    if value:
+                        return value
+        except Exception:  # noqa: BLE001
+            pass
+
+    uname = platform.uname()
+    for candidate in (
+        getattr(uname, "processor", None),
+        platform.processor(),
+        getattr(uname, "machine", None),
+    ):
+        if candidate:
+            text = str(candidate).strip()
+            if text and text.lower() not in {"unknown", "generic"}:
+                return text
+    return None
+
+
+def _normalize_cpu_brand(raw: str | None) -> str:
+    """Return a short, sanitised CPU identifier slug."""
+
+    if raw is None:
+        return "unknown"
+
+    brand = raw.strip()
+    if not brand:
+        return "unknown"
+
+    for mark in ("(R)", "(r)", "(TM)", "(tm)", "(SM)", "(sm)", "®", "™", "℠"):
+        brand = brand.replace(mark, "")
+
+    brand = re.sub(r"@.*", "", brand)
+    brand = re.sub(r"\b(?:CPU|Processor)\b", "", brand, flags=re.IGNORECASE)
+    brand = re.sub(r"\b\d+(?:\.\d+)?\s*[GM]Hz\b", "", brand, flags=re.IGNORECASE)
+    brand = re.sub(r"\s+", " ", brand).strip()
+
+    if not brand:
+        return "unknown"
+
+    tokens = re.split(r"[\s/]+", brand)
+    drop_tokens = {
+        "core",
+        "processor",
+        "cpu",
+        "with",
+        "dual",
+        "quad",
+        "six",
+        "eight",
+        "twelve",
+        "sixteen",
+        "twenty",
+        "thirty-two",
+        "desktop",
+        "mobile",
+    }
+
+    filtered: list[str] = []
+    for token in tokens:
+        token = token.strip("-_")
+        if not token:
+            continue
+        lowered = token.lower()
+        if lowered in drop_tokens:
+            continue
+        if "core" in lowered:
+            continue
+        filtered.append(token)
+
+    if not filtered:
+        filtered = [token for token in tokens if token]
+
+    slug = "-".join(filtered)
+    slug = re.sub(r"-+", "-", slug).strip("-")
+    return _sanitize_component(slug) or "unknown"
+
+
+def _derive_gpu_slug(gpus: Sequence[dict[str, Any]]) -> str:
+    """Return a short identifier describing the primary GPU, if any."""
+
+    for gpu in gpus:
+        name = gpu.get("name")
+        if isinstance(name, str) and name.strip():
+            slug = _sanitize_component(name.strip())
+            return slug or "unknown"
+    return "nogpu"
+
+
+def make_system_id(system: str, cpu_slug: str, gpu_slug: str) -> str:
     """Construct a deterministic identifier for the current system."""
 
-    components = [hostname, system, machine, f"py{python_version}".replace(".", "_")]
-    sanitized = [_sanitize_component(part.lower()) for part in components if part]
+    components = [system or "unknown", cpu_slug or "unknown", gpu_slug or "unknown"]
+    sanitized: list[str] = []
+    for part in components:
+        clean = _sanitize_component(part).lower() or "unknown"
+        clean = clean.replace("-", "_")
+        sanitized.append(clean)
     return "-".join(sanitized)
 
 
@@ -49,6 +208,9 @@ def collect_system_metadata() -> tuple[str, str, dict[str, Any]]:
     hostname = socket.gethostname() or uname.node
     python_version = platform.python_version()
 
+    raw_cpu = _raw_cpu_string()
+    cpu_slug = _normalize_cpu_brand(raw_cpu)
+
     metadata_dict: dict[str, Any] = {
         "collected_at": now.isoformat(),
         "hostname": hostname,
@@ -57,7 +219,7 @@ def collect_system_metadata() -> tuple[str, str, dict[str, Any]]:
             "release": uname.release,
             "version": uname.version,
             "machine": uname.machine,
-            "processor": uname.processor,
+            "processor": raw_cpu or uname.processor or platform.processor(),
         },
         "python": {
             "version": python_version,
@@ -140,7 +302,17 @@ def collect_system_metadata() -> tuple[str, str, dict[str, Any]]:
 
     metadata_dict["gpus"] = gpu_info
 
-    system_id = make_system_id(hostname, uname.system, uname.machine, python_version)
+    cpu_component = cpu_slug
+    if cpu_component == "unknown":
+        cpu_component = uname.machine or "unknown"
+
+    gpu_slug = _derive_gpu_slug(gpu_info)
+
+    system_id = make_system_id(
+        uname.system,
+        cpu_component,
+        gpu_slug,
+    )
 
     return system_id, timestamp, metadata_dict
 
