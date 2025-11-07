@@ -17,7 +17,7 @@ __all__ = ["plot_benchmark_history"]
 def _strip_benchmark(label: str) -> str:
     """Remove the substring "benchmark" (case-insensitive) from tick labels."""
 
-    cleaned = re.sub("(?i)benchmark", "", label)
+    cleaned = re.sub("(?i)benchmark_", "", label)
     # Collapse extra whitespace introduced by removal and trim the result.
     return " ".join(cleaned.split())
 
