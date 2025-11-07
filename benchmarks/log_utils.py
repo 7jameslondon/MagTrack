@@ -175,11 +175,26 @@ def _normalize_cpu_brand(raw: str | None) -> str:
     return _sanitize_component(slug) or "unknown"
 
 
-def make_system_id(hostname: str, system: str, machine: str, python_version: str) -> str:
+def _derive_gpu_slug(gpus: Sequence[dict[str, Any]]) -> str:
+    """Return a short identifier describing the primary GPU, if any."""
+
+    for gpu in gpus:
+        name = gpu.get("name")
+        if isinstance(name, str) and name.strip():
+            slug = _sanitize_component(name.strip())
+            return slug or "unknown"
+    return "nogpu"
+
+
+def make_system_id(system: str, cpu_slug: str, gpu_slug: str) -> str:
     """Construct a deterministic identifier for the current system."""
 
-    components = [hostname, system, machine, f"py{python_version}".replace(".", "_")]
-    sanitized = [_sanitize_component(part.lower()) for part in components if part]
+    components = [system or "unknown", cpu_slug or "unknown", gpu_slug or "unknown"]
+    sanitized: list[str] = []
+    for part in components:
+        clean = _sanitize_component(part).lower() or "unknown"
+        clean = clean.replace("-", "_")
+        sanitized.append(clean)
     return "-".join(sanitized)
 
 
@@ -287,11 +302,16 @@ def collect_system_metadata() -> tuple[str, str, dict[str, Any]]:
 
     metadata_dict["gpus"] = gpu_info
 
+    cpu_component = cpu_slug
+    if cpu_component == "unknown":
+        cpu_component = uname.machine or "unknown"
+
+    gpu_slug = _derive_gpu_slug(gpu_info)
+
     system_id = make_system_id(
-        hostname,
         uname.system,
-        cpu_slug if cpu_slug != "unknown" else uname.machine,
-        python_version,
+        cpu_component,
+        gpu_slug,
     )
 
     return system_id, timestamp, metadata_dict

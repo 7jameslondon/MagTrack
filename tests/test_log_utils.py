@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections import namedtuple
+import re
 import sys
 import types
 
@@ -58,14 +59,13 @@ def test_collect_system_metadata_uses_cpu_slug(monkeypatch: pytest.MonkeyPatch) 
     assert metadata["platform"]["processor"] == raw_cpu
 
     expected_cpu_slug = log_utils._normalize_cpu_brand(raw_cpu)
+    expected_gpu_slug = log_utils._derive_gpu_slug(metadata.get("gpus", []))
     expected_id = log_utils.make_system_id(
-        "bench-host",
         fake_uname.system,
         expected_cpu_slug,
-        "3.11.4",
+        expected_gpu_slug,
     )
     assert system_id == expected_id
 
-    # Ensure the identifier keeps the expected OS-CPU-GPU-style structure.
-    assert "-linux-" in system_id
-    assert f"-{expected_cpu_slug.lower()}-" in system_id
+    # Ensure the identifier keeps the expected OS-CPU-GPU structure.
+    assert re.match(r"^[^-]+-[^-]+-[^-]+$", system_id)
