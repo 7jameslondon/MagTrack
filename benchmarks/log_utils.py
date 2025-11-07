@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections import Counter
 from dataclasses import dataclass
 from datetime import datetime, timezone
 import json
@@ -31,12 +32,39 @@ def _sanitize_component(component: str) -> str:
     return "".join(safe).strip("-") or "unknown"
 
 
-def make_system_id(hostname: str, system: str, machine: str, python_version: str) -> str:
-    """Construct a deterministic identifier for the current system."""
+def make_system_id(system: str, cpu_name: str | None, gpu_names: Sequence[str] | None) -> str:
+    """Construct a deterministic identifier in the format ``OS-CPU-GPU``."""
 
-    components = [hostname, system, machine, f"py{python_version}".replace(".", "_")]
-    sanitized = [_sanitize_component(part.lower()) for part in components if part]
-    return "-".join(sanitized)
+    os_component = _sanitize_component((system or "unknown").lower())
+
+    cpu_value = cpu_name or "unknown-cpu"
+    cpu_component = _sanitize_component(cpu_value.lower()) or "unknown-cpu"
+
+    if gpu_names:
+        counter: Counter[str] = Counter()
+        for name in gpu_names:
+            if not isinstance(name, str):
+                continue
+            counter[_sanitize_component(name.lower()) or "gpu"] += 1
+        if counter:
+            gpu_parts: list[str] = []
+            for gpu_name, count in sorted(counter.items()):
+                if count > 1:
+                    gpu_parts.append(f"{gpu_name}x{count}")
+                else:
+                    gpu_parts.append(gpu_name)
+            gpu_component = _sanitize_component("_".join(gpu_parts)) or "nogpu"
+        else:
+            gpu_component = "nogpu"
+    else:
+        gpu_component = "nogpu"
+
+    components = [
+        os_component or "unknown",
+        cpu_component or "unknown-cpu",
+        gpu_component or "nogpu",
+    ]
+    return "-".join(components)
 
 
 def collect_system_metadata() -> tuple[str, str, dict[str, Any]]:
@@ -140,7 +168,15 @@ def collect_system_metadata() -> tuple[str, str, dict[str, Any]]:
 
     metadata_dict["gpus"] = gpu_info
 
-    system_id = make_system_id(hostname, uname.system, uname.machine, python_version)
+    cpu_name = (
+        uname.processor
+        or platform.processor()
+        or metadata_dict["platform"].get("machine")
+        or "unknown-cpu"
+    )
+    gpu_names = [gpu.get("name") for gpu in gpu_info if isinstance(gpu.get("name"), str)]
+
+    system_id = make_system_id(uname.system, cpu_name, gpu_names)
 
     return system_id, timestamp, metadata_dict
 
