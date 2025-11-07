@@ -259,14 +259,17 @@ def plot_benchmark_history(
         for axis in axes_list[:-1]:
             axis.tick_params(labelbottom=False)
 
-    fig.tight_layout(rect=(0, 0.12, 1, 1))
+    # Reserve horizontal space on the right for the legend, which is placed
+    # outside the plotting area.
+    fig.tight_layout(rect=(0, 0.12, 0.85, 1))
 
     if legend_entries:
         fig.legend(
             list(legend_entries.values()),
             list(legend_entries.keys()),
-            loc="lower center",
-            ncol=min(len(legend_entries), 4),
+            loc="center left",
+            bbox_to_anchor=(0.98, 0.5),
+            ncol=1,
             title="System ID",
             fontsize="small",
             title_fontsize="medium",
