@@ -7,6 +7,10 @@ The workflow is driven by :mod:`benchmarks.run_all`, which discovers every
 callable whose name starts with ``benchmark_`` and measures it with repeat
 executions.
 
+.. image:: https://raw.githubusercontent.com/7jameslondon/MagTrack/refs/heads/master/assets/benchmarks.png
+   :alt: Benchmark Results Graph
+   :align: center
+
 Running the orchestrator
 ------------------------
 
