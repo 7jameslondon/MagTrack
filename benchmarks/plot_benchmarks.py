@@ -199,7 +199,7 @@ def plot_benchmark_history(
                     {
                         "label": latest_label,
                         "values": latest_values,
-                        "facecolor": "none",
+                        "facecolor": "red",
                         "edgecolor": "black",
                         "linewidth": 2.0,
                         "linestyle": "--",
@@ -230,10 +230,8 @@ def plot_benchmark_history(
                 zorder=config["zorder"],
             )
 
-        axis.set_ylabel("Relative runtime (× average)")
-        title = f"{backend.upper()} benchmark runtime comparison by system (normalised)"
-        if latest_label:
-            title += "\n(latest run outlined with dashed bars)"
+        axis.set_ylabel("Relative Runtime")
+        title = f"{backend.upper()} Benchmark"
         axis.set_title(title)
         axis.set_xticks(x, labels, rotation=45, ha="right")
         axis.grid(axis="y", linestyle=":", alpha=0.4)
