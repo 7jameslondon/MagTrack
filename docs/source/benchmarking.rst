@@ -1,4 +1,4 @@
-Benchmarking MagTrack
+Benchmarking
 =====================
 
 MagTrack ships with a small benchmarking harness that exercises each module in
