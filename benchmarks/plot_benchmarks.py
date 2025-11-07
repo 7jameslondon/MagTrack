@@ -11,6 +11,8 @@ import numpy as np
 
 from benchmarks import log_utils
 
+BASELINE_SYSTEM_ID = "windows-13th_gen_intel_i7_13700-nvidia_geforce_rtx_3070"
+
 __all__ = ["plot_benchmark_history"]
 
 
@@ -104,11 +106,12 @@ def plot_benchmark_history(
             for row in rows
             if row.get("benchmark") == benchmark and row.get("backend") == backend
         ]
-        combined = [row.get("mean_time") for row in category_rows if row.get("mean_time") is not None]
-        if not combined:
-            continue
-
-        baseline = _mean(combined)
+        baseline_values = [
+            row.get("mean_time")
+            for row in category_rows
+            if row.get("system_id") == BASELINE_SYSTEM_ID and row.get("mean_time") is not None
+        ]
+        baseline = _mean(baseline_values)
         if np.isnan(baseline) or baseline == 0:
             continue
 
