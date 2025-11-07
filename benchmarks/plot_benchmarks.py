@@ -162,7 +162,7 @@ def plot_benchmark_history(
     fig, axes = plt.subplots(
         nrows=len(ordered_backends),
         ncols=1,
-        figsize=(max(8, max_label_count * 0.9), fig_height),
+        figsize=(max(8, max_label_count * 0.9) +3., fig_height),
         sharex=True,
     )
 
@@ -264,18 +264,18 @@ def plot_benchmark_history(
 
     # Reserve horizontal space on the right for the legend, which is placed
     # outside the plotting area.
-    fig.tight_layout(rect=(0, 0.12, 0.85, 1))
+    fig.tight_layout(rect=(0, 0.15, 1, 1))
 
     if legend_entries:
         fig.legend(
             list(legend_entries.values()),
             list(legend_entries.keys()),
-            loc="center left",
-            bbox_to_anchor=(0.98, 0.5),
+            loc="center",
+            bbox_to_anchor=(0.5, 0.2),
             ncol=1,
             title="System ID",
             fontsize="small",
-            title_fontsize="medium",
+            title_fontsize="large",
             frameon=False,
         )
 
