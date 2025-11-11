@@ -14,9 +14,11 @@ What is MagTrack?
 
 System requirements
 -------------------
+
 - `Python <https://www.python.org/downloads/>`_  >=3.9
 - Supports Windows, macOS, and Linux
-    - macOS does not support CUDA GPU acceleration
+
+  - macOS does not support CUDA GPU acceleration
 
 Installation
 ------------
@@ -28,13 +30,9 @@ Method 1: CPU only (easier)
 This method supports macOS, Windows, or Linux. But MagTrack will only be able to use your CPU.
 You can always later use method 2 if you want to add GPU acceleration.
 
-With pip run:
-
 .. code-block:: console
 
    pip install magtrack[cpu]
-
-Or with Conda: *coming soon*.
 
 Method 2: CPU + GPU (a little harder)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -43,23 +41,27 @@ This method supports Windows or Linux.
 This allows MagTrack to use either the CPU or a CUDA-capable GPU.
 
 #. Confirm that your system has an NVIDIA GPU.
-#. Install the free `CUDA Toolkit <https://developer.nvidia.com/cuda-toolkit>`_.
-    * Versions 11, 12, or 13 are supported.
-    * You can check the installed version by running ``nvcc -V`` in a terminal such as Command Prompt.
-#. Install MagTrack using the pip or conda.
-    * **pip**: use the command that matches your CUDA version:
-        .. list-table::
-           :header-rows: 1
 
-           * - CUDA Toolkit Version
-             - Pip command
-           * - 11.x
-             - ``pip install magtrack[cu11]``
-           * - 12.x
-             - ``pip install magtrack[cu12]``
-           * - 13.x
-             - ``pip install magtrack[cu13]``
-    * conda: *coming soon*.
+#. Install the free `CUDA Toolkit <https://developer.nvidia.com/cuda-toolkit>`_.
+
+   * Versions 11, 12, or 13 are supported.
+
+   * You can check the installed version by running ``nvcc -V`` in a terminal such as Command Prompt.
+
+#. Install MagTrack using the pip command that matches your CUDA version:
+
+   .. list-table::
+      :header-rows: 1
+
+      * - CUDA Toolkit Version
+        - Pip command
+      * - 11.x
+        - ``pip install magtrack[cu11]``
+      * - 12.x
+        - ``pip install magtrack[cu12]``
+      * - 13.x
+        - ``pip install magtrack[cu13]``
+
 
 Verify the installation
 -----------------------
