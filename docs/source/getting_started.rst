@@ -11,6 +11,7 @@ What is MagTrack?
 * `Documented <https://magtrack.readthedocs.io/en/stable/>`_, `tested <https://github.com/7jameslondon/MagTrack/actions/workflows/python-package.yml>`_, and `benchmarked <https://magtrack.readthedocs.io/en/stable/benchmarking.html>`_
 * Only depends on `NumPy <https://numpy.org>`_, `SciPy <https://scipy.org>`_, and `CuPy <https://cupy.dev>`_
 * Runs on Windows, macOS, and Linux
+* `Easy installation <https://magtrack.readthedocs.io/en/stable/getting_started.html#installation>`_ with pip
 
 System requirements
 -------------------
