@@ -11,10 +11,10 @@
 MagTrack is a Python package for tracking symmetric beads in single-molecule magnetic tweezers experiments. 
 
 * Sub-pixel XYZ coordinates
-* GPU accelerated (optional, requires a CUDA GPU)
+* GPU accelerated (optional, requires a NVIDIA CUDA GPU)
 * Python notebook included with [examples](https://colab.research.google.com/github/7jameslondon/MagTrack/blob/master/examples/examples.ipynb)
 * [Documented](https://magtrack.readthedocs.io/en/stable/), [tested](https://github.com/7jameslondon/MagTrack/actions/workflows/python-package.yml), and [benchmarked](https://magtrack.readthedocs.io/en/stable/benchmarking.html)
-* Only depends on [NumPy](https://numpy.org/), [SciPy](https://scipy.org/), and [CuPy](https://cupy.dev/)
+* Only depends on [NumPy](https://numpy.org), [SciPy](https://scipy.org), and [CuPy](https://cupy.dev)
 
 Try a demo in a Google Colab notebook:
 [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/7jameslondon/MagTrack/blob/master/examples/examples.ipynb)
@@ -25,12 +25,12 @@ Try a demo in a Google Colab notebook:
 
 ## ⏳ Install
 ### Pre-requisites
-* Python >=3.9
-* NumPy >=1.26
-* SciPy >=1.11.1
-* (Optional, but needed for GPU acceleration) CuPy-CUDA12x >=13.0
-* Windows or Linux or MacOS (MacOS does not support NVIDIA GPU acceleration)
-* MagTrack can run on a CPU or GPU. But GPU execution requires a CUDA-compliant GPU with the CUDA Toolkit installed. This is free and easy to install for most NVIDIA GPUs.
+* Operating System: Windows or Linux or MacOS (MacOS does not support NVIDIA GPU acceleration)
+* [Python](https://www.python.org/downloads/) >=3.9
+* [NumPy](https://numpy.org) >=1.26
+* [SciPy](https://scipy.org) >=1.11.1
+* (Optional, GPU acceleration) [CuPy-CUDA12x](https://cupy.dev) >=13.0
+* (Optional, GPU acceleration) [CUDA Toolkit](https://docs.cupy.dev/en/stable/install.html). This is free and easy to install for computers with most NVIDIA GPUs.
 
 ### Instructions
 ```
