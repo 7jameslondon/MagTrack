@@ -32,16 +32,20 @@ Try a demo in a Google Colab notebook:
 
 ### GPU acceleration dependancies
 MagTrack works can work with your CPU or GPU. For GPU acceleration your computer must have a NVIDIA CUDA GPU.
+* (Optional, GPU acceleration) [CuPy-CUDA11x](https://cupy.dev) >=12.0
 * (Optional, GPU acceleration) [CuPy-CUDA12x](https://cupy.dev) >=13.0
+* (Optional, GPU acceleration) [CuPy-CUDA13x](https://cupy.dev) >=13.0
 * (Optional, GPU acceleration) [CUDA Toolkit](https://developer.nvidia.com/cuda-toolkit).
 
 ### Instructions
 ```
 pip install magtrack
 ```
-Or if you have a NVIDIA CUDA GPU. First, install the [CUDA Toolkit](https://developer.nvidia.com/cuda-toolkit). Then run:
+Or if you have a NVIDIA CUDA GPU. First, install the [CUDA Toolkit](https://developer.nvidia.com/cuda-toolkit). Then install MagTrack with the extra that matches your CUDA Toolkit:
 ```
-pip install magtrack[gpu]
+pip install magtrack[cu11]  # for CUDA 11.x environments
+pip install magtrack[cu12]  # for CUDA 12.x environments
+pip install magtrack[cu13]  # for CUDA 13.x environments
 ```
 
 ## ⚒ Usage
