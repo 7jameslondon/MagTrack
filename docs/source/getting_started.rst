@@ -33,18 +33,43 @@ algorithms, but NVIDIA GPU acceleration is only available on platforms with CUDA
 Installation
 ------------
 
-Install the latest release from PyPI. Choose the extra that matches the environment you plan to run:
+MagTrack supports Windows, macOS, and Linux. macOS installs are limited to CPU execution because CUDA-based GPU
+acceleration is only available on Windows and Linux systems. Ensure that you have Python 3.9 or newer installed before
+continuing.
+
+Method 1: CPU only (easier)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This method works on macOS, Windows, or Linux and installs the CPU-only dependencies.
 
 .. code-block:: console
 
    pip install magtrack[cpu]
-   pip install magtrack[cu11]
-   pip install magtrack[cu12]
-   pip install magtrack[cu13]
 
-If you intend to use GPU acceleration, make sure that the CUDA Toolkit compatible with your GPU is installed before
-installing CuPy. Refer to the `CuPy installation guide <https://docs.cupy.dev/en/stable/install.html>`_ for detailed
-instructions.
+Conda installation *coming soon*.
+
+Method 2: CPU or GPU (a little harder)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This method supports Windows or Linux and allows MagTrack to use either the CPU or a CUDA-capable GPU. Confirm that
+your system has an NVIDIA GPU and install the free `CUDA Toolkit <https://developer.nvidia.com/cuda-toolkit>`_ first.
+Versions 11, 12, or 13 are supported. You can verify the installed version by running ``nvcc -V`` in a terminal.
+
+After installing the CUDA Toolkit, install MagTrack using the pip command that matches your CUDA version:
+
+.. list-table::
+   :header-rows: 1
+
+   * - CUDA Toolkit Version
+     - Pip command
+   * - 11.x
+     - ``pip install magtrack[cu11]``
+   * - 12.x
+     - ``pip install magtrack[cu12]``
+   * - 13.x
+     - ``pip install magtrack[cu13]``
+
+Conda installation *coming soon*.
 
 Verify the installation
 -----------------------
