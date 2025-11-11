@@ -28,7 +28,9 @@ dependencies = [
 
 [project.optional-dependencies]
 cpu = []
-gpu = ["cupy-cuda12x>=13.0; sys_platform != 'darwin'"]
+cu11 = ["cupy-cuda11x>=12.0; sys_platform != 'darwin'"]
+cu12 = ["cupy-cuda12x>=13.0; sys_platform != 'darwin'"]
+cu13 = ["cupy-cuda13x>=13.0; sys_platform != 'darwin'"]
 docs = [
     "sphinx>=7",
     "furo",

@@ -20,28 +20,27 @@ System requirements
 -------------------
 
 MagTrack requires Python 3.9 or newer as well as recent versions of NumPy and SciPy. Optional GPU acceleration is
-available through CuPy (CUDA 12.x builds). The package works on Windows, Linux, and macOS. macOS can run the CPU
+available through CuPy (CUDA 11.x, 12.x, or 13.x builds). The package works on Windows, Linux, and macOS. macOS can run the CPU
 algorithms, but NVIDIA GPU acceleration is only available on platforms with CUDA support.
 
 * Python >=3.9
 * NumPy >=1.26
 * SciPy >=1.11.1
+* (Optional) CuPy-CUDA11x >=12.0
 * (Optional) CuPy-CUDA12x >=13.0
+* (Optional) CuPy-CUDA13x >=13.0
 
 Installation
 ------------
 
-Install the latest release from PyPI. Include the ``[gpu]`` extra if you plan to use CuPy-based GPU acceleration:
+Install the latest release from PyPI. Choose the extra that matches the environment you plan to run:
 
 .. code-block:: console
 
-   pip install magtrack[gpu]
-
-To install only the CPU dependencies:
-
-.. code-block:: console
-
-   pip install magtrack
+   pip install magtrack[cpu]
+   pip install magtrack[cu11]
+   pip install magtrack[cu12]
+   pip install magtrack[cu13]
 
 If you intend to use GPU acceleration, make sure that the CUDA Toolkit compatible with your GPU is installed before
 installing CuPy. Refer to the `CuPy installation guide <https://docs.cupy.dev/en/stable/install.html>`_ for detailed
