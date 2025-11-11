@@ -24,24 +24,25 @@ Try a demo in a Google Colab notebook:
 </h3>
 
 ## ⏳ Install
-### Pre-requisites
+### Dependancies
 * Operating System: Windows or Linux or MacOS (MacOS does not support NVIDIA GPU acceleration)
 * [Python](https://www.python.org/downloads/) >=3.9
 * [NumPy](https://numpy.org) >=1.26
 * [SciPy](https://scipy.org) >=1.11.1
+
+### GPU acceleration dependancies
+MagTrack works can work with your CPU or GPU. For GPU acceleration your computer must have a NVIDIA CUDA GPU.
 * (Optional, GPU acceleration) [CuPy-CUDA12x](https://cupy.dev) >=13.0
-* (Optional, GPU acceleration) [CUDA Toolkit](https://developer.nvidia.com/cuda-toolkit). This is free and easy to install for computers with most NVIDIA GPUs.
+* (Optional, GPU acceleration) [CUDA Toolkit](https://developer.nvidia.com/cuda-toolkit).
 
 ### Instructions
 ```
-pip install magtrack[gpu]
-```
-Or without CuPy
-```
 pip install magtrack
 ```
-
-Optional: For GPU acceleration on a computer with an NVIDIA CUDA GPU, you may need to install the CUDA Toolkit for CuPy. See details [here](https://developer.nvidia.com/cuda-toolkit).
+Or if you have a NVIDIA CUDA GPU. First, install the [CUDA Toolkit](https://developer.nvidia.com/cuda-toolkit). Then run:
+```
+pip install magtrack[gpu]
+```
 
 ## ⚒ Usage
 ```
