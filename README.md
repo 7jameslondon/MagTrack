@@ -30,7 +30,7 @@ Try a demo in a Google Colab notebook:
 * [NumPy](https://numpy.org) >=1.26
 * [SciPy](https://scipy.org) >=1.11.1
 * (Optional, GPU acceleration) [CuPy-CUDA12x](https://cupy.dev) >=13.0
-* (Optional, GPU acceleration) [CUDA Toolkit](https://docs.cupy.dev/en/stable/install.html). This is free and easy to install for computers with most NVIDIA GPUs.
+* (Optional, GPU acceleration) [CUDA Toolkit](https://developer.nvidia.com/cuda-toolkit). This is free and easy to install for computers with most NVIDIA GPUs.
 
 ### Instructions
 ```
@@ -41,7 +41,7 @@ Or without CuPy
 pip install magtrack
 ```
 
-Optional: For GPU acceleration on a computer with an NVIDIA CUDA GPU, you may need to install the CUDA Toolkit for CuPy. See details at https://docs.cupy.dev/en/stable/install.html
+Optional: For GPU acceleration on a computer with an NVIDIA CUDA GPU, you may need to install the CUDA Toolkit for CuPy. See details [here](https://developer.nvidia.com/cuda-toolkit).
 
 ## ⚒ Usage
 ```
