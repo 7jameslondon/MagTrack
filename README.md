@@ -14,7 +14,7 @@
 * Python notebook included with [examples](https://colab.research.google.com/github/7jameslondon/MagTrack/blob/master/examples/examples.ipynb)
 * [Documented](https://magtrack.readthedocs.io/en/stable/), [tested](https://github.com/7jameslondon/MagTrack/actions/workflows/python-package.yml), and [benchmarked](https://magtrack.readthedocs.io/en/stable/benchmarking.html)
 * Only depends on [NumPy](https://numpy.org), [SciPy](https://scipy.org), and [CuPy](https://cupy.dev)
-* Supports Windows, macOS, and Linux
+* Runs on Windows, macOS, and Linux
 
 Try a demo in a Google Colab notebook [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/7jameslondon/MagTrack/blob/master/examples/examples.ipynb)
 

@@ -10,14 +10,13 @@ What is MagTrack?
 * Python notebook included with `examples <https://colab.research.google.com/github/7jameslondon/MagTrack/blob/master/examples/examples.ipynb>`_
 * `Documented <https://magtrack.readthedocs.io/en/stable/>`_, `tested <https://github.com/7jameslondon/MagTrack/actions/workflows/python-package.yml>`_, and `benchmarked <https://magtrack.readthedocs.io/en/stable/benchmarking.html>`_
 * Only depends on `NumPy <https://numpy.org>`_, `SciPy <https://scipy.org>`_, and `CuPy <https://cupy.dev>`_
-* Supports Windows, macOS, and Linux
+* Runs on Windows, macOS, and Linux
 
 System requirements
 -------------------
-* `Python <https://www.python.org/downloads/>`_  >=3.9
-* Supports Windows, macOS, and Linux
-
-    * macOS does not support CUDA GPU acceleration
+- `Python <https://www.python.org/downloads/>`_  >=3.9
+- Supports Windows, macOS, and Linux
+    - macOS does not support CUDA GPU acceleration
 
 Installation
 ------------
@@ -43,25 +42,24 @@ Method 2: CPU + GPU (a little harder)
 This method supports Windows or Linux.
 This allows MagTrack to use either the CPU or a CUDA-capable GPU.
 
-1. Confirm that your system has an NVIDIA GPU.
-2. Install the free `CUDA Toolkit <https://developer.nvidia.com/cuda-toolkit>`_.
+#. Confirm that your system has an NVIDIA GPU.
+#. Install the free `CUDA Toolkit <https://developer.nvidia.com/cuda-toolkit>`_.
     * Versions 11, 12, or 13 are supported.
     * You can check the installed version by running ``nvcc -V`` in a terminal such as Command Prompt.
-3. Install MagTrack using the pip command that matches your CUDA version:
+#. Install MagTrack using the pip or conda.
+    * **pip**: use the command that matches your CUDA version:
+        .. list-table::
+           :header-rows: 1
 
-.. list-table::
-   :header-rows: 1
-
-   * - CUDA Toolkit Version
-     - Pip command
-   * - 11.x
-     - ``pip install magtrack[cu11]``
-   * - 12.x
-     - ``pip install magtrack[cu12]``
-   * - 13.x
-     - ``pip install magtrack[cu13]``
-
-Conda installation *coming soon*.
+           * - CUDA Toolkit Version
+             - Pip command
+           * - 11.x
+             - ``pip install magtrack[cu11]``
+           * - 12.x
+             - ``pip install magtrack[cu12]``
+           * - 13.x
+             - ``pip install magtrack[cu13]``
+    * conda: *coming soon*.
 
 Verify the installation
 -----------------------
