@@ -78,20 +78,23 @@ pub fn center_of_mass(
             }
         };
 
-        for row in 0..height {
+        let subtract_background = matches!(background_mode, Background::Mean | Background::Median);
+
+        for (row_idx, row_pixels) in image.chunks_exact(width).enumerate() {
             let mut row_sum = 0.0_f64;
-            let row_offset = row * width;
-            for col in 0..width {
-                let mut value = image[row_offset + col];
-                if matches!(background_mode, Background::Mean | Background::Median) {
+            for (col_idx, pixel) in row_pixels.iter().enumerate() {
+                let mut value = *pixel;
+                if subtract_background {
                     value = (value - background_value).abs();
                 }
 
                 row_sum += value;
-                column_sums[col] += value;
+                unsafe {
+                    *column_sums.get_unchecked_mut(col_idx) += value;
+                }
                 total_mass += value;
             }
-            y_numerator += row as f64 * row_sum;
+            y_numerator += row_idx as f64 * row_sum;
         }
 
         for col in 0..width {
