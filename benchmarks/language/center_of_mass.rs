@@ -129,8 +129,13 @@ pub fn center_of_mass(
             }
         }
 
+        let mut col_ptr = column_sums.as_ptr();
         for col in 0..width {
-            x_numerator += col as f64 * column_sums[col];
+            let value = unsafe { *col_ptr };
+            x_numerator += col as f64 * value;
+            unsafe {
+                col_ptr = col_ptr.add(1);
+            }
         }
 
         if total_mass == 0.0 {
