@@ -97,7 +97,7 @@ class TestCenterOfMass(unittest.TestCase):
         self._run_center_of_mass_test(background="median", tolerance=0.8)
 
     def test_center_of_mass_rejects_unknown_background(self):
-        with self.assertRaises(NotImplementedError):
+        with self.assertRaises(ValueError):
             magtrack.center_of_mass(self.stack_np, background="unsupported")
 
     def test_center_of_mass_does_not_modify_input_stack(self):

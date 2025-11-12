@@ -460,9 +460,12 @@ def center_of_mass(stack, background='none'):
     xp = cp.get_array_module(stack)
 
     # Checks
-    assert stack.ndim == 3
-    assert stack.shape[0] == stack.shape[1]
-    assert stack.dtype == xp.float32 or stack.dtype == xp.float64
+    if stack.ndim != 3:
+        raise ValueError('stack must be a 3D array, stack.shape=(n_pixels, n_pixels, n_images)')
+    if stack.shape[0] != stack.shape[1]:
+        raise ValueError('stack images must be square, stack.shape=(n_pixels, n_pixels, n_images)')
+    if stack.dtype != xp.float32 and stack.dtype != xp.float64:
+        raise TypeError('stack dtype must be float32 or float64')
 
     # Correct background of each image
     if background == 'none':
@@ -476,17 +479,23 @@ def center_of_mass(stack, background='none'):
         xp.subtract(stack_norm, xp.median(stack, axis=(0, 1)), out=stack_norm)
         xp.absolute(stack_norm, out=stack_norm)
     else:
-        raise NotImplementedError
+        raise ValueError('background must be "none", "mean" or "median"')
 
-    # Calculate total
-    total_mass = xp.sum(stack_norm, axis=(0, 1))
+    # Calculate projections and total mass
+    sum_x = xp.sum(stack_norm, axis=0)
+    total_mass = xp.sum(sum_x, axis=0)
     # Prevent divide by zero
     total_mass = xp.where(total_mass == 0., xp.nan, total_mass)
 
+    # Coordinate grid
+    grid = xp.arange(stack_norm.shape[0], dtype=stack.dtype)
+
     # Calculate center
-    index = xp.arange(stack_norm.shape[0], dtype=stack.dtype)[:, xp.newaxis]
-    x = xp.sum(index * xp.sum(stack_norm, axis=0), axis=0) / total_mass
-    y = xp.sum(index * xp.sum(stack_norm, axis=1), axis=0) / total_mass
+    x_num = xp.tensordot(grid, sum_x, axes=(0, 0))
+    y_num = xp.einsum('ijk,i->k', stack_norm, grid)
+
+    x = x_num / total_mass
+    y = y_num / total_mass
 
     return x, y
 
