@@ -19,6 +19,21 @@ else:
 
 np.seterr(divide='ignore', invalid='ignore')
 
+
+_GRID_CACHE = {}
+
+
+def _get_coordinate_grid(length, dtype, xp):
+    """Return a cached 1-D coordinate grid for the given backend."""
+
+    backend = 'cupy' if xp is cp else 'numpy'
+    key = (backend, length, dtype)
+    grid = _GRID_CACHE.get(key)
+    if grid is None:
+        grid = xp.arange(length, dtype=dtype)
+        _GRID_CACHE[key] = grid
+    return grid
+
 # ---------- Helper functions ---------- #
 
 def binmean(x, weights, n_bins: int):
@@ -478,15 +493,22 @@ def center_of_mass(stack, background='none'):
     else:
         raise NotImplementedError
 
-    # Calculate total
-    total_mass = xp.sum(stack_norm, axis=(0, 1))
+    # Calculate projections and total mass
+    sum_x = xp.sum(stack_norm, axis=0)
+    total_mass = xp.sum(sum_x, axis=0)
     # Prevent divide by zero
     total_mass = xp.where(total_mass == 0., xp.nan, total_mass)
 
+    # Cached coordinate grids
+    rows = _get_coordinate_grid(stack_norm.shape[0], stack.dtype, xp)
+    cols = _get_coordinate_grid(stack_norm.shape[1], stack.dtype, xp)
+
     # Calculate center
-    index = xp.arange(stack_norm.shape[0], dtype=stack.dtype)[:, xp.newaxis]
-    x = xp.sum(index * xp.sum(stack_norm, axis=0), axis=0) / total_mass
-    y = xp.sum(index * xp.sum(stack_norm, axis=1), axis=0) / total_mass
+    x_num = xp.tensordot(cols, sum_x, axes=(0, 0))
+    y_num = xp.einsum('ijk,i->k', stack_norm, rows)
+
+    x = x_num / total_mass
+    y = y_num / total_mass
 
     return x, y
 
