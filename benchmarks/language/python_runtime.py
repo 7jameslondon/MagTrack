@@ -10,7 +10,7 @@ for _ in range(100):
 
 # Runtime measurement
 start_time = perf_counter()
-for _ in range(1000):
+for _ in range(10000):
     magtrack.center_of_mass(stack)
 end_time = perf_counter()
 elapsed_time = end_time - start_time

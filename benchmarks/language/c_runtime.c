@@ -1,3 +1,4 @@
+// Build with gcc -O3 -march=native -std=c11 -DNDEBUG -ffast-math -fopenmp -g .\benchmarks\language\c_runtime.c -o c_runtime.exe
 #define CENTER_OF_MASS_API static
 #define CENTER_OF_MASS_STORAGE static
 #include "center_of_mass_impl.h"
@@ -95,7 +96,7 @@ int main(void) {
         return EXIT_FAILURE;
     }
 
-    for (size_t i = 0; i < 1000; ++i) {
+    for (size_t i = 0; i < 10000; ++i) {
         center_of_mass(stack, width, height, n_images, "none", x, y);
     }
 
@@ -108,7 +109,7 @@ int main(void) {
     }
 
     double elapsed = elapsed_seconds(&start, &end);
-    printf("Runtime: %.6f seconds\n", elapsed);
+    printf("Runtime : %.6f seconds\n", elapsed);
 
     free(stack);
     free(x);
