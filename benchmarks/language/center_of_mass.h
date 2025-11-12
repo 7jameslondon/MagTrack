@@ -3,7 +3,11 @@
 
 #include <stddef.h>
 
-void center_of_mass(
+#ifndef CENTER_OF_MASS_API
+#define CENTER_OF_MASS_API
+#endif
+
+CENTER_OF_MASS_API void center_of_mass(
     const double *stack,
     size_t width,
     size_t height,

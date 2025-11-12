@@ -1,5 +1,12 @@
-#include "center_of_mass.h"
+#define CENTER_OF_MASS_API static
+#define CENTER_OF_MASS_STORAGE static
+#include "center_of_mass_impl.h"
 
+#if defined(_WIN32)
+#include <windows.h>
+#endif
+
+#include <errno.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -22,6 +29,34 @@ static double elapsed_seconds(const struct timespec *start, const struct timespe
     double seconds = (double)(end->tv_sec - start->tv_sec);
     long nanoseconds = end->tv_nsec - start->tv_nsec;
     return seconds + (double)nanoseconds / 1e9;
+}
+
+static int monotonic_timespec(struct timespec *ts) {
+#if defined(_WIN32)
+    static LARGE_INTEGER frequency = {0};
+    LARGE_INTEGER counter;
+
+    if (frequency.QuadPart == 0) {
+        if (!QueryPerformanceFrequency(&frequency)) {
+            errno = EINVAL;
+            return -1;
+        }
+    }
+    if (!QueryPerformanceCounter(&counter)) {
+        errno = EINVAL;
+        return -1;
+    }
+
+    long double counts = (long double)counter.QuadPart;
+    long double freq = (long double)frequency.QuadPart;
+    long double total_seconds = counts / freq;
+
+    ts->tv_sec = (time_t)total_seconds;
+    ts->tv_nsec = (long)((total_seconds - (long double)ts->tv_sec) * 1e9L);
+    return 0;
+#else
+    return clock_gettime(CLOCK_MONOTONIC, ts);
+#endif
 }
 
 int main(void) {
@@ -52,8 +87,8 @@ int main(void) {
     struct timespec start;
     struct timespec end;
 
-    if (clock_gettime(CLOCK_MONOTONIC, &start) != 0) {
-        perror("clock_gettime");
+    if (monotonic_timespec(&start) != 0) {
+        perror("monotonic_timespec");
         free(stack);
         free(x);
         free(y);
@@ -64,8 +99,8 @@ int main(void) {
         center_of_mass(stack, width, height, n_images, "none", x, y);
     }
 
-    if (clock_gettime(CLOCK_MONOTONIC, &end) != 0) {
-        perror("clock_gettime");
+    if (monotonic_timespec(&end) != 0) {
+        perror("monotonic_timespec");
         free(stack);
         free(x);
         free(y);
