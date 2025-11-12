@@ -1,3 +1,5 @@
+# python -m sphinx -b html docs/source docs/_build/html
+
 import os, sys
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 
@@ -5,9 +7,6 @@ project = 'MagTrack'
 copyright = '2025, James London'
 author = 'James London'
 release = '0.7.2'
-
-# -- General configuration ---------------------------------------------------
-# https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
 extensions = [
     "sphinx.ext.autodoc",
