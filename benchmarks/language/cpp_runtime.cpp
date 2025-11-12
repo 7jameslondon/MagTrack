@@ -1,6 +1,7 @@
-// Build with:
+/* Build with:
 //   g++ -O3 -march=native -std=c++17 -DNDEBUG -ffast-math \
 //       benchmarks/language/cpp_runtime.cpp -o cpp_runtime
+*/
 
 #include "center_of_mass_cpp.h"
 
@@ -34,7 +35,7 @@ int main() {
         const auto end = std::chrono::steady_clock::now();
 
         const std::chrono::duration<double> elapsed = end - start;
-        std::cout << "Runtime: " << elapsed.count() << " seconds" << std::endl;
+        std::cout << "C++ Runtime: " << elapsed.count() << " seconds" << std::endl;
     } catch (const std::exception &err) {
         std::cerr << "Error: " << err.what() << std::endl;
         return 1;
