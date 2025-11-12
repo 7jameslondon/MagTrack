@@ -1,3 +1,5 @@
+// build with: rustc ".\benchmarks\language\rust_runtime.rs" -O -C opt-level=3 -C lto=thin -C codegen-units=1 -C panic=abort -C target-cpu=native -C target-feature=+avx2,+fma -o ".\rust_runtime.exe"
+
 mod center_of_mass;
 
 use center_of_mass::center_of_mass;
