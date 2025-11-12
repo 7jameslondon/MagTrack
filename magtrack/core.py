@@ -459,6 +459,11 @@ def center_of_mass(stack, background='none'):
     # GPU or CPU?
     xp = cp.get_array_module(stack)
 
+    # Checks
+    assert stack.ndim == 3
+    assert stack.shape[0] == stack.shape[1]
+    assert stack.dtype == xp.float32 or stack.dtype == xp.float64
+
     # Correct background of each image
     if background == 'none':
         stack_norm = stack.view()
@@ -479,7 +484,7 @@ def center_of_mass(stack, background='none'):
     total_mass = xp.where(total_mass == 0., xp.nan, total_mass)
 
     # Calculate center
-    index = xp.arange(stack_norm.shape[0], dtype=xp.float64)[:, xp.newaxis]
+    index = xp.arange(stack_norm.shape[0], dtype=stack.dtype)[:, xp.newaxis]
     x = xp.sum(index * xp.sum(stack_norm, axis=0), axis=0) / total_mass
     y = xp.sum(index * xp.sum(stack_norm, axis=1), axis=0) / total_mass
 
