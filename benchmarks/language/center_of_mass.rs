@@ -57,11 +57,13 @@ pub fn center_of_mass(
         let mut x_numerator = 0.0_f64;
         let mut y_numerator = 0.0_f64;
 
-        column_sums.fill(0.0);
+        for value in &mut column_sums {
+            *value = 0.0;
+        }
 
         let background_value = match background_mode {
             Background::None => 0.0,
-            Background::Mean => image.iter().sum::<f64>() / image_size as f64,
+            Background::Mean => image.iter().copied().sum::<f64>() / image_size as f64,
             Background::Median => {
                 let buffer = median_buffer.as_mut().expect("median buffer missing");
                 buffer.copy_from_slice(image);
@@ -78,20 +80,53 @@ pub fn center_of_mass(
             }
         };
 
-        for row in 0..height {
-            let mut row_sum = 0.0_f64;
-            let row_offset = row * width;
-            for col in 0..width {
-                let mut value = image[row_offset + col];
-                if matches!(background_mode, Background::Mean | Background::Median) {
-                    value = (value - background_value).abs();
-                }
+        let subtract_background = matches!(background_mode, Background::Mean | Background::Median);
+        let mut row_ptr = image.as_ptr();
+        let column_ptr = column_sums.as_mut_ptr();
 
-                row_sum += value;
-                column_sums[col] += value;
-                total_mass += value;
+        if subtract_background {
+            for row_idx in 0..height {
+                let mut row_sum = 0.0_f64;
+                let mut pixel_ptr = row_ptr;
+                for col_idx in 0..width {
+                    let raw_value = unsafe { *pixel_ptr };
+                    let value = (raw_value - background_value).abs();
+
+                    row_sum += value;
+                    unsafe {
+                        *column_ptr.add(col_idx) += value;
+                    }
+                    total_mass += value;
+                    unsafe {
+                        pixel_ptr = pixel_ptr.add(1);
+                    }
+                }
+                y_numerator += row_idx as f64 * row_sum;
+                unsafe {
+                    row_ptr = pixel_ptr;
+                }
             }
-            y_numerator += row as f64 * row_sum;
+        } else {
+            for row_idx in 0..height {
+                let mut row_sum = 0.0_f64;
+                let mut pixel_ptr = row_ptr;
+                for col_idx in 0..width {
+                    let value = unsafe { *pixel_ptr };
+
+                    row_sum += value;
+                    unsafe {
+                        *column_ptr.add(col_idx) += value;
+                    }
+                    total_mass += value;
+                    unsafe {
+                        pixel_ptr = pixel_ptr.add(1);
+                    }
+                }
+                y_numerator += row_idx as f64 * row_sum;
+                unsafe {
+                    row_ptr = pixel_ptr;
+                }
+            }
         }
 
         for col in 0..width {
