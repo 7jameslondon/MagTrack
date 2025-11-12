@@ -25,9 +25,9 @@ pub fn center_of_mass(
 
     let image_size = width * height;
     let required_len = image_size * n_images;
-    assert!(stack.len() >= required_len, "stack length is too small");
-    assert!(x_out.len() >= n_images, "x_out length is too small");
-    assert!(y_out.len() >= n_images, "y_out length is too small");
+    debug_assert!(stack.len() >= required_len, "stack length is too small");
+    debug_assert!(x_out.len() >= n_images, "x_out length is too small");
+    debug_assert!(y_out.len() >= n_images, "y_out length is too small");
 
     let background_mode = match background {
         "none" => Background::None,
@@ -57,9 +57,7 @@ pub fn center_of_mass(
         let mut x_numerator = 0.0_f64;
         let mut y_numerator = 0.0_f64;
 
-        for value in &mut column_sums {
-            *value = 0.0;
-        }
+        column_sums.fill(0.0);
 
         let background_value = match background_mode {
             Background::None => 0.0,
@@ -81,61 +79,29 @@ pub fn center_of_mass(
         };
 
         let subtract_background = matches!(background_mode, Background::Mean | Background::Median);
-        let mut row_ptr = image.as_ptr();
-        let column_ptr = column_sums.as_mut_ptr();
+        for (row_idx, row) in image.chunks(width).enumerate() {
+            let mut row_sum = 0.0_f64;
 
-        if subtract_background {
-            for row_idx in 0..height {
-                let mut row_sum = 0.0_f64;
-                let mut pixel_ptr = row_ptr;
-                for col_idx in 0..width {
-                    let raw_value = unsafe { *pixel_ptr };
+            if subtract_background {
+                for (col_idx, &raw_value) in row.iter().enumerate() {
                     let value = (raw_value - background_value).abs();
-
                     row_sum += value;
-                    unsafe {
-                        *column_ptr.add(col_idx) += value;
-                    }
+                    column_sums[col_idx] += value;
                     total_mass += value;
-                    unsafe {
-                        pixel_ptr = pixel_ptr.add(1);
-                    }
                 }
-                y_numerator += row_idx as f64 * row_sum;
-                unsafe {
-                    row_ptr = pixel_ptr;
+            } else {
+                for (col_idx, &value) in row.iter().enumerate() {
+                    row_sum += value;
+                    column_sums[col_idx] += value;
+                    total_mass += value;
                 }
             }
-        } else {
-            for row_idx in 0..height {
-                let mut row_sum = 0.0_f64;
-                let mut pixel_ptr = row_ptr;
-                for col_idx in 0..width {
-                    let value = unsafe { *pixel_ptr };
 
-                    row_sum += value;
-                    unsafe {
-                        *column_ptr.add(col_idx) += value;
-                    }
-                    total_mass += value;
-                    unsafe {
-                        pixel_ptr = pixel_ptr.add(1);
-                    }
-                }
-                y_numerator += row_idx as f64 * row_sum;
-                unsafe {
-                    row_ptr = pixel_ptr;
-                }
-            }
+            y_numerator += row_idx as f64 * row_sum;
         }
 
-        let mut col_ptr = column_sums.as_ptr();
-        for col in 0..width {
-            let value = unsafe { *col_ptr };
+        for (col, &value) in column_sums.iter().enumerate() {
             x_numerator += col as f64 * value;
-            unsafe {
-                col_ptr = col_ptr.add(1);
-            }
         }
 
         if total_mass == 0.0 {
