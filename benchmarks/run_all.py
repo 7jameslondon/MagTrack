@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import importlib
+import importlib.resources as resources
 import inspect
 import sys
 from contextlib import contextmanager
@@ -171,14 +172,27 @@ class BenchmarkRecorder:
                 return []
 
 
-def discover_benchmark_modules(root: Path) -> list[str]:
+def discover_benchmark_modules(root: Path | None = None) -> list[str]:
     """Return fully-qualified module names containing benchmarks."""
 
     modules: list[str] = []
-    for path in sorted(root.glob("benchmark_*.py")):
-        if path.name in {"benchmark_utils.py", "benchmark_common.py"}:
+
+    traversable = None
+    if root is not None:
+        traversable = root
+    else:
+        try:
+            traversable = resources.files("benchmarks")
+        except Exception:  # noqa: BLE001 - fall back to filesystem path lookup
+            traversable = Path(__file__).resolve().parent
+
+    for entry in sorted(traversable.iterdir(), key=lambda item: item.name):
+        if not entry.name.startswith("benchmark_"):
             continue
-        modules.append(f"benchmarks.{path.stem}")
+        if entry.name in {"benchmark_utils.py", "benchmark_common.py"}:
+            continue
+        if entry.is_file() and entry.name.endswith(".py"):
+            modules.append(f"benchmarks.{Path(entry.name).stem}")
     return modules
 
 
@@ -195,8 +209,11 @@ def discover_benchmark_functions(module: Any) -> list[tuple[str, BenchmarkFunc]]
 def run_benchmarks(selected_modules: Iterable[str] | None = None) -> dict[str, Any]:
     """Execute benchmark modules and return structured results."""
 
-    benchmarks_dir = Path(__file__).resolve().parent
-    modules = list(selected_modules) if selected_modules is not None else discover_benchmark_modules(benchmarks_dir)
+    modules = (
+        list(selected_modules)
+        if selected_modules is not None
+        else discover_benchmark_modules()
+    )
 
     recorder = BenchmarkRecorder()
     results: list[dict[str, Any]] = []
