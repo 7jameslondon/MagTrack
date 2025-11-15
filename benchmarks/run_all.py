@@ -196,7 +196,11 @@ def run_benchmarks(selected_modules: Iterable[str] | None = None) -> dict[str, A
     """Execute benchmark modules and return structured results."""
 
     benchmarks_dir = Path(__file__).resolve().parent
-    modules = list(selected_modules) if selected_modules is not None else discover_benchmark_modules(benchmarks_dir)
+    modules = (
+        list(selected_modules)
+        if selected_modules is not None
+        else discover_benchmark_modules(benchmarks_dir)
+    )
 
     recorder = BenchmarkRecorder()
     results: list[dict[str, Any]] = []

@@ -47,5 +47,14 @@ docs = [
 Homepage = "https://github.com/7jameslondon/MagTrack"
 Issues = "https://github.com/7jameslondon/MagTrack/issues"
 
+[project.scripts]
+benchmark-magtrack = "benchmarks.run_all:main"
+
 [tool.setuptools]
-packages = ["magtrack"]
+packages = ["magtrack", "benchmarks"]
+
+[tool.setuptools.package-data]
+benchmarks = [
+    "logs/**",
+    "language/**",
+]
