@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import argparse
 import importlib
-import importlib.resources as resources
 import inspect
+import pkgutil
 import sys
 from contextlib import contextmanager
 from pathlib import Path
@@ -177,22 +177,29 @@ def discover_benchmark_modules(root: Path | None = None) -> list[str]:
 
     modules: list[str] = []
 
-    traversable = None
     if root is not None:
-        traversable = root
-    else:
-        try:
-            traversable = resources.files("benchmarks")
-        except Exception:  # noqa: BLE001 - fall back to filesystem path lookup
-            traversable = Path(__file__).resolve().parent
+        traversable = Path(root)
+        for entry in sorted(traversable.iterdir(), key=lambda item: item.name):
+            if not entry.name.startswith("benchmark_"):
+                continue
+            if entry.name in {"benchmark_utils.py", "benchmark_common.py"}:
+                continue
+            if entry.is_file() and entry.suffix == ".py":
+                modules.append(f"benchmarks.{entry.stem}")
+        return modules
 
-    for entry in sorted(traversable.iterdir(), key=lambda item: item.name):
-        if not entry.name.startswith("benchmark_"):
+    package = importlib.import_module("benchmarks")
+    for info in sorted(
+        pkgutil.iter_modules(package.__path__, f"{package.__name__}."),  # type: ignore[arg-type]
+        key=lambda item: item.name,
+    ):
+        module_name = info.name
+        leaf_name = module_name.rsplit(".", 1)[-1]
+        if not leaf_name.startswith("benchmark_"):
             continue
-        if entry.name in {"benchmark_utils.py", "benchmark_common.py"}:
+        if leaf_name in {"benchmark_utils", "benchmark_common"}:
             continue
-        if entry.is_file() and entry.name.endswith(".py"):
-            modules.append(f"benchmarks.{Path(entry.name).stem}")
+        modules.append(module_name)
     return modules
 
 
