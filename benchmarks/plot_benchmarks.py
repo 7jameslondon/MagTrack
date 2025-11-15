@@ -58,7 +58,7 @@ def plot_benchmark_history(
     log_root: Path | str = log_utils.LOG_ROOT,
     run_directory: Path | None = None,
     *,
-    show_latest: bool = True,
+    show_latest: bool = False,
 ):
     """Render a bar chart comparing the latest benchmark run to historical data.
 
@@ -296,8 +296,8 @@ def plot_benchmark_history(
             list(legend_entries.values()),
             list(legend_entries.keys()),
             loc="center",
-            bbox_to_anchor=(0.5, 0.2),
-            ncol=1,
+            bbox_to_anchor=(0.5, 0.15),
+            ncol=2,
             title="System ID",
             fontsize="small",
             title_fontsize="large",
