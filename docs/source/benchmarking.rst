@@ -14,9 +14,19 @@ executions.
 Running the orchestrator
 ------------------------
 
-Launch the orchestrator directly from the project root::
+First make sure Matplotlib is available by installing the benchmarking extra
+dependencies::
 
-   python -m benchmarks.run_all
+   pip install .[benchmark]
+
+If you also want to collect GPU measurements, include one of the ``cuXX``
+extras (for example ``.[benchmark,cu12]``) so the appropriate CuPy wheel is
+installed.
+
+Once the dependencies are in place you can launch the orchestrator directly
+from the project root with the convenience script::
+
+   benchmark-magtrack
 
 The command prints a short progress log while it imports benchmark modules and
 runs their ``benchmark_*`` functions. CPU timings are always collected. GPU
