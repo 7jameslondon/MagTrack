@@ -7,7 +7,7 @@ from typing import Any
 
 import numpy as np
 
-import confbenchmarks  # noqa: F401  # Ensures repository root on sys.path
+from benchmarks import confbenchmarks as confbenchmarks  # noqa: F401  # Ensures repository root on sys.path
 import magtrack
 from benchmarks.cpu_benchmark import cpu_benchmark
 from magtrack._cupy import cp, check_cupy
