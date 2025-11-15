@@ -846,8 +846,58 @@ def radial_profile(stack, x, y, oversample=1):
     return profiles
 
 
-def fft_profile(stack, x, y, oversample=4, rmin=0.0, rmax=0.5, gaus_factor=6.):
-    """Compute FFT-based radial intensity profiles for a stack of images.
+def fft_profile(stack, oversample=4, rmin=0.0, rmax=0.5):
+    """Compute FFT-based radial intensity profiles without pre-filtering.
+
+    Each image is transformed via a real 2D FFT, and the magnitude spectrum is
+    azimuthally averaged into oversampled radial bins that correspond to the
+    requested normalized frequency range. Unlike
+    :func:`fft_profile_with_center`, this routine does not apply Gaussian
+    weighting or require bead center coordinates.
+
+    Parameters
+    ----------
+    stack : array_like, shape (n_pixels, n_pixels, n_images)
+        Image stack to profile. The images must be square with an even width.
+    oversample : int, default=4
+        Radial oversampling factor (>=1) applied when binning FFT magnitudes.
+    rmin : float, default=0.0
+        Minimum normalized radial frequency (0–0.5 Nyquist) to keep in the
+        returned profile.
+    rmax : float, default=0.5
+        Maximum normalized radial frequency (0–0.5 Nyquist) considered when
+        building the radial profile.
+
+    Returns
+    -------
+    profile : array_like, shape (n_selected_bins, n_images)
+        Oversampled radial magnitude profiles for each image, sliced to the
+        bins corresponding to the radial range ``[rmin, rmax]``.
+    """
+
+    xp = cp.get_array_module(stack)
+
+    n_images = stack.shape[2]
+    width = stack.shape[0]
+    center = width // 2
+    n_bins = int(round(center * rmax * oversample))
+    n_start = int(round(center * rmin * oversample))
+    grid = xp.indices((width, center + 1), dtype=xp.float32)
+    r_int = xp.round(
+        xp.hypot(grid[1], grid[0] - center) * oversample
+    ).astype(xp.uint16)
+    r = xp.tile(r_int.reshape(-1, 1), (1, n_images))
+
+    fft_cpx = xp.fft.fftshift(xp.fft.rfft2(stack, axes=(0, 1)), axes=(0,))
+    fft = xp.abs(fft_cpx).reshape(-1, n_images)
+
+    profile = binmean(r, fft, n_bins)[n_start:]
+
+    return profile
+
+
+def fft_profile_with_center(stack, x, y, oversample=4, rmin=0.0, rmax=0.5, gaus_factor=6.):
+    """Compute FFT-based radial intensity profiles using Gaussian weighting.
 
     The images are first weighted in-place by a 2D Gaussian centered at the
     requested locations. A real 2D FFT is then evaluated for each weighted
@@ -882,29 +932,25 @@ def fft_profile(stack, x, y, oversample=4, rmin=0.0, rmax=0.5, gaus_factor=6.):
         bins corresponding to the radial range ``[rmin, rmax]``.
     """
 
-    # GPU or CPU?
     xp = cp.get_array_module(stack)
 
-    # Radial distance
     n_images = stack.shape[2]
     width = stack.shape[0]
     center = width // 2
     n_bins = int(round(center * rmax * oversample))
     n_start = int(round(center * rmin * oversample))
-    grid = xp.indices((width, center+1), dtype=xp.float32)
-    # cast to uint16 because min and max r for 1024x1024 would be 0 and 1449
-    r_int = xp.round(xp.hypot(grid[1], grid[0] - center) * oversample).astype(xp.uint16).reshape(-1, 1)
-    r = xp.tile(r_int, (1, n_images))
+    grid = xp.indices((width, center + 1), dtype=xp.float32)
+    r_int = xp.round(
+        xp.hypot(grid[1], grid[0] - center) * oversample
+    ).astype(xp.uint16)
+    r = xp.tile(r_int.reshape(-1, 1), (1, n_images))
 
-    # Gaussian weights
-    w = gaussian_2d(xp.arange(width), xp.arange(width), x, y, width/gaus_factor)
+    w = gaussian_2d(xp.arange(width), xp.arange(width), x, y, width / gaus_factor)
     stack *= w
 
-    # FFT
     fft_cpx = xp.fft.fftshift(xp.fft.rfft2(stack, axes=(0, 1)), axes=(0,))
     fft = xp.abs(fft_cpx).reshape(-1, n_images)
 
-    # Profile
     profile = binmean(r, fft, n_bins)[n_start:]
 
     return profile
@@ -1031,7 +1077,7 @@ def stack_to_xyzp_advanced(stack, zlut=None, **kwargs):
         )
 
     if kwargs.get('use fft_profile', True):
-        profiles = fft_profile(gpu_stack, x, y, **kwargs.get('fft_profile', {}))
+        profiles = fft_profile(gpu_stack, **kwargs.get('fft_profile', {}))
     else:
         profiles = radial_profile(gpu_stack, x, y, **kwargs.get('radial_profile', {}))
 
