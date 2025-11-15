@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import argparse
 import importlib
+import importlib.resources as importlib_resources
 import inspect
-import pkgutil
 import sys
 from contextlib import contextmanager
 from pathlib import Path
@@ -172,34 +172,20 @@ class BenchmarkRecorder:
                 return []
 
 
-def discover_benchmark_modules(root: Path | None = None) -> list[str]:
+def discover_benchmark_modules() -> list[str]:
     """Return fully-qualified module names containing benchmarks."""
 
     modules: list[str] = []
 
-    if root is not None:
-        traversable = Path(root)
-        for entry in sorted(traversable.iterdir(), key=lambda item: item.name):
-            if not entry.name.startswith("benchmark_"):
-                continue
-            if entry.name in {"benchmark_utils.py", "benchmark_common.py"}:
-                continue
-            if entry.is_file() and entry.suffix == ".py":
-                modules.append(f"benchmarks.{entry.stem}")
-        return modules
-
     package = importlib.import_module("benchmarks")
-    for info in sorted(
-        pkgutil.iter_modules(package.__path__, f"{package.__name__}."),  # type: ignore[arg-type]
-        key=lambda item: item.name,
-    ):
-        module_name = info.name
-        leaf_name = module_name.rsplit(".", 1)[-1]
-        if not leaf_name.startswith("benchmark_"):
+    traversable = importlib_resources.files(package)
+    for entry in sorted(traversable.iterdir(), key=lambda item: item.name):
+        if not entry.name.startswith("benchmark_"):
             continue
-        if leaf_name in {"benchmark_utils", "benchmark_common"}:
+        if entry.name in {"benchmark_utils.py", "benchmark_common.py"}:
             continue
-        modules.append(module_name)
+        if entry.is_file() and entry.suffix == ".py":
+            modules.append(f"{package.__name__}.{entry.stem}")
     return modules
 
 
