@@ -57,8 +57,23 @@ def _resolve_run_id(log_root: Path, run_directory: Path | None, rows: Sequence[d
 def plot_benchmark_history(
     log_root: Path | str = log_utils.LOG_ROOT,
     run_directory: Path | None = None,
+    *,
+    show_latest: bool = False,
 ):
-    """Render a bar chart comparing the latest benchmark run to historical data."""
+    """Render a bar chart comparing the latest benchmark run to historical data.
+
+    Parameters
+    ----------
+    log_root:
+        Root directory containing the benchmark logs.
+    run_directory:
+        Optional path to a specific run directory whose results should be
+        highlighted.
+    show_latest:
+        When ``True`` (the default), include a visual highlight for the most
+        recent run in the chart. Set to ``False`` to omit the latest-run
+        annotation entirely.
+    """
 
     root = Path(log_root)
     rows = log_utils.aggregate_logs(root)
@@ -66,10 +81,17 @@ def plot_benchmark_history(
         print("No benchmark logs found; skipping plot generation.")
         return None
 
-    latest_run_id = _resolve_run_id(root, run_directory, rows)
-    if latest_run_id is None:
-        print("Unable to determine the latest run identifier; skipping plot generation.")
-        return None
+    latest_run_id: str | None = None
+    latest_system_id: str | None = None
+    if show_latest:
+        latest_run_id = _resolve_run_id(root, run_directory, rows)
+        if latest_run_id is None:
+            print(
+                "Unable to determine the latest run identifier; omitting latest-run highlight."
+            )
+            show_latest = False
+        else:
+            latest_system_id = str(latest_run_id).split("/", 1)[0]
 
     categories = sorted(
         {
@@ -87,9 +109,6 @@ def plot_benchmark_history(
     backend_labels: dict[str, list[str]] = {}
     backend_per_system_values: dict[str, dict[str, list[float]]] = {}
     backend_latest_values: dict[str, list[float]] = {}
-    latest_system_id: str | None = None
-    if latest_run_id:
-        latest_system_id = str(latest_run_id).split("/", 1)[0]
 
     for benchmark, backend in categories:
         if benchmark is None or backend is None:
@@ -101,7 +120,8 @@ def plot_benchmark_history(
         backend_per_system_values.setdefault(
             backend_key, {system: [] for system in systems}
         )
-        backend_latest_values.setdefault(backend_key, [])
+        if show_latest:
+            backend_latest_values.setdefault(backend_key, [])
 
         category_rows = [
             row
@@ -129,14 +149,15 @@ def plot_benchmark_history(
                 _normalize(mean_value, baseline)
             )
 
-        latest_times = [
-            row.get("mean_time")
-            for row in category_rows
-            if row.get("run_id") == latest_run_id and row.get("mean_time") is not None
-        ]
-        backend_latest_values[backend_key].append(
-            _normalize(_mean(latest_times), baseline)
-        )
+        if show_latest and latest_run_id:
+            latest_times = [
+                row.get("mean_time")
+                for row in category_rows
+                if row.get("run_id") == latest_run_id and row.get("mean_time") is not None
+            ]
+            backend_latest_values[backend_key].append(
+                _normalize(_mean(latest_times), baseline)
+            )
 
     if not any(backend_labels.values()):
         print("No benchmark entries were found to plot.")
@@ -178,7 +199,7 @@ def plot_benchmark_history(
     for axis, backend in zip(axes_list, ordered_backends):
         labels = backend_labels[backend]
         per_system_values = backend_per_system_values[backend]
-        latest_values = backend_latest_values[backend]
+        latest_values = backend_latest_values.get(backend, [])
 
         series: list[dict[str, object]] = []
 
@@ -192,15 +213,17 @@ def plot_benchmark_history(
                     "label": system,
                     "values": values,
                     "facecolor": cmap(index % cmap.N),
-                    "edgecolor": "black" if system == latest_system_id else None,
-                    "linewidth": 1.5 if system == latest_system_id else 0,
+                    "edgecolor": "black"
+                    if show_latest and system == latest_system_id
+                    else None,
+                    "linewidth": 1.5 if show_latest and system == latest_system_id else 0,
                     "linestyle": "-",
-                    "zorder": 2 if system == latest_system_id else 1,
+                    "zorder": 2 if show_latest and system == latest_system_id else 1,
                 }
             )
 
         latest_label: str | None = None
-        if latest_run_id:
+        if show_latest and latest_run_id:
             if len(latest_values) < len(labels):
                 latest_values = latest_values + [
                     float("nan")
@@ -273,8 +296,8 @@ def plot_benchmark_history(
             list(legend_entries.values()),
             list(legend_entries.keys()),
             loc="center",
-            bbox_to_anchor=(0.5, 0.2),
-            ncol=1,
+            bbox_to_anchor=(0.5, 0.15),
+            ncol=2,
             title="System ID",
             fontsize="small",
             title_fontsize="large",
