@@ -45,6 +45,29 @@ class ProfileTestBase(unittest.TestCase):
         return magtrack.binmean(r, flat_stack, n_bins)
 
     def _compute_expected_fft_profile(
+        self, xp, stack, oversample, rmin, rmax
+    ):
+        n_images = stack.shape[2]
+        width = stack.shape[0]
+        center = width // 2
+        n_bins = int(round(center * rmax * oversample))
+        n_start = int(round(center * rmin * oversample))
+
+        grid = xp.indices((width, center + 1), dtype=xp.float32)
+        r_int = xp.round(
+            xp.hypot(grid[1], grid[0] - center) * oversample
+        ).astype(xp.uint16)
+        r = xp.tile(r_int.reshape(-1, 1), (1, n_images))
+
+        fft_cpx = xp.fft.fftshift(
+            xp.fft.rfft2(stack, axes=(0, 1)), axes=(0,)
+        )
+        fft = xp.abs(fft_cpx).reshape(-1, n_images)
+
+        profile = magtrack.binmean(r, fft, n_bins)
+        return profile[n_start:]
+
+    def _compute_expected_fft_profile_with_center(
         self, xp, stack, x, y, oversample, rmin, rmax, gaus_factor
     ):
         n_images = stack.shape[2]
@@ -127,6 +150,54 @@ class TestFFTProfile(ProfileTestBase):
         image[2, 1] = 1.0
         stack_np = np.stack((image, image.T), axis=-1)
 
+        oversample = 4
+        rmin = 0.0
+        rmax = 0.75
+
+        for xp in self.xp_modules:
+            stack = self._to_xp(xp, stack_np)
+
+            result = magtrack.fft_profile(
+                stack.copy(), oversample=oversample, rmin=rmin, rmax=rmax
+            )
+            expected = self._compute_expected_fft_profile(
+                xp, stack, oversample, rmin, rmax
+            )
+
+            self._assert_allclose(xp, result, expected, rtol=1e-6, atol=1e-7)
+            self.assertEqual(result.shape, expected.shape)
+            self.assertEqual(result.shape[1], stack.shape[2])
+
+    def test_fft_profile_respects_rmin_and_rmax(self):
+        image = np.arange(36, dtype=np.float32).reshape(6, 6)
+        stack_np = np.stack((image, image[::-1, :]), axis=-1)
+
+        oversample = 2
+        rmin = 0.25
+        rmax = 0.5
+
+        for xp in self.xp_modules:
+            stack = self._to_xp(xp, stack_np)
+
+            result = magtrack.fft_profile(
+                stack.copy(), oversample=oversample, rmin=rmin, rmax=rmax
+            )
+            expected = self._compute_expected_fft_profile(
+                xp, stack, oversample, rmin, rmax
+            )
+
+            self._assert_allclose(xp, result, expected, rtol=1e-6, atol=1e-7)
+            self.assertEqual(result.shape, expected.shape)
+            self.assertEqual(result.shape[1], stack.shape[2])
+
+
+class TestFFTProfileWithCenter(ProfileTestBase):
+    def test_fft_profile_with_center_matches_manual_computation(self):
+        image = np.zeros((4, 4), dtype=np.float32)
+        image[1, 1] = 4.0
+        image[2, 1] = 1.0
+        stack_np = np.stack((image, image.T), axis=-1)
+
         x_np = np.array([1.5, 2.0], dtype=np.float32)
         y_np = np.array([1.5, 1.0], dtype=np.float32)
         oversample = 4
@@ -139,10 +210,16 @@ class TestFFTProfile(ProfileTestBase):
             x = self._to_xp(xp, x_np)
             y = self._to_xp(xp, y_np)
 
-            result = magtrack.fft_profile(
-                stack.copy(), x, y, oversample=oversample, rmin=rmin, rmax=rmax, gaus_factor=gaus_factor
+            result = magtrack.fft_profile_with_center(
+                stack.copy(),
+                x,
+                y,
+                oversample=oversample,
+                rmin=rmin,
+                rmax=rmax,
+                gaus_factor=gaus_factor,
             )
-            expected = self._compute_expected_fft_profile(
+            expected = self._compute_expected_fft_profile_with_center(
                 xp, stack, x, y, oversample, rmin, rmax, gaus_factor
             )
 
@@ -150,7 +227,7 @@ class TestFFTProfile(ProfileTestBase):
             self.assertEqual(result.shape, expected.shape)
             self.assertEqual(result.shape[1], stack.shape[2])
 
-    def test_fft_profile_respects_rmin_and_rmax(self):
+    def test_fft_profile_with_center_respects_rmin_and_rmax(self):
         image = np.arange(36, dtype=np.float32).reshape(6, 6)
         stack_np = np.stack((image, image[::-1, :]), axis=-1)
 
@@ -166,10 +243,16 @@ class TestFFTProfile(ProfileTestBase):
             x = self._to_xp(xp, x_np)
             y = self._to_xp(xp, y_np)
 
-            result = magtrack.fft_profile(
-                stack.copy(), x, y, oversample=oversample, rmin=rmin, rmax=rmax, gaus_factor=gaus_factor
+            result = magtrack.fft_profile_with_center(
+                stack.copy(),
+                x,
+                y,
+                oversample=oversample,
+                rmin=rmin,
+                rmax=rmax,
+                gaus_factor=gaus_factor,
             )
-            expected = self._compute_expected_fft_profile(
+            expected = self._compute_expected_fft_profile_with_center(
                 xp, stack, x, y, oversample, rmin, rmax, gaus_factor
             )
 
