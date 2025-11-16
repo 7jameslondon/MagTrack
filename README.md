@@ -44,6 +44,15 @@ You can see more examples of how to use MagTrack in [this notebook](https://gith
 Try it out with Google Colab. [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/7jameslondon/MagTrack/blob/master/examples/examples.ipynb)
 Or you can [download](https://github.com/7jameslondon/MagTrack/blob/master/examples/examples.ipynb) it and run it on your computer with [Jupyter Notebook](https://jupyter.org/install).
 
+### Visualize accuracy sweep bead images
+You can inspect the simulated bead images that power the accuracy benchmark by running the TkAgg-based Matplotlib helper:
+
+```bash
+python examples/show_accuracy_montage.py
+```
+
+Use the CLI flags (run with `-h`) to change montage sizing, spacing, or figure layout.
+
 ## 📖 Documentation
 View the full guide to MagTrack at [magtrack.readthedocs.io](https://magtrack.readthedocs.io)
 
