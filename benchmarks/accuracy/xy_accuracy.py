@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-import argparse
 from collections.abc import Iterable as IterableABC
+from dataclasses import dataclass
 from itertools import product
-from pathlib import Path
 from typing import Callable, Dict, Iterable, List, Sequence, Tuple
 
 import numpy as np
@@ -19,6 +18,47 @@ MethodFunc = Callable[[np.ndarray], Tuple[np.ndarray, np.ndarray]]
 
 METHOD_REGISTRY: Dict[str, MethodFunc] = {}
 DEFAULT_CAMERA_PIXEL_SIZE_NM = 10000.0
+
+
+@dataclass(frozen=True)
+class AccuracySweepConfig:
+    """Default configuration for :func:`run_accuracy_sweep`."""
+
+    n_images: int = 100
+    magnification_choices: Tuple[float, ...] = (100.0,)
+    size_nm_choices: Tuple[float, ...] = (6400.0,)
+    radius_nm_choices: Tuple[float, ...] = (1500.0, 2500.0)
+    background_levels: Tuple[float, ...] = (0.3, 0.8)
+    contrast_scales: Tuple[float, ...] = (0.5, 1.0)
+    z_nm_choices: Tuple[float, ...] = (0.0, 1000.0)
+    x_fraction_choices: Tuple[float, ...] = (0.0, 0.01)
+    y_fraction_choices: Tuple[float, ...] = (0.0, 0.01)
+    photons_per_unit_choices: Tuple[float, ...] = (5000.0,)
+    camera_pixel_size_nm: float = DEFAULT_CAMERA_PIXEL_SIZE_NM
+    rng_seed: int | None = 0
+    methods: Tuple[str, ...] | None = None
+
+    def to_kwargs(self) -> Dict[str, object]:
+        """Return a dictionary of keyword arguments for :func:`run_accuracy_sweep`."""
+
+        return {
+            "n_images": self.n_images,
+            "magnification_choices": self.magnification_choices,
+            "size_nm_choices": self.size_nm_choices,
+            "radius_nm_choices": self.radius_nm_choices,
+            "background_levels": self.background_levels,
+            "contrast_scales": self.contrast_scales,
+            "z_nm_choices": self.z_nm_choices,
+            "x_fraction_choices": self.x_fraction_choices,
+            "y_fraction_choices": self.y_fraction_choices,
+            "photons_per_unit_choices": self.photons_per_unit_choices,
+            "camera_pixel_size_nm": self.camera_pixel_size_nm,
+            "rng_seed": self.rng_seed,
+            "methods": list(self.methods) if self.methods is not None else None,
+        }
+
+
+DEFAULT_SWEEP_CONFIG = AccuracySweepConfig()
 
 
 def register_method(name: str) -> Callable[[MethodFunc], MethodFunc]:
@@ -64,7 +104,9 @@ def _true_xy_pixels(x_nm: float, y_nm: float, nm_per_px: float, size_px: int) ->
     return x_px, y_px
 
 
-def _summarize(df: pd.DataFrame) -> str:
+def summarize_accuracy(df: pd.DataFrame) -> pd.DataFrame:
+    """Compute RMSE summaries for a sweep DataFrame."""
+
     summary = df.groupby("method").apply(
         lambda g: pd.Series(
             {
@@ -74,7 +116,14 @@ def _summarize(df: pd.DataFrame) -> str:
         ),
         include_groups=False,
     )
-    return summary.to_string(float_format="{:.3f}".format)
+    summary = summary.reset_index()
+    return summary
+
+
+def format_summary(summary_df: pd.DataFrame) -> str:
+    """Return a pretty string representation of :func:`summarize_accuracy`."""
+
+    return summary_df.to_string(index=False, float_format="{:.3f}".format)
 
 
 def _as_tuple(value: float | int | Sequence[float | int]) -> Tuple[float | int, ...]:
@@ -248,94 +297,13 @@ def run_accuracy_sweep(
     return pd.concat(rows, ignore_index=True)
 
 
-def main(argv: List[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description="Run XY localization accuracy benchmark.")
-    parser.add_argument("--n-images", type=int, default=100, help="Number of images to simulate.")
-    parser.add_argument("--out", type=str, default=None, help="Optional path to CSV output.")
-    parser.add_argument(
-        "--magnification-choices",
-        type=str,
-        default="100.0",
-        help="Comma-separated magnifications to test (default: 100).",
-    )
-    parser.add_argument(
-        "--size-nm-choices",
-        type=str,
-        default="6400.0",
-        help="Comma-separated physical ROI sizes in nanometers (default: 6400).",
-    )
-    parser.add_argument(
-        "--camera-pixel-size-nm",
-        type=float,
-        default=DEFAULT_CAMERA_PIXEL_SIZE_NM,
-        help="Physical camera pixel size in nanometers (default: 10000).",
-    )
-    parser.add_argument(
-        "--z-nm-choices",
-        type=str,
-        default="0.0,1000.0",
-        help="Comma-separated list of z positions in nanometers (default: 0,1000).",
-    )
-    parser.add_argument(
-        "--x-fraction-choices",
-        type=str,
-        default="0.0,0.01",
-        help="Comma-separated fractions of size_px specifying x offsets from the center (default: 0,0.01).",
-    )
-    parser.add_argument(
-        "--y-fraction-choices",
-        type=str,
-        default="0.0,0.01",
-        help="Comma-separated fractions of size_px specifying y offsets from the center (default: 0,0.01).",
-    )
-    parser.add_argument(
-        "--methods",
-        type=str,
-        default=None,
-        help="Comma-separated list of method names to run (default: all registered).",
-    )
-    args = parser.parse_args(argv)
-
-    method_list = args.methods.split(",") if args.methods else None
-    magnifications = tuple(
-        float(part) for part in args.magnification_choices.split(",") if part.strip()
-    )
-    if not magnifications:
-        raise SystemExit("--magnification-choices must include at least one numeric value")
-    size_nm_choices = tuple(
-        float(part) for part in args.size_nm_choices.split(",") if part.strip()
-    )
-    if not size_nm_choices:
-        raise SystemExit("--size-nm-choices must include at least one numeric value")
-    z_choices = tuple(float(part) for part in args.z_nm_choices.split(",") if part.strip())
-    if not z_choices:
-        raise SystemExit("--z-nm-choices must include at least one numeric value")
-    x_fractions = tuple(float(part) for part in args.x_fraction_choices.split(",") if part.strip())
-    if not x_fractions:
-        raise SystemExit("--x-fraction-choices must include at least one numeric value")
-    y_fractions = tuple(float(part) for part in args.y_fraction_choices.split(",") if part.strip())
-    if not y_fractions:
-        raise SystemExit("--y-fraction-choices must include at least one numeric value")
-    df = run_accuracy_sweep(
-        n_images=args.n_images,
-        methods=method_list,
-        magnification_choices=magnifications,
-        size_nm_choices=size_nm_choices,
-        camera_pixel_size_nm=args.camera_pixel_size_nm,
-        z_nm_choices=z_choices,
-        x_fraction_choices=x_fractions,
-        y_fraction_choices=y_fractions,
-    )
-
-    if args.out:
-        output_path = Path(args.out)
-        output_path.parent.mkdir(parents=True, exist_ok=True)
-        df.to_csv(output_path, index=False)
-    else:
-        print(_summarize(df))
-
-    return 0
-
-
-if __name__ == "__main__":
-    raise SystemExit(main())
+__all__ = [
+    "AccuracySweepConfig",
+    "DEFAULT_CAMERA_PIXEL_SIZE_NM",
+    "DEFAULT_SWEEP_CONFIG",
+    "MethodFunc",
+    "format_summary",
+    "register_method",
+    "run_accuracy_sweep",
+    "summarize_accuracy",
+]
