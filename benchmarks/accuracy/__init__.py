@@ -9,6 +9,7 @@ from benchmarks.accuracy.runner import (
 )
 from benchmarks.accuracy.xy_accuracy import (
     AccuracySweepConfig,
+    AccuracySweepResults,
     DEFAULT_CAMERA_PIXEL_SIZE_NM,
     DEFAULT_SWEEP_CONFIG,
     MethodFunc,
@@ -20,6 +21,7 @@ from benchmarks.accuracy.xy_accuracy import (
 
 __all__ = [
     "AccuracySweepConfig",
+    "AccuracySweepResults",
     "DEFAULT_CAMERA_PIXEL_SIZE_NM",
     "DEFAULT_SWEEP_CONFIG",
     "MethodFunc",

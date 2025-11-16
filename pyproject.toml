@@ -33,11 +33,9 @@ cu12 = ["cupy-cuda12x>=13.0"]
 cu13 = ["cupy-cuda13x>=13.0"]
 benchmark = [
     "matplotlib",
-    "pandas",
 ]
 test = [
     "matplotlib",
-    "pandas",
     "pytest",
 ]
 docs = [
