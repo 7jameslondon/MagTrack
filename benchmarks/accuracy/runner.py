@@ -9,7 +9,6 @@ from typing import Any, Dict
 
 from benchmarks.speed import log_utils as speed_log_utils
 
-from benchmarks.accuracy.plot_xy_accuracy import make_default_plots
 from benchmarks.accuracy.xy_accuracy import (
     AccuracySweepConfig,
     AccuracySweepResults,
@@ -81,38 +80,15 @@ def get_latest_csv(log_dir: Path | str | None = None) -> Path:
     return csv_files[-1]
 
 
-def plot_accuracy_results(
-    csv_path: Path | str | None = None,
-    *,
-    log_dir: Path | str | None = None,
-    out_dir: Path | str | None = None,
-    show: bool = False,
-) -> Path:
-    """Generate the default plots for a CSV file (latest log if not provided)."""
-
-    if csv_path is None:
-        csv_path = get_latest_csv(log_dir)
-    csv_path = Path(csv_path)
-    results = AccuracySweepResults.from_csv(csv_path)
-
-    if out_dir is None:
-        out_dir = csv_path.parent / "plots" / csv_path.stem
-    out_dir_path = Path(out_dir)
-    make_default_plots(results, out_dir=out_dir_path, show=show)
-    return out_dir_path
-
-
 def run_full_accuracy_benchmark(
     config: AccuracySweepConfig | None = None,
     *,
     log_dir: Path | str | None = None,
-    auto_plot: bool = True,
-    show_plots: bool = False,
 ) -> Dict[str, Any]:
     """Run the full XY-accuracy benchmark pipeline.
 
     The pipeline executes :func:`run_accuracy_sweep`, writes a timestamped CSV and JSON
-    log, and (optionally) generates the default plots for the new results.
+    log, and returns the key artifacts from the run.
     """
 
     active_config = config or DEFAULT_SWEEP_CONFIG
@@ -122,19 +98,10 @@ def run_full_accuracy_benchmark(
     results = run_accuracy_sweep(**active_config.to_kwargs())
     log_info = _write_log(results, active_config, run_context)
 
-    plot_dir = None
-    if auto_plot:
-        plot_dir = plot_accuracy_results(
-            csv_path=log_info["csv_path"],
-            log_dir=log_dir_path,
-            show=show_plots,
-        )
-
     return {
         "csv_path": log_info["csv_path"],
         "log_path": log_info["log_path"],
         "summary": format_summary(log_info["summary"]),
-        "plot_dir": plot_dir,
     }
 
 
@@ -144,6 +111,5 @@ if __name__ == "__main__":
 
 __all__ = [
     "get_latest_csv",
-    "plot_accuracy_results",
     "run_full_accuracy_benchmark",
 ]
