@@ -7,9 +7,9 @@ import numpy as np
 from benchmarks.accuracy.xy_accuracy import DEFAULT_CAMERA_PIXEL_SIZE_NM, run_accuracy_sweep
 
 
-DEFAULT_Z_CHOICES = (0.0,)
-DEFAULT_X_FRACTIONS = (0.0,)
-DEFAULT_Y_FRACTIONS = (0.0,)
+DEFAULT_Z_CHOICES = (0.0, 1000.0)
+DEFAULT_X_FRACTIONS = (0.0, 0.01)
+DEFAULT_Y_FRACTIONS = (0.0, 0.01)
 DEFAULT_MAGNIFICATIONS = (100.0,)
 DEFAULT_SIZE_NM = (6400.0,)
 
@@ -52,7 +52,14 @@ def test_run_accuracy_sweep_smoke():
     df = _run_default(n_images=4, rng_seed=0)
     assert not df.empty
     assert EXPECTED_COLUMNS.issubset(df.columns)
-    combos = 2 * 2 * 2  # radius_nm_choices * background_levels * contrast_scales
+    combos = (
+        2  # radius_nm_choices
+        * 2  # background_levels
+        * 2  # contrast_scales
+        * len(DEFAULT_Z_CHOICES)
+        * len(DEFAULT_X_FRACTIONS)
+        * len(DEFAULT_Y_FRACTIONS)
+    )
     assert df["image_index"].nunique() == 4 * combos
 
 
@@ -83,7 +90,17 @@ def test_parameter_combinations_produce_expected_count():
         x_fraction_choices=(-0.2, 0.0),
         y_fraction_choices=(0.0, 0.3),
     )
-    expected_combos = 2 * 2 * 1 * 2 * 1 * 2 * 2 * 2
+    expected_combos = (
+        2  # magnification_choices
+        * 2  # size_nm_choices
+        * 1  # radius_nm_choices
+        * 2  # background_levels
+        * 1  # contrast_scales
+        * 2  # photons_per_unit_choices
+        * len(DEFAULT_Z_CHOICES)
+        * 2  # x_fraction_choices
+        * 2  # y_fraction_choices
+    )
     assert df["image_index"].nunique() == expected_combos
     assert set(df["magnification"].unique()) == {100.0, 125.0}
     assert set(df["nm_per_px"].unique()) == {

@@ -92,9 +92,9 @@ def run_accuracy_sweep(
     radius_nm_choices: Tuple[float, ...] = (1500.0, 2500.0),
     background_levels: Tuple[float, ...] = (0.3, 0.8),
     contrast_scales: Tuple[float, ...] = (0.5, 1.0),
-    z_nm_choices: Sequence[float] | None = None,
-    x_fraction_choices: Sequence[float] | None = None,
-    y_fraction_choices: Sequence[float] | None = None,
+    z_nm_choices: Sequence[float] | None = (0.0, 1000.0),
+    x_fraction_choices: Sequence[float] | None = (0.0, 0.01),
+    y_fraction_choices: Sequence[float] | None = (0.0, 0.01),
     photons_per_unit_choices: float | Sequence[float] = 5000.0,
     camera_pixel_size_nm: float = DEFAULT_CAMERA_PIXEL_SIZE_NM,
     rng_seed: int | None = 0,
@@ -117,17 +117,17 @@ def run_accuracy_sweep(
     contrast_values = tuple(float(v) for v in contrast_scales)
     photons_values = tuple(float(v) for v in _as_tuple(photons_per_unit_choices))
     if z_nm_choices is None:
-        raise ValueError("z_nm_choices must be specified")
+        z_nm_choices = (0.0, 1000.0)
     z_values = tuple(float(v) for v in _as_tuple(z_nm_choices))
     if not z_values:
         raise ValueError("z_nm_choices must contain at least one value")
     if x_fraction_choices is None:
-        raise ValueError("x_fraction_choices must be specified")
+        x_fraction_choices = (0.0, 0.01)
     x_fraction_values = tuple(float(v) for v in _as_tuple(x_fraction_choices))
     if not x_fraction_values:
         raise ValueError("x_fraction_choices must contain at least one value")
     if y_fraction_choices is None:
-        raise ValueError("y_fraction_choices must be specified")
+        y_fraction_choices = (0.0, 0.01)
     y_fraction_values = tuple(float(v) for v in _as_tuple(y_fraction_choices))
     if not y_fraction_values:
         raise ValueError("y_fraction_choices must contain at least one value")
@@ -273,20 +273,20 @@ def main(argv: List[str] | None = None) -> int:
     parser.add_argument(
         "--z-nm-choices",
         type=str,
-        required=True,
-        help="Comma-separated list of z positions in nanometers (required).",
+        default="0.0,1000.0",
+        help="Comma-separated list of z positions in nanometers (default: 0,1000).",
     )
     parser.add_argument(
         "--x-fraction-choices",
         type=str,
-        required=True,
-        help="Comma-separated fractions of size_px specifying x offsets from the center.",
+        default="0.0,0.01",
+        help="Comma-separated fractions of size_px specifying x offsets from the center (default: 0,0.01).",
     )
     parser.add_argument(
         "--y-fraction-choices",
         type=str,
-        required=True,
-        help="Comma-separated fractions of size_px specifying y offsets from the center.",
+        default="0.0,0.01",
+        help="Comma-separated fractions of size_px specifying y offsets from the center (default: 0,0.01).",
     )
     parser.add_argument(
         "--methods",
