@@ -7,7 +7,30 @@ from typing import Any
 
 import matplotlib
 
-matplotlib.use("TkAgg")
+
+def _configure_tk_backend() -> None:
+    """Force Matplotlib to use TkAgg and fail fast if Tk is unavailable."""
+
+    backend = "TkAgg"
+    try:
+        import tkinter  # type: ignore # pylint: disable=unused-import
+    except ImportError as exc:  # pragma: no cover - depends on user environment
+        raise SystemExit(
+            "TkAgg requires Tkinter but it is not installed. Install Tk/Tcl "
+            "support (e.g., `python -m pip install tk` on Windows) and re-run."
+        ) from exc
+
+    try:
+        matplotlib.use(backend, force=True)
+    except (ImportError, RuntimeError) as exc:  # pragma: no cover - backend specific
+        raise SystemExit(
+            f"Unable to activate Matplotlib backend '{backend}'. "
+            "Verify that Tkinter is available and working."
+        ) from exc
+
+
+_configure_tk_backend()
+
 import matplotlib.pyplot as plt
 
 from benchmarks.accuracy.xy_accuracy import (

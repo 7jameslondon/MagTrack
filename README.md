@@ -51,7 +51,9 @@ You can inspect the simulated bead images that power the accuracy benchmark by r
 python examples/show_accuracy_montage.py
 ```
 
-Use the CLI flags (run with `-h`) to change montage sizing, spacing, or figure layout.
+Use the CLI flags (run with `-h`) to change montage sizing, spacing, or figure layout. The
+script forces Matplotlib's TkAgg backend, so ensure your Python installation includes
+Tk/Tcl support (e.g., install the `tk` package on Windows) before launching it.
 
 ## 📖 Documentation
 View the full guide to MagTrack at [magtrack.readthedocs.io](https://magtrack.readthedocs.io)
