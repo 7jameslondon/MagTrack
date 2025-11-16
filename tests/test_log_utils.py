@@ -9,7 +9,7 @@ import types
 
 import pytest
 
-from benchmarks import log_utils
+from benchmarks.speed import log_utils
 
 
 def test_normalize_cpu_brand_truncates_trademarks() -> None:

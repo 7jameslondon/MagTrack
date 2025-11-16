@@ -1,4 +1,4 @@
-"""Performance benchmark for :func:`magtrack.radial_profile`."""
+"""Performance benchmark for :func:`magtrack.auto_conv_multiline_sub_pixel`."""
 
 from __future__ import annotations
 
@@ -7,9 +7,9 @@ from typing import Any
 
 import numpy as np
 
-from benchmarks import confbenchmarks  # noqa: F401  # Ensures repository root on sys.path
+from benchmarks.speed import confbenchmarks  # noqa: F401  # Ensures repository root on sys.path
 import magtrack
-from benchmarks.cpu_benchmark import cpu_benchmark
+from benchmarks.speed.cpu_benchmark import cpu_benchmark
 from magtrack._cupy import cp, check_cupy
 from magtrack.simulation import simulate_beads
 
@@ -40,15 +40,12 @@ def _generate_inputs(
     n_images: int,
     nm_per_px: float,
     size_px: int,
-    oversample: int,
     seed: int,
 ) -> tuple[Any, Any, Any]:
-    """Generate bead stacks and bead center estimates."""
+    """Generate bead stacks and initial guesses for benchmarking."""
 
     if n_images <= 0:
         raise ValueError("n_images must be a positive integer")
-    if oversample <= 0:
-        raise ValueError("oversample must be a positive integer")
 
     rng = np.random.default_rng(seed)
     base = _BASE_LAYOUT_NM
@@ -69,19 +66,19 @@ def _generate_inputs(
     expected_x_np = base_px + xyz_nm[:, 0] / nm_per_px
     expected_y_np = base_px + xyz_nm[:, 1] / nm_per_px
 
-    offsets_x_np = np.linspace(-0.25, 0.25, n_images, dtype=np.float64)
-    offsets_y_np = np.linspace(0.3, -0.3, n_images, dtype=np.float64)
+    offsets_x_np = np.linspace(-0.3, 0.3, n_images, dtype=np.float64)
+    offsets_y_np = np.linspace(0.25, -0.25, n_images, dtype=np.float64)
 
     if xp is np:
         stack = stack_np
-        centers_x = expected_x_np + offsets_x_np / oversample
-        centers_y = expected_y_np + offsets_y_np / oversample
-        return stack, centers_x, centers_y
+        guess_x = expected_x_np + offsets_x_np
+        guess_y = expected_y_np + offsets_y_np
+        return stack, guess_x, guess_y
     if xp is cp:
         stack = cp.asarray(stack_np)
-        centers_x = cp.asarray(expected_x_np + offsets_x_np / oversample)
-        centers_y = cp.asarray(expected_y_np + offsets_y_np / oversample)
-        return stack, centers_x, centers_y
+        guess_x = cp.asarray(expected_x_np + offsets_x_np)
+        guess_y = cp.asarray(expected_y_np + offsets_y_np)
+        return stack, guess_x, guess_y
     raise TypeError("xp must be either numpy or cupy")
 
 
@@ -92,54 +89,55 @@ def _print_summary(label: str, times: np.ndarray) -> None:
     print(f"{label}: mean {mean:.6f}s ± {std:.6f}s over {times.size} runs")
 
 
-def benchmark_radial_profile(
+def benchmark_auto_conv_multiline_sub_pixel(
     *,
     n_images: int = 1000,
     nm_per_px: float = 100.0,
     size_px: int = 64,
-    oversample: int = 3,
     n_repeat: int = 100,
     n_warmup_cpu: int = 10,
     n_warmup_gpu: int = 10,
     max_duration: float = 30.0,
     seed: int = 12345,
+    line_ratio: float = 0.1,
+    n_local: int = 5,
 ) -> None:
-    """Run CPU and GPU benchmarks for :func:`magtrack.radial_profile`."""
+    """Run CPU and GPU benchmarks for :func:`magtrack.auto_conv_multiline_sub_pixel`."""
 
-    print("Benchmarking: magtrack.radial_profile")
+    print("Benchmarking: magtrack.auto_conv_multiline_sub_pixel")
     print(
-        "n_images: {n_images}, nm_per_px: {nm_per_px}, size_px: {size_px}, oversample: {oversample}".format(
+        "n_images: {n_images}, nm_per_px: {nm_per_px}, size_px: {size_px}".format(
             n_images=n_images,
             nm_per_px=nm_per_px,
             size_px=size_px,
-            oversample=oversample,
         )
     )
     print(
         "n_repeat: {n_repeat}, n_warmup_cpu: {n_warmup_cpu}, "
         "n_warmup_gpu: {n_warmup_gpu}, max_duration: {max_duration}, "
-        "seed: {seed}".format(
+        "seed: {seed}, line_ratio: {line_ratio}, n_local: {n_local}".format(
             n_repeat=n_repeat,
             n_warmup_cpu=n_warmup_cpu,
             n_warmup_gpu=n_warmup_gpu,
             max_duration=max_duration,
             seed=seed,
+            line_ratio=line_ratio,
+            n_local=n_local,
         )
     )
 
-    stack_cpu, centers_x_cpu, centers_y_cpu = _generate_inputs(
+    stack_cpu, guess_x_cpu, guess_y_cpu = _generate_inputs(
         np,
         n_images=n_images,
         nm_per_px=nm_per_px,
         size_px=size_px,
-        oversample=oversample,
         seed=seed,
     )
 
     cpu_results = cpu_benchmark(
-        magtrack.radial_profile,
-        args=(stack_cpu, centers_x_cpu, centers_y_cpu),
-        kwargs={"oversample": oversample},
+        magtrack.auto_conv_multiline_sub_pixel,
+        args=(stack_cpu, guess_x_cpu, guess_y_cpu),
+        kwargs={"line_ratio": line_ratio, "n_local": n_local},
         max_duration=max_duration,
         n_repeat=n_repeat,
         n_warmup=n_warmup_cpu,
@@ -152,19 +150,18 @@ def benchmark_radial_profile(
 
     from cupyx.profiler import benchmark as cupy_benchmark  # type: ignore
 
-    stack_gpu, centers_x_gpu, centers_y_gpu = _generate_inputs(
+    stack_gpu, guess_x_gpu, guess_y_gpu = _generate_inputs(
         cp,
         n_images=n_images,
         nm_per_px=nm_per_px,
         size_px=size_px,
-        oversample=oversample,
         seed=seed,
     )
 
     gpu_results = cupy_benchmark(
-        magtrack.radial_profile,
-        args=(stack_gpu, centers_x_gpu, centers_y_gpu),
-        kwargs={"oversample": oversample},
+        magtrack.auto_conv_multiline_sub_pixel,
+        args=(stack_gpu, guess_x_gpu, guess_y_gpu),
+        kwargs={"line_ratio": line_ratio, "n_local": n_local},
         max_duration=max_duration,
         n_repeat=n_repeat,
         n_warmup=n_warmup_gpu,

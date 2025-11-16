@@ -1,4 +1,4 @@
-"""Performance benchmark for :func:`magtrack.auto_conv_multiline_sub_pixel`."""
+"""Performance benchmark for :func:`magtrack.auto_conv_sub_pixel`."""
 
 from __future__ import annotations
 
@@ -7,9 +7,9 @@ from typing import Any
 
 import numpy as np
 
-from benchmarks import confbenchmarks  # noqa: F401  # Ensures repository root on sys.path
+from benchmarks.speed import confbenchmarks  # noqa: F401  # Ensures repository root on sys.path
 import magtrack
-from benchmarks.cpu_benchmark import cpu_benchmark
+from benchmarks.speed.cpu_benchmark import cpu_benchmark
 from magtrack._cupy import cp, check_cupy
 from magtrack.simulation import simulate_beads
 
@@ -89,7 +89,7 @@ def _print_summary(label: str, times: np.ndarray) -> None:
     print(f"{label}: mean {mean:.6f}s ± {std:.6f}s over {times.size} runs")
 
 
-def benchmark_auto_conv_multiline_sub_pixel(
+def benchmark_auto_conv_sub_pixel(
     *,
     n_images: int = 1000,
     nm_per_px: float = 100.0,
@@ -99,12 +99,10 @@ def benchmark_auto_conv_multiline_sub_pixel(
     n_warmup_gpu: int = 10,
     max_duration: float = 30.0,
     seed: int = 12345,
-    line_ratio: float = 0.1,
-    n_local: int = 5,
 ) -> None:
-    """Run CPU and GPU benchmarks for :func:`magtrack.auto_conv_multiline_sub_pixel`."""
+    """Run CPU and GPU benchmarks for :func:`magtrack.auto_conv_sub_pixel`."""
 
-    print("Benchmarking: magtrack.auto_conv_multiline_sub_pixel")
+    print("Benchmarking: magtrack.auto_conv_sub_pixel")
     print(
         "n_images: {n_images}, nm_per_px: {nm_per_px}, size_px: {size_px}".format(
             n_images=n_images,
@@ -115,14 +113,12 @@ def benchmark_auto_conv_multiline_sub_pixel(
     print(
         "n_repeat: {n_repeat}, n_warmup_cpu: {n_warmup_cpu}, "
         "n_warmup_gpu: {n_warmup_gpu}, max_duration: {max_duration}, "
-        "seed: {seed}, line_ratio: {line_ratio}, n_local: {n_local}".format(
+        "seed: {seed}".format(
             n_repeat=n_repeat,
             n_warmup_cpu=n_warmup_cpu,
             n_warmup_gpu=n_warmup_gpu,
             max_duration=max_duration,
             seed=seed,
-            line_ratio=line_ratio,
-            n_local=n_local,
         )
     )
 
@@ -135,9 +131,9 @@ def benchmark_auto_conv_multiline_sub_pixel(
     )
 
     cpu_results = cpu_benchmark(
-        magtrack.auto_conv_multiline_sub_pixel,
+        magtrack.auto_conv_sub_pixel,
         args=(stack_cpu, guess_x_cpu, guess_y_cpu),
-        kwargs={"line_ratio": line_ratio, "n_local": n_local},
+        kwargs={},
         max_duration=max_duration,
         n_repeat=n_repeat,
         n_warmup=n_warmup_cpu,
@@ -159,9 +155,9 @@ def benchmark_auto_conv_multiline_sub_pixel(
     )
 
     gpu_results = cupy_benchmark(
-        magtrack.auto_conv_multiline_sub_pixel,
+        magtrack.auto_conv_sub_pixel,
         args=(stack_gpu, guess_x_gpu, guess_y_gpu),
-        kwargs={"line_ratio": line_ratio, "n_local": n_local},
+        kwargs={},
         max_duration=max_duration,
         n_repeat=n_repeat,
         n_warmup=n_warmup_gpu,

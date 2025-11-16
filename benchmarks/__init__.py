@@ -1,7 +1,10 @@
-"""Utility package for MagTrack benchmark scripts."""
+"""Utility package for MagTrack benchmarks.
+
+Speed benchmarks live under :mod:`benchmarks.speed` and retain the existing
+runtime benchmarking harness. A companion :mod:`benchmarks.accuracy`
+subpackage will eventually house localization accuracy suites.
+"""
 
 from __future__ import annotations
 
-# The benchmark scripts rely on relative imports when executed via
-# ``python -m benchmarks.run_all``. This module ensures the directory behaves as
-# a package without imposing additional side effects.
+__all__ = ["speed", "accuracy"]

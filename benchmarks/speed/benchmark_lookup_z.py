@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import numpy as np
 
-from benchmarks import confbenchmarks  # noqa: F401  # Ensures repository root on sys.path
+from benchmarks.speed import confbenchmarks  # noqa: F401  # Ensures repository root on sys.path
 import magtrack
-from benchmarks.cpu_benchmark import cpu_benchmark
+from benchmarks.speed.cpu_benchmark import cpu_benchmark
 from magtrack._cupy import cp, check_cupy
 from magtrack.simulation import simulate_beads
 

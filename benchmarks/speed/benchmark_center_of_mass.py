@@ -1,4 +1,4 @@
-"""Performance benchmark for :func:`magtrack.qi`."""
+"""Performance benchmark for :func:`magtrack.center_of_mass`."""
 
 from __future__ import annotations
 
@@ -7,9 +7,9 @@ from typing import Any
 
 import numpy as np
 
-from benchmarks import confbenchmarks  # noqa: F401  # Ensures repository root on sys.path
+from benchmarks.speed import confbenchmarks  # noqa: F401  # Ensures repository root on sys.path
 import magtrack
-from benchmarks.cpu_benchmark import cpu_benchmark
+from benchmarks.speed.cpu_benchmark import cpu_benchmark
 from magtrack._cupy import cp, check_cupy
 from magtrack.simulation import simulate_beads
 
@@ -41,8 +41,8 @@ def _generate_inputs(
     nm_per_px: float,
     size_px: int,
     seed: int,
-) -> tuple[Any, Any, Any]:
-    """Generate bead stacks and initial guesses for benchmarking."""
+) -> Any:
+    """Generate a bead stack for benchmarking."""
 
     if n_images <= 0:
         raise ValueError("n_images must be a positive integer")
@@ -52,6 +52,8 @@ def _generate_inputs(
     repeats = math.ceil(n_images / base.shape[0])
     xyz_nm = np.tile(base, (repeats, 1))[:n_images].copy()
 
+    # Introduce small random perturbations to avoid identical images while
+    # preserving the overall bead layout used in the tests.
     jitter_scale = np.array([50.0, 50.0, 75.0], dtype=np.float64)
     jitter = rng.normal(scale=jitter_scale, size=xyz_nm.shape)
     xyz_nm += jitter
@@ -62,23 +64,10 @@ def _generate_inputs(
         size_px=size_px,
     ).astype(np.float64, copy=False)
 
-    base_px = (size_px - 1) / 2.0
-    expected_x_np = base_px + xyz_nm[:, 0] / nm_per_px
-    expected_y_np = base_px + xyz_nm[:, 1] / nm_per_px
-
-    offsets_x_np = np.linspace(-0.3, 0.3, n_images, dtype=np.float64)
-    offsets_y_np = np.linspace(0.25, -0.25, n_images, dtype=np.float64)
-
     if xp is np:
-        stack = stack_np
-        guess_x = expected_x_np + offsets_x_np
-        guess_y = expected_y_np + offsets_y_np
-        return stack, guess_x, guess_y
+        return stack_np
     if xp is cp:
-        stack = cp.asarray(stack_np)
-        guess_x = cp.asarray(expected_x_np + offsets_x_np)
-        guess_y = cp.asarray(expected_y_np + offsets_y_np)
-        return stack, guess_x, guess_y
+        return cp.asarray(stack_np)
     raise TypeError("xp must be either numpy or cupy")
 
 
@@ -89,25 +78,28 @@ def _print_summary(label: str, times: np.ndarray) -> None:
     print(f"{label}: mean {mean:.6f}s ± {std:.6f}s over {times.size} runs")
 
 
-def benchmark_qi(
+def benchmark_center_of_mass(
     *,
     n_images: int = 1000,
     nm_per_px: float = 100.0,
     size_px: int = 64,
+    background: str = "mean",
     n_repeat: int = 100,
     n_warmup_cpu: int = 10,
     n_warmup_gpu: int = 10,
     max_duration: float = 30.0,
     seed: int = 12345,
 ) -> None:
-    """Run CPU and GPU benchmarks for :func:`magtrack.qi`."""
+    """Run CPU and GPU benchmarks for :func:`magtrack.center_of_mass`."""
 
-    print("Benchmarking: magtrack.qi")
+    print("Benchmarking: magtrack.center_of_mass")
     print(
-        "n_images: {n_images}, nm_per_px: {nm_per_px}, size_px: {size_px}".format(
+        "n_images: {n_images}, nm_per_px: {nm_per_px}, size_px: {size_px}, "
+        "background: {background}".format(
             n_images=n_images,
             nm_per_px=nm_per_px,
             size_px=size_px,
+            background=background,
         )
     )
     print(
@@ -122,7 +114,7 @@ def benchmark_qi(
         )
     )
 
-    stack_cpu, guess_x_cpu, guess_y_cpu = _generate_inputs(
+    stack_cpu = _generate_inputs(
         np,
         n_images=n_images,
         nm_per_px=nm_per_px,
@@ -131,9 +123,9 @@ def benchmark_qi(
     )
 
     cpu_results = cpu_benchmark(
-        magtrack.qi,
-        args=(stack_cpu, guess_x_cpu, guess_y_cpu),
-        kwargs={},
+        magtrack.center_of_mass,
+        args=(stack_cpu,),
+        kwargs={"background": background},
         max_duration=max_duration,
         n_repeat=n_repeat,
         n_warmup=n_warmup_cpu,
@@ -146,7 +138,7 @@ def benchmark_qi(
 
     from cupyx.profiler import benchmark as cupy_benchmark  # type: ignore
 
-    stack_gpu, guess_x_gpu, guess_y_gpu = _generate_inputs(
+    stack_gpu = _generate_inputs(
         cp,
         n_images=n_images,
         nm_per_px=nm_per_px,
@@ -155,9 +147,9 @@ def benchmark_qi(
     )
 
     gpu_results = cupy_benchmark(
-        magtrack.qi,
-        args=(stack_gpu, guess_x_gpu, guess_y_gpu),
-        kwargs={},
+        magtrack.center_of_mass,
+        args=(stack_gpu,),
+        kwargs={"background": background},
         max_duration=max_duration,
         n_repeat=n_repeat,
         n_warmup=n_warmup_gpu,
@@ -165,3 +157,7 @@ def benchmark_qi(
     gpu_times = cp.asnumpy(gpu_results.gpu_times).squeeze()
     gpu_cpu_times = np.asarray(gpu_results.cpu_times).squeeze()
     _print_summary("GPU", gpu_times + gpu_cpu_times)
+
+
+if __name__ == "__main__":
+    benchmark_center_of_mass()
