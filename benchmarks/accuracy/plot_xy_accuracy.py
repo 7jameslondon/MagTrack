@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import argparse
 from pathlib import Path
 from typing import Sequence
 
@@ -137,33 +136,8 @@ def make_default_plots(
         plt.close(fig)
 
 
-def main(argv: list[str] | None = None) -> int:
-    """CLI entry point to generate standard XY-accuracy plots from a CSV file."""
-
-    parser = argparse.ArgumentParser(
-        description="Generate XY-accuracy plots from a sweep CSV file."
-    )
-    parser.add_argument(
-        "--csv",
-        required=True,
-        type=str,
-        help="Path to CSV produced by run_accuracy_sweep.",
-    )
-    parser.add_argument(
-        "--out-dir",
-        type=str,
-        default=None,
-        help="Directory to store generated plots (default: show only).",
-    )
-    args = parser.parse_args(argv)
-
-    csv_path = Path(args.csv)
-    df = pd.read_csv(csv_path)
-
-    out_dir = Path(args.out_dir) if args.out_dir else None
-    make_default_plots(df, out_dir=out_dir, show=True)
-    return 0
-
-
-if __name__ == "__main__":
-    raise SystemExit(main())
+__all__ = [
+    "compute_xy_metrics",
+    "make_default_plots",
+    "plot_metric_vs_factor",
+]
