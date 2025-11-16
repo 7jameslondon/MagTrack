@@ -17,7 +17,7 @@ if str(PROJECT_ROOT) not in sys.path:
 
 import numpy as np
 
-from . import log_utils
+from benchmarks.speed import log_utils
 
 
 BenchmarkFunc = Callable[[], Any]
@@ -286,7 +286,7 @@ def main(argv: list[str] | None = None) -> int:
     print(f"Aggregated history written to {aggregate_path}")
 
     try:
-        from .plot_benchmarks import plot_benchmark_history
+        from benchmarks.speed.plot_benchmarks import plot_benchmark_history
         import matplotlib.pyplot as plt
 
         fig = plot_benchmark_history(log_utils.LOG_ROOT, run_dir)
