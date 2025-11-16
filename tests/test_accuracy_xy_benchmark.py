@@ -29,7 +29,8 @@ def test_run_accuracy_sweep_smoke():
     df = run_accuracy_sweep(n_images=4, rng_seed=0)
     assert not df.empty
     assert EXPECTED_COLUMNS.issubset(df.columns)
-    assert df["image_index"].nunique() == 4
+    combos = 2 * 2 * 2  # radius_nm_choices * background_levels * contrast_scales
+    assert df["image_index"].nunique() == 4 * combos
 
 
 def test_default_methods_present():
@@ -44,3 +45,19 @@ def test_reproducible_errors_with_seed():
     summary1 = df1.groupby("method")["dx_nm"].mean().sort_index().to_numpy()
     summary2 = df2.groupby("method")["dx_nm"].mean().sort_index().to_numpy()
     np.testing.assert_allclose(summary1, summary2)
+
+
+def test_parameter_combinations_produce_expected_count():
+    df = run_accuracy_sweep(
+        n_images=1,
+        nm_per_px=(80.0, 100.0),
+        size_px=(32, 64),
+        radius_nm_choices=(1000.0,),
+        background_levels=(0.2, 0.4),
+        contrast_scales=(0.5,),
+        rng_seed=42,
+    )
+    expected_combos = 2 * 2 * 1 * 2 * 1
+    assert df["image_index"].nunique() == expected_combos
+    assert set(df["nm_per_px"].unique()) == {80.0, 100.0}
+    assert set(df["size_px"].unique()) == {32, 64}
