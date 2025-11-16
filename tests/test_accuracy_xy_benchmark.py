@@ -22,6 +22,9 @@ EXPECTED_COLUMNS = {
     "background_level",
     "contrast_scale",
     "z_true_nm",
+    "nm_per_px",
+    "size_px",
+    "photons_per_unit",
 }
 
 
@@ -55,12 +58,14 @@ def test_parameter_combinations_produce_expected_count():
         radius_nm_choices=(1000.0,),
         background_levels=(0.2, 0.4),
         contrast_scales=(0.5,),
+        photons_per_unit_choices=(2000.0, 5000.0),
         rng_seed=42,
     )
-    expected_combos = 2 * 2 * 1 * 2 * 1
+    expected_combos = 2 * 2 * 1 * 2 * 1 * 2
     assert df["image_index"].nunique() == expected_combos
     assert set(df["nm_per_px"].unique()) == {80.0, 100.0}
     assert set(df["size_px"].unique()) == {32, 64}
+    assert set(df["photons_per_unit"].unique()) == {2000.0, 5000.0}
 
 
 def test_z_choices_expand_combinations():
@@ -78,3 +83,13 @@ def test_z_choices_expand_combinations():
     expected_combos = 1 * 1 * 1 * 1 * 1 * len(z_values)
     assert df["image_index"].nunique() == 2 * expected_combos
     assert set(np.unique(df["z_true_nm"])) == set(z_values)
+
+
+def test_single_photon_choice_matches_default():
+    df_default = run_accuracy_sweep(n_images=2, rng_seed=0)
+    df_custom = run_accuracy_sweep(
+        n_images=2,
+        photons_per_unit_choices=(5000.0,),
+        rng_seed=0,
+    )
+    np.testing.assert_allclose(df_default["photons_per_unit"], df_custom["photons_per_unit"])

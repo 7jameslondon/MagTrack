@@ -92,6 +92,7 @@ def run_accuracy_sweep(
     background_levels: Tuple[float, ...] = (0.3, 0.8),
     contrast_scales: Tuple[float, ...] = (0.5, 1.0),
     z_nm_choices: Sequence[float] | None = None,
+    photons_per_unit_choices: float | Sequence[float] = 5000.0,
     rng_seed: int | None = 0,
     methods: List[str] | None = None,
 ) -> pd.DataFrame:
@@ -99,12 +100,12 @@ def run_accuracy_sweep(
     method_names = _ensure_methods(methods)
 
     rows: List[pd.DataFrame] = []
-    photons_per_unit = 5000.0
     nm_per_px_values = tuple(float(v) for v in _as_tuple(nm_per_px))
     size_px_values = tuple(int(v) for v in _as_tuple(size_px))
     radius_values = tuple(float(v) for v in radius_nm_choices)
     background_values = tuple(float(v) for v in background_levels)
     contrast_values = tuple(float(v) for v in contrast_scales)
+    photons_values = tuple(float(v) for v in _as_tuple(photons_per_unit_choices))
     if z_nm_choices is None:
         z_values: Tuple[float | None, ...] = (None,)
     else:
@@ -118,6 +119,7 @@ def run_accuracy_sweep(
         radius_val,
         background_val,
         contrast_val,
+        photons_val,
         z_choice,
     ) in product(
         nm_per_px_values,
@@ -125,6 +127,7 @@ def run_accuracy_sweep(
         radius_values,
         background_values,
         contrast_values,
+        photons_values,
         z_values,
     ):
         x_true_px = np.empty(n_images, dtype=np.float64)
@@ -157,8 +160,8 @@ def run_accuracy_sweep(
                 contrast_scale=contrast_val,
             ).astype(np.float32)
 
-            lam = np.clip(clean_stack * photons_per_unit, 0, None)
-            noisy = rng.poisson(lam).astype(np.float32) / photons_per_unit
+            lam = np.clip(clean_stack * photons_val, 0, None)
+            noisy = rng.poisson(lam).astype(np.float32) / photons_val
             stack_list.append(noisy)
 
         stack = np.concatenate(stack_list, axis=2)
@@ -193,6 +196,7 @@ def run_accuracy_sweep(
                         "z_true_nm": z_true_nm,
                         "nm_per_px": np.full(n_images, nm_per_px_val, dtype=np.float64),
                         "size_px": np.full(n_images, size_px_val, dtype=np.int64),
+                        "photons_per_unit": np.full(n_images, photons_val, dtype=np.float64),
                     }
                 )
             )
