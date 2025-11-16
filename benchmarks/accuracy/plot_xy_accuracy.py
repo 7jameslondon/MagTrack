@@ -2,49 +2,114 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterable, Mapping, Sequence
 from pathlib import Path
-from typing import Sequence
+from typing import Any
 
 import matplotlib
 
-try:
-    matplotlib.use("tkAgg")
-except Exception:  # pragma: no cover - fallback for headless environments
-    matplotlib.use("Agg")
+matplotlib.use("Agg")
 
 import matplotlib.pyplot as plt
-import pandas as pd
+import numpy as np
+
+from benchmarks.accuracy.xy_accuracy import AccuracySweepResults
+
+
+SweepTable = AccuracySweepResults | Mapping[str, Sequence[Any]]
+
+
+def _scalar(value: Any) -> Any:
+    if isinstance(value, np.generic):
+        return value.item()
+    return value
+
+
+def _get_column(table: SweepTable, column: str) -> np.ndarray:
+    if isinstance(table, AccuracySweepResults):
+        if column not in table:
+            raise KeyError(f"Column '{column}' not found in AccuracySweepResults")
+        return table[column]
+    if column not in table:
+        raise KeyError(f"Column '{column}' not found in data")
+    return np.asarray(table[column])
+
+
+def _has_column(table: SweepTable, column: str) -> bool:
+    if isinstance(table, AccuracySweepResults):
+        return column in table
+    if isinstance(table, Mapping):
+        return column in table
+    return False
 
 
 def compute_xy_metrics(
-    df: pd.DataFrame,
+    df: SweepTable,
     factor: str | None = None,
-) -> pd.DataFrame:
+) -> list[dict[str, Any]]:
     """Compute summary XY-error metrics per method (optionally per factor)."""
 
-    if "method" not in df.columns:
-        raise KeyError("DataFrame must include a 'method' column")
-    if any(col not in df.columns for col in ("dx_nm", "dy_nm")):
-        raise KeyError("DataFrame must include 'dx_nm' and 'dy_nm' columns")
-    if factor is not None and factor not in df.columns:
-        raise KeyError(f"Requested factor '{factor}' not found in DataFrame")
+    required = {"method", "dx_nm", "dy_nm"}
+    missing = [col for col in required if not _has_column(df, col)]
+    if missing:
+        raise KeyError(
+            "Missing required columns: " + ", ".join(sorted(missing))
+        )
+    if factor is not None and not _has_column(df, factor):
+        raise KeyError(f"Requested factor '{factor}' not found in sweep data")
 
-    r_nm = (df["dx_nm"] ** 2 + df["dy_nm"] ** 2) ** 0.5
-    working_df = df.assign(r_nm=r_nm)
+    methods = _get_column(df, "method")
+    dx_nm = _get_column(df, "dx_nm").astype(np.float64, copy=False)
+    dy_nm = _get_column(df, "dy_nm").astype(np.float64, copy=False)
+    if dx_nm.size == 0:
+        return []
 
-    group_keys: list[str] = ["method"]
-    if factor is not None:
-        group_keys.append(factor)
+    factor_values = _get_column(df, factor) if factor is not None else None
+    metrics: dict[tuple[Any, ...], dict[str, Any]] = {}
 
-    grouped = working_df.groupby(group_keys, dropna=False)
-    metrics = grouped.agg(
-        mean_abs_dx_nm=("dx_nm", lambda s: s.abs().mean()),
-        mean_abs_dy_nm=("dy_nm", lambda s: s.abs().mean()),
-        mean_r_sq=("r_nm", lambda s: (s ** 2).mean()),
-    )
-    metrics = metrics.reset_index()
-    metrics["rmse_r_nm"] = metrics.pop("mean_r_sq") ** 0.5
-    return metrics
+    for idx in range(dx_nm.size):
+        method_val = str(_scalar(methods[idx]))
+        key: tuple[Any, ...]
+        factor_val = None
+        if factor_values is not None:
+            factor_val = _scalar(factor_values[idx])
+            key = (method_val, factor_val)
+        else:
+            key = (method_val,)
+
+        entry = metrics.setdefault(
+            key,
+            {
+                "method": method_val,
+                "factor": factor_val,
+                "abs_dx_sum": 0.0,
+                "abs_dy_sum": 0.0,
+                "r_sq_sum": 0.0,
+                "count": 0,
+            },
+        )
+        entry["abs_dx_sum"] += float(abs(dx_nm[idx]))
+        entry["abs_dy_sum"] += float(abs(dy_nm[idx]))
+        entry["r_sq_sum"] += float(dx_nm[idx] ** 2 + dy_nm[idx] ** 2)
+        entry["count"] += 1
+
+    metrics_rows: list[dict[str, Any]] = []
+    for key in sorted(metrics.keys()):
+        entry = metrics[key]
+        count = entry["count"]
+        if count == 0:
+            continue
+        row = {
+            "method": entry["method"],
+            "mean_abs_dx_nm": entry["abs_dx_sum"] / count,
+            "mean_abs_dy_nm": entry["abs_dy_sum"] / count,
+            "rmse_r_nm": (entry["r_sq_sum"] / count) ** 0.5,
+        }
+        if factor is not None:
+            row[factor] = entry["factor"]
+        metrics_rows.append(row)
+
+    return metrics_rows
 
 
 def _pretty_label(name: str) -> str:
@@ -55,7 +120,7 @@ def _pretty_label(name: str) -> str:
 
 
 def plot_metric_vs_factor(
-    df: pd.DataFrame,
+    df: SweepTable,
     factor: str,
     metric: str = "rmse_r_nm",
     methods: Sequence[str] | None = None,
@@ -63,26 +128,28 @@ def plot_metric_vs_factor(
 ) -> plt.Axes:
     """Plot a chosen metric vs a factor for each method."""
 
-    metrics_df = compute_xy_metrics(df, factor=factor)
+    metrics_rows = compute_xy_metrics(df, factor=factor)
 
-    if metric not in metrics_df.columns:
+    if metrics_rows and metric not in metrics_rows[0]:
         raise KeyError(f"Metric '{metric}' not computed by compute_xy_metrics")
 
     if methods is None:
-        method_list = sorted(metrics_df["method"].unique())
+        method_list = sorted({row["method"] for row in metrics_rows})
     else:
-        method_list = [m for m in methods if m in metrics_df["method"].unique()]
+        available = {row["method"] for row in metrics_rows}
+        method_list = [m for m in methods if m in available]
 
     if ax is None:
         _, ax = plt.subplots()
 
     for method in method_list:
-        subset = metrics_df[metrics_df["method"] == method].sort_values(factor)
-        if subset.empty:
+        subset = [row for row in metrics_rows if row["method"] == method]
+        subset.sort(key=lambda row: row.get(factor))
+        if not subset:
             continue
         ax.plot(
-            subset[factor],
-            subset[metric],
+            [row[factor] for row in subset],
+            [row[metric] for row in subset],
             marker="o",
             linestyle="-",
             label=method,
@@ -97,16 +164,16 @@ def plot_metric_vs_factor(
 
 
 def make_default_plots(
-    df: pd.DataFrame,
+    df: SweepTable,
     out_dir: Path | None = None,
     *,
     show: bool = False,
 ) -> None:
-    """Generate a set of standard XY-accuracy plots from a sweep DataFrame.
+    """Generate a set of standard XY-accuracy plots from sweep results.
 
     Parameters
     ----------
-    df : DataFrame
+    df : Mapping or AccuracySweepResults
         Sweep results from :func:`run_accuracy_sweep`.
     out_dir : Path or None, optional
         Directory to store PNGs. If ``None``, plots are not saved.
@@ -116,7 +183,7 @@ def make_default_plots(
 
     figures: list[tuple[str, plt.Figure]] = []
     for factor in ("radius_nm", "z_true_nm", "contrast_scale"):
-        if factor not in df.columns:
+        if not _has_column(df, factor):
             continue
         fig, ax = plt.subplots()
         plot_metric_vs_factor(df, factor=factor, metric="rmse_r_nm", ax=ax)

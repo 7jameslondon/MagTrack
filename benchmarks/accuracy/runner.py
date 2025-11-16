@@ -8,11 +8,10 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict
 
-import pandas as pd
-
 from benchmarks.accuracy.plot_xy_accuracy import make_default_plots
 from benchmarks.accuracy.xy_accuracy import (
     AccuracySweepConfig,
+    AccuracySweepResults,
     DEFAULT_SWEEP_CONFIG,
     format_summary,
     run_accuracy_sweep,
@@ -34,25 +33,25 @@ def _timestamp_strings() -> tuple[str, str]:
 
 
 def _write_log(
-    df: pd.DataFrame,
+    results: AccuracySweepResults,
     config: AccuracySweepConfig,
     log_dir: Path,
-) -> Dict[str, Path | str | pd.DataFrame]:
+) -> Dict[str, Path | str | list[dict[str, Any]]]:
     slug, iso_timestamp = _timestamp_strings()
     csv_path = log_dir / f"xy_accuracy_{slug}.csv"
     log_path = log_dir / f"xy_accuracy_{slug}.json"
 
-    df.to_csv(csv_path, index=False)
-    summary_df = summarize_accuracy(df)
+    results.to_csv(csv_path)
+    summary_rows = summarize_accuracy(results)
     payload = {
         "run_timestamp": iso_timestamp,
         "config": asdict(config),
         "csv_path": str(csv_path.resolve()),
-        "summary": summary_df.to_dict(orient="records"),
+        "summary": summary_rows,
     }
     log_path.write_text(json.dumps(payload, indent=2))
 
-    return {"csv_path": csv_path, "log_path": log_path, "summary_df": summary_df}
+    return {"csv_path": csv_path, "log_path": log_path, "summary": summary_rows}
 
 
 def get_latest_csv(log_dir: Path | str | None = None) -> Path:
@@ -79,12 +78,12 @@ def plot_accuracy_results(
     if csv_path is None:
         csv_path = get_latest_csv(log_dir)
     csv_path = Path(csv_path)
-    df = pd.read_csv(csv_path)
+    results = AccuracySweepResults.from_csv(csv_path)
 
     if out_dir is None:
         out_dir = csv_path.parent / "plots" / csv_path.stem
     out_dir_path = Path(out_dir)
-    make_default_plots(df, out_dir=out_dir_path, show=show)
+    make_default_plots(results, out_dir=out_dir_path, show=show)
     return out_dir_path
 
 
@@ -104,8 +103,8 @@ def run_full_accuracy_benchmark(
     active_config = config or DEFAULT_SWEEP_CONFIG
     log_dir_path = _ensure_log_dir(log_dir)
 
-    df = run_accuracy_sweep(**active_config.to_kwargs())
-    log_info = _write_log(df, active_config, log_dir_path)
+    results = run_accuracy_sweep(**active_config.to_kwargs())
+    log_info = _write_log(results, active_config, log_dir_path)
 
     plot_dir = None
     if auto_plot:
@@ -118,7 +117,7 @@ def run_full_accuracy_benchmark(
     return {
         "csv_path": log_info["csv_path"],
         "log_path": log_info["log_path"],
-        "summary": format_summary(log_info["summary_df"]),
+        "summary": format_summary(log_info["summary"]),
         "plot_dir": plot_dir,
     }
 

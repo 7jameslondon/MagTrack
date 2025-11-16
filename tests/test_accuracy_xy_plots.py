@@ -4,23 +4,23 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
 
 from benchmarks.accuracy.plot_xy_accuracy import (
     compute_xy_metrics,
     make_default_plots,
     plot_metric_vs_factor,
 )
+from benchmarks.accuracy.xy_accuracy import AccuracySweepResults
 
 
-def _synthetic_df() -> pd.DataFrame:
-    data = []
+def _synthetic_results() -> AccuracySweepResults:
+    rows = []
     for method in ("method_a", "method_b"):
         for radius in (1000.0, 2000.0):
-            data.append(
+            rows.append(
                 {
                     "method": method,
-                    "image_index": len(data),
+                    "image_index": len(rows),
                     "dx_nm": 1.0 if method == "method_a" else -0.5,
                     "dy_nm": -0.5 if radius == 1000.0 else 0.75,
                     "radius_nm": radius,
@@ -29,54 +29,45 @@ def _synthetic_df() -> pd.DataFrame:
                     "z_true_nm": 50.0 if method == "method_a" else -50.0,
                 }
             )
-    return pd.DataFrame(data)
+    return AccuracySweepResults.from_rows(rows)
 
 
 def test_compute_xy_metrics_no_factor() -> None:
-    df = _synthetic_df()
-    metrics = compute_xy_metrics(df)
-    assert set(metrics.columns) == {
-        "method",
-        "mean_abs_dx_nm",
-        "mean_abs_dy_nm",
-        "rmse_r_nm",
-    }
-    assert set(metrics["method"]) == {"method_a", "method_b"}
-    assert np.all(
-        np.isfinite(metrics[["mean_abs_dx_nm", "mean_abs_dy_nm", "rmse_r_nm"]].to_numpy())
-    )
+    results = _synthetic_results()
+    metrics = compute_xy_metrics(results)
+    assert {row["method"] for row in metrics} == {"method_a", "method_b"}
+    for row in metrics:
+        assert {"method", "mean_abs_dx_nm", "mean_abs_dy_nm", "rmse_r_nm"}.issubset(row)
+        assert np.isfinite(row["mean_abs_dx_nm"])
+        assert np.isfinite(row["mean_abs_dy_nm"])
+        assert np.isfinite(row["rmse_r_nm"])
 
 
 def test_compute_xy_metrics_with_factor() -> None:
-    df = _synthetic_df()
-    metrics = compute_xy_metrics(df, factor="radius_nm")
-    assert set(metrics.columns) == {
-        "method",
-        "radius_nm",
-        "mean_abs_dx_nm",
-        "mean_abs_dy_nm",
-        "rmse_r_nm",
-    }
+    results = _synthetic_results()
+    metrics = compute_xy_metrics(results, factor="radius_nm")
     assert len(metrics) == 4
-    assert set(metrics["radius_nm"]) == {1000.0, 2000.0}
+    assert set(row["radius_nm"] for row in metrics) == {1000.0, 2000.0}
+    for row in metrics:
+        assert "rmse_r_nm" in row
 
 
 def test_plot_metric_vs_factor_returns_axes() -> None:
-    df = _synthetic_df()
-    ax = plot_metric_vs_factor(df, factor="radius_nm")
+    results = _synthetic_results()
+    ax = plot_metric_vs_factor(results, factor="radius_nm")
     assert isinstance(ax, plt.Axes)
     plt.close(ax.figure)
 
 
 def test_make_default_plots_creates_pngs(tmp_path: Path) -> None:
-    df = _synthetic_df()
-    make_default_plots(df, tmp_path, show=False)
+    results = _synthetic_results()
+    make_default_plots(results, tmp_path, show=False)
     for factor in ("radius_nm", "z_true_nm", "contrast_scale"):
         path = tmp_path / f"xy_{factor}_rmse_r_nm.png"
         assert path.exists()
 
 
 def test_make_default_plots_show_only(tmp_path: Path) -> None:
-    df = _synthetic_df()
-    make_default_plots(df, out_dir=None, show=False)
+    results = _synthetic_results()
+    make_default_plots(results, out_dir=None, show=False)
     assert not any(tmp_path.iterdir())
