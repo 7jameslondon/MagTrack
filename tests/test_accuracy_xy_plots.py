@@ -70,7 +70,13 @@ def test_plot_metric_vs_factor_returns_axes() -> None:
 
 def test_make_default_plots_creates_pngs(tmp_path: Path) -> None:
     df = _synthetic_df()
-    make_default_plots(df, tmp_path)
+    make_default_plots(df, tmp_path, show=False)
     for factor in ("radius_nm", "z_true_nm", "contrast_scale"):
         path = tmp_path / f"xy_{factor}_rmse_r_nm.png"
         assert path.exists()
+
+
+def test_make_default_plots_show_only(tmp_path: Path) -> None:
+    df = _synthetic_df()
+    make_default_plots(df, out_dir=None, show=False)
+    assert not any(tmp_path.iterdir())

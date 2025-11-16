@@ -6,6 +6,13 @@ import argparse
 from pathlib import Path
 from typing import Sequence
 
+import matplotlib
+
+try:
+    matplotlib.use("tkAgg")
+except Exception:  # pragma: no cover - fallback for headless environments
+    matplotlib.use("Agg")
+
 import matplotlib.pyplot as plt
 import pandas as pd
 
@@ -92,20 +99,41 @@ def plot_metric_vs_factor(
 
 def make_default_plots(
     df: pd.DataFrame,
-    out_dir: Path,
+    out_dir: Path | None = None,
+    *,
+    show: bool = False,
 ) -> None:
-    """Generate a set of standard XY-accuracy plots from a sweep DataFrame."""
+    """Generate a set of standard XY-accuracy plots from a sweep DataFrame.
 
-    out_path = Path(out_dir)
-    out_path.mkdir(parents=True, exist_ok=True)
+    Parameters
+    ----------
+    df : DataFrame
+        Sweep results from :func:`run_accuracy_sweep`.
+    out_dir : Path or None, optional
+        Directory to store PNGs. If ``None``, plots are not saved.
+    show : bool, optional
+        Whether to display the generated plots via :func:`matplotlib.pyplot.show`.
+    """
 
+    figures: list[tuple[str, plt.Figure]] = []
     for factor in ("radius_nm", "z_true_nm", "contrast_scale"):
         if factor not in df.columns:
             continue
         fig, ax = plt.subplots()
         plot_metric_vs_factor(df, factor=factor, metric="rmse_r_nm", ax=ax)
         fig.tight_layout()
-        fig.savefig(out_path / f"xy_{factor}_rmse_r_nm.png", dpi=150)
+        figures.append((factor, fig))
+
+    if out_dir is not None and figures:
+        out_path = Path(out_dir)
+        out_path.mkdir(parents=True, exist_ok=True)
+        for factor, fig in figures:
+            fig.savefig(out_path / f"xy_{factor}_rmse_r_nm.png", dpi=150)
+
+    if show and figures:
+        plt.show()
+
+    for _, fig in figures:
         plt.close(fig)
 
 
@@ -125,15 +153,15 @@ def main(argv: list[str] | None = None) -> int:
         "--out-dir",
         type=str,
         default=None,
-        help="Directory to store generated plots (default: alongside CSV).",
+        help="Directory to store generated plots (default: show only).",
     )
     args = parser.parse_args(argv)
 
     csv_path = Path(args.csv)
     df = pd.read_csv(csv_path)
 
-    out_dir = Path(args.out_dir) if args.out_dir else csv_path.parent
-    make_default_plots(df, out_dir)
+    out_dir = Path(args.out_dir) if args.out_dir else None
+    make_default_plots(df, out_dir=out_dir, show=True)
     return 0
 
 
