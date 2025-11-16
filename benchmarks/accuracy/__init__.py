@@ -2,11 +2,7 @@
 
 from __future__ import annotations
 
-from benchmarks.accuracy.runner import (
-    get_latest_csv,
-    plot_accuracy_results,
-    run_full_accuracy_benchmark,
-)
+from benchmarks.accuracy.runner import get_latest_csv, run_full_accuracy_benchmark
 from benchmarks.accuracy.xy_accuracy import (
     AccuracySweepConfig,
     AccuracySweepResults,
@@ -27,7 +23,6 @@ __all__ = [
     "MethodFunc",
     "format_summary",
     "get_latest_csv",
-    "plot_accuracy_results",
     "register_method",
     "run_accuracy_sweep",
     "run_full_accuracy_benchmark",
