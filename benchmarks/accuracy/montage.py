@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-import argparse
 import math
-from dataclasses import dataclass, replace
+from dataclasses import dataclass
+from itertools import product
 from typing import Any, Iterable, Sequence
 
 import matplotlib
@@ -22,27 +22,12 @@ class BeadImage:
     metadata: dict[str, Any]
 
 
-def _as_tuple(value: float | int | Sequence[float | int]) -> tuple[float | int, ...]:
-    if isinstance(value, (str, bytes)):
-        return (value,)
-    if isinstance(value, Sequence):
-        return tuple(value)
-    return (value,)
-
-
-def _resolve_choices(
-    values: float | Sequence[float] | None,
-    *,
-    fallback: Iterable[float] | None,
-    name: str,
-) -> tuple[float, ...]:
+def _choice_tuple(values: Sequence[float] | None, fallback: Iterable[float]) -> tuple[float, ...]:
     if values is None:
-        if fallback is None:
-            raise ValueError(f"{name} must contain at least one value")
-        values = tuple(float(v) for v in fallback)
-    resolved = tuple(float(v) for v in _as_tuple(values))
+        return tuple(fallback)
+    resolved = tuple(values)
     if not resolved:
-        raise ValueError(f"{name} must contain at least one value")
+        return tuple(fallback)
     return resolved
 
 
@@ -54,22 +39,17 @@ def generate_accuracy_benchmark_images(
     """Return simulated bead images used by the accuracy sweep."""
 
     cfg = config or DEFAULT_SWEEP_CONFIG
-    if cfg.n_images <= 0:
-        raise ValueError("AccuracySweepConfig.n_images must be positive")
-    if max_images is not None and max_images <= 0:
-        raise ValueError("max_images must be positive")
-
     rng = np.random.default_rng(cfg.rng_seed)
 
-    magnifications = _resolve_choices(cfg.magnification_choices, fallback=None, name="magnification_choices")
-    size_nm_values = _resolve_choices(cfg.size_nm_choices, fallback=None, name="size_nm_choices")
-    radius_values = _resolve_choices(cfg.radius_nm_choices, fallback=None, name="radius_nm_choices")
-    background_values = _resolve_choices(cfg.background_levels, fallback=None, name="background_levels")
-    contrast_values = _resolve_choices(cfg.contrast_scales, fallback=None, name="contrast_scales")
-    photons_values = _resolve_choices(cfg.photons_per_unit_choices, fallback=None, name="photons_per_unit_choices")
-    z_values = _resolve_choices(cfg.z_nm_choices, fallback=(0.0, 1000.0), name="z_nm_choices")
-    x_fraction_values = _resolve_choices(cfg.x_fraction_choices, fallback=(0.0, 0.01), name="x_fraction_choices")
-    y_fraction_values = _resolve_choices(cfg.y_fraction_choices, fallback=(0.0, 0.01), name="y_fraction_choices")
+    magnifications = _choice_tuple(cfg.magnification_choices, (100.0,))
+    size_nm_values = _choice_tuple(cfg.size_nm_choices, (6400.0,))
+    radius_values = _choice_tuple(cfg.radius_nm_choices, (1500.0,))
+    background_values = _choice_tuple(cfg.background_levels, (0.3,))
+    contrast_values = _choice_tuple(cfg.contrast_scales, (0.5,))
+    photons_values = _choice_tuple(cfg.photons_per_unit_choices, (5000.0,))
+    z_values = _choice_tuple(cfg.z_nm_choices, (0.0,))
+    x_fraction_values = _choice_tuple(cfg.x_fraction_choices, (0.0,))
+    y_fraction_values = _choice_tuple(cfg.y_fraction_choices, (0.0,))
 
     images: list[BeadImage] = []
     image_index_offset = 0
@@ -84,7 +64,7 @@ def generate_accuracy_benchmark_images(
         z_choice,
         x_fraction,
         y_fraction,
-    ) in _cartesian_product(
+    ) in product(
         magnifications,
         size_nm_values,
         radius_values,
@@ -95,30 +75,10 @@ def generate_accuracy_benchmark_images(
         x_fraction_values,
         y_fraction_values,
     ):
-        if magnification_val <= 0:
-            raise ValueError("magnification choices must be positive")
         nm_per_px_val = cfg.camera_pixel_size_nm / magnification_val
-        if nm_per_px_val <= 0:
-            raise ValueError("camera_pixel_size_nm must be positive")
+        size_px_val = max(int(round(size_nm_val / nm_per_px_val)), 1)
 
-        size_px_exact = size_nm_val / nm_per_px_val
-        size_px_val = int(round(size_px_exact))
-        if size_px_val <= 0:
-            raise ValueError(
-                "Derived size_px must be positive. Adjust magnification or size_nm choices."
-            )
-        if abs(size_px_exact - size_px_val) > 1e-6:
-            raise ValueError(
-                "size_nm value {size_nm} is incompatible with magnification {mag}, resulting in a non-integer pixel width".format(
-                    size_nm=size_nm_val,
-                    mag=magnification_val,
-                )
-            )
-
-        x_nm = x_fraction * size_nm_val
-        y_nm = y_fraction * size_nm_val
-
-        xyz_nm = np.array([[x_nm, y_nm, z_choice]], dtype=np.float64)
+        xyz_nm = np.array([[x_fraction * size_nm_val, y_fraction * size_nm_val, z_choice]], dtype=np.float64)
         clean_stack = simulate_beads(
             xyz_nm,
             nm_per_px=nm_per_px_val,
@@ -165,15 +125,13 @@ def show_accuracy_montage(
 
     images = generate_accuracy_benchmark_images(config=config, max_images=max_images)
     if not images:
-        raise RuntimeError("No bead images were generated")
+        return
 
-    if matplotlib.get_backend().lower() != "tkagg":
-        matplotlib.use("TkAgg", force=True)
-
+    matplotlib.use("TkAgg", force=False)
     import matplotlib.pyplot as plt  # Imported lazily to honor backend selection.
 
     total = len(images)
-    cols = math.ceil(math.sqrt(total))
+    cols = max(math.ceil(math.sqrt(total)), 1)
     rows = math.ceil(total / cols)
     if figsize is None:
         figsize = (cols * 1.5, rows * 1.5)
@@ -185,11 +143,7 @@ def show_accuracy_montage(
         ax.imshow(bead.data, cmap=cmap, interpolation="nearest")
         ax.axis("off")
         ax.set_title(
-            "idx {idx}\nrad {radius:.0f}nm bg {bg:.2f}".format(
-                idx=bead.metadata.get("image_index", "?"),
-                radius=bead.metadata.get("radius_nm", 0.0),
-                bg=bead.metadata.get("background_level", 0.0),
-            ),
+            f"idx {bead.metadata.get('image_index', '?')}\nrad {bead.metadata.get('radius_nm', 0.0):.0f}nm",
             fontsize=6,
         )
 
@@ -201,41 +155,10 @@ def show_accuracy_montage(
     plt.show()
 
 
-def _cartesian_product(*arrays: Iterable[float]) -> Iterable[tuple[float, ...]]:
-    if not arrays:
-        return []
-    from itertools import product
-
-    return product(*arrays)
-
-
-def _parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Visualize accuracy benchmark bead images.")
-    parser.add_argument(
-        "--max-images",
-        type=int,
-        default=64,
-        help="Limit the number of images shown in the montage (default: 64).",
-    )
-    parser.add_argument(
-        "--rng-seed",
-        type=int,
-        default=None,
-        help="Override the RNG seed used for bead noise generation.",
-    )
-    return parser.parse_args()
-
-
 def main() -> None:
-    args = _parse_args()
-    config = DEFAULT_SWEEP_CONFIG
-    if args.rng_seed is not None:
-        config = replace(config, rng_seed=args.rng_seed)
-    show_accuracy_montage(config=config, max_images=args.max_images)
+    """Convenience CLI entry point that shows the default montage."""
 
-
-if __name__ == "__main__":
-    main()
+    show_accuracy_montage()
 
 
 __all__ = [
