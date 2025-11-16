@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import csv
+import math
 from collections import OrderedDict
 from collections.abc import Iterable as IterableABC
 from dataclasses import dataclass
@@ -16,6 +17,22 @@ from magtrack.core import auto_conv_sub_pixel, center_of_mass
 from magtrack.simulation import simulate_beads
 
 MethodFunc = Callable[[np.ndarray], Tuple[np.ndarray, np.ndarray]]
+
+
+@dataclass(frozen=True)
+class _SweepParameterGrid:
+    """Normalized parameter choices for accuracy sweep simulations."""
+
+    camera_pixel_size_nm: float
+    magnification_values: Tuple[float, ...]
+    size_nm_values: Tuple[float, ...]
+    radius_values: Tuple[float, ...]
+    background_values: Tuple[float, ...]
+    contrast_values: Tuple[float, ...]
+    photons_values: Tuple[float, ...]
+    z_values: Tuple[float, ...]
+    x_fraction_values: Tuple[float, ...]
+    y_fraction_values: Tuple[float, ...]
 
 
 METHOD_REGISTRY: Dict[str, MethodFunc] = {}
@@ -107,6 +124,78 @@ def _python_scalar(value: Any) -> Any:
     if isinstance(value, np.generic):
         return value.item()
     return value
+
+
+def _prepare_sweep_parameter_grid(
+    *,
+    camera_pixel_size_nm: float,
+    magnification_choices: float | Sequence[float],
+    size_nm_choices: float | Sequence[float],
+    radius_nm_choices: Sequence[float],
+    background_levels: Sequence[float],
+    contrast_scales: Sequence[float],
+    photons_per_unit_choices: float | Sequence[float],
+    z_nm_choices: Sequence[float] | None,
+    x_fraction_choices: Sequence[float] | None,
+    y_fraction_choices: Sequence[float] | None,
+) -> _SweepParameterGrid:
+    if camera_pixel_size_nm <= 0:
+        raise ValueError("camera_pixel_size_nm must be positive")
+    magnification_values = tuple(float(v) for v in _as_tuple(magnification_choices))
+    if not magnification_values:
+        raise ValueError("magnification_choices must contain at least one value")
+    size_nm_values = tuple(float(v) for v in _as_tuple(size_nm_choices))
+    if not size_nm_values:
+        raise ValueError("size_nm_choices must contain at least one value")
+    radius_values = tuple(float(v) for v in radius_nm_choices)
+    background_values = tuple(float(v) for v in background_levels)
+    contrast_values = tuple(float(v) for v in contrast_scales)
+    photons_values = tuple(float(v) for v in _as_tuple(photons_per_unit_choices))
+    if z_nm_choices is None:
+        z_nm_choices = (0.0, 1000.0)
+    z_values = tuple(float(v) for v in _as_tuple(z_nm_choices))
+    if not z_values:
+        raise ValueError("z_nm_choices must contain at least one value")
+    if x_fraction_choices is None:
+        x_fraction_choices = (0.0, 0.01)
+    x_fraction_values = tuple(float(v) for v in _as_tuple(x_fraction_choices))
+    if not x_fraction_values:
+        raise ValueError("x_fraction_choices must contain at least one value")
+    if y_fraction_choices is None:
+        y_fraction_choices = (0.0, 0.01)
+    y_fraction_values = tuple(float(v) for v in _as_tuple(y_fraction_choices))
+    if not y_fraction_values:
+        raise ValueError("y_fraction_choices must contain at least one value")
+
+    return _SweepParameterGrid(
+        camera_pixel_size_nm=camera_pixel_size_nm,
+        magnification_values=magnification_values,
+        size_nm_values=size_nm_values,
+        radius_values=radius_values,
+        background_values=background_values,
+        contrast_values=contrast_values,
+        photons_values=photons_values,
+        z_values=z_values,
+        x_fraction_values=x_fraction_values,
+        y_fraction_values=y_fraction_values,
+    )
+
+
+def _simulate_noisy_stack(
+    clean_stack: np.ndarray,
+    *,
+    n_images: int,
+    photons_per_unit: float,
+    rng: np.random.Generator,
+) -> np.ndarray:
+    if n_images <= 0:
+        raise ValueError("n_images must be positive")
+    lam = np.clip(clean_stack * photons_per_unit, 0, None)
+    stack_list = []
+    for _ in range(n_images):
+        noisy = rng.poisson(lam).astype(np.float32) / photons_per_unit
+        stack_list.append(noisy)
+    return np.concatenate(stack_list, axis=2)
 
 
 class AccuracySweepResults:
@@ -435,35 +524,20 @@ def run_accuracy_sweep(
 ) -> AccuracySweepResults:
     rng = np.random.default_rng(rng_seed)
     method_names = _ensure_methods(methods)
+    params = _prepare_sweep_parameter_grid(
+        camera_pixel_size_nm=camera_pixel_size_nm,
+        magnification_choices=magnification_choices,
+        size_nm_choices=size_nm_choices,
+        radius_nm_choices=radius_nm_choices,
+        background_levels=background_levels,
+        contrast_scales=contrast_scales,
+        photons_per_unit_choices=photons_per_unit_choices,
+        z_nm_choices=z_nm_choices,
+        x_fraction_choices=x_fraction_choices,
+        y_fraction_choices=y_fraction_choices,
+    )
 
     column_chunks: Dict[str, List[np.ndarray]] = {name: [] for name in SWEEP_COLUMN_ORDER}
-    if camera_pixel_size_nm <= 0:
-        raise ValueError("camera_pixel_size_nm must be positive")
-    magnification_values = tuple(float(v) for v in _as_tuple(magnification_choices))
-    if not magnification_values:
-        raise ValueError("magnification_choices must contain at least one value")
-    size_nm_values = tuple(float(v) for v in _as_tuple(size_nm_choices))
-    if not size_nm_values:
-        raise ValueError("size_nm_choices must contain at least one value")
-    radius_values = tuple(float(v) for v in radius_nm_choices)
-    background_values = tuple(float(v) for v in background_levels)
-    contrast_values = tuple(float(v) for v in contrast_scales)
-    photons_values = tuple(float(v) for v in _as_tuple(photons_per_unit_choices))
-    if z_nm_choices is None:
-        z_nm_choices = (0.0, 1000.0)
-    z_values = tuple(float(v) for v in _as_tuple(z_nm_choices))
-    if not z_values:
-        raise ValueError("z_nm_choices must contain at least one value")
-    if x_fraction_choices is None:
-        x_fraction_choices = (0.0, 0.01)
-    x_fraction_values = tuple(float(v) for v in _as_tuple(x_fraction_choices))
-    if not x_fraction_values:
-        raise ValueError("x_fraction_choices must contain at least one value")
-    if y_fraction_choices is None:
-        y_fraction_choices = (0.0, 0.01)
-    y_fraction_values = tuple(float(v) for v in _as_tuple(y_fraction_choices))
-    if not y_fraction_values:
-        raise ValueError("y_fraction_choices must contain at least one value")
 
     image_index_offset = 0
 
@@ -478,19 +552,19 @@ def run_accuracy_sweep(
         x_fraction,
         y_fraction,
     ) in product(
-        magnification_values,
-        size_nm_values,
-        radius_values,
-        background_values,
-        contrast_values,
-        photons_values,
-        z_values,
-        x_fraction_values,
-        y_fraction_values,
+        params.magnification_values,
+        params.size_nm_values,
+        params.radius_values,
+        params.background_values,
+        params.contrast_values,
+        params.photons_values,
+        params.z_values,
+        params.x_fraction_values,
+        params.y_fraction_values,
     ):
         if magnification_val <= 0:
             raise ValueError("magnification choices must be positive")
-        nm_per_px_val = camera_pixel_size_nm / magnification_val
+        nm_per_px_val = params.camera_pixel_size_nm / magnification_val
         size_px_exact = size_nm_val / nm_per_px_val
         size_px_val = int(round(size_px_exact))
         if size_px_val <= 0:
@@ -529,13 +603,12 @@ def run_accuracy_sweep(
             contrast_scale=contrast_val,
         ).astype(np.float32)
 
-        stack_list = []
-        lam = np.clip(clean_stack * photons_val, 0, None)
-        for _ in range(n_images):
-            noisy = rng.poisson(lam).astype(np.float32) / photons_val
-            stack_list.append(noisy)
-
-        stack = np.concatenate(stack_list, axis=2)
+        stack = _simulate_noisy_stack(
+            clean_stack,
+            n_images=n_images,
+            photons_per_unit=photons_val,
+            rng=rng,
+        )
 
         for method in method_names:
             estimator = METHOD_REGISTRY[method]
@@ -585,6 +658,145 @@ def run_accuracy_sweep(
     return AccuracySweepResults(finalized_data, column_order=SWEEP_COLUMN_ORDER)
 
 
+def _center_pad_tile(image: np.ndarray, tile_size: int, fill_value: float) -> np.ndarray:
+    if tile_size <= 0:
+        raise ValueError("tile_size must be positive")
+    if image.ndim != 2:
+        raise ValueError("image tiles must be two-dimensional")
+    padded = np.full((tile_size, tile_size), fill_value, dtype=np.float32)
+    height, width = image.shape
+    if height > tile_size or width > tile_size:
+        raise ValueError("tile_size must be greater than or equal to the image dimensions")
+    row_offset = (tile_size - height) // 2
+    col_offset = (tile_size - width) // 2
+    padded[row_offset : row_offset + height, col_offset : col_offset + width] = image
+    return padded
+
+
+def create_accuracy_sweep_montage(
+    *,
+    n_images: int = 100,
+    magnification_choices: float | Sequence[float] = 100.0,
+    size_nm_choices: float | Sequence[float] = 6400.0,
+    radius_nm_choices: Tuple[float, ...] = (1500.0, 2500.0),
+    background_levels: Tuple[float, ...] = (0.3, 0.8),
+    contrast_scales: Tuple[float, ...] = (0.5, 1.0),
+    z_nm_choices: Sequence[float] | None = (0.0, 1000.0),
+    x_fraction_choices: Sequence[float] | None = (0.0, 0.01),
+    y_fraction_choices: Sequence[float] | None = (0.0, 0.01),
+    photons_per_unit_choices: float | Sequence[float] = 5000.0,
+    camera_pixel_size_nm: float = DEFAULT_CAMERA_PIXEL_SIZE_NM,
+    rng_seed: int | None = 0,
+    tile_columns: int = 10,
+    tile_spacing_px: int = 2,
+    fill_value: float = 0.0,
+) -> np.ndarray:
+    """Return a tiled image showing every noisy bead image simulated in the sweep."""
+
+    rng = np.random.default_rng(rng_seed)
+    params = _prepare_sweep_parameter_grid(
+        camera_pixel_size_nm=camera_pixel_size_nm,
+        magnification_choices=magnification_choices,
+        size_nm_choices=size_nm_choices,
+        radius_nm_choices=radius_nm_choices,
+        background_levels=background_levels,
+        contrast_scales=contrast_scales,
+        photons_per_unit_choices=photons_per_unit_choices,
+        z_nm_choices=z_nm_choices,
+        x_fraction_choices=x_fraction_choices,
+        y_fraction_choices=y_fraction_choices,
+    )
+
+    if tile_columns <= 0:
+        raise ValueError("tile_columns must be positive")
+    if tile_spacing_px < 0:
+        raise ValueError("tile_spacing_px must be non-negative")
+
+    tiles: list[np.ndarray] = []
+    max_tile_size = 0
+
+    for (
+        magnification_val,
+        size_nm_val,
+        radius_val,
+        background_val,
+        contrast_val,
+        photons_val,
+        z_choice,
+        x_fraction,
+        y_fraction,
+    ) in product(
+        params.magnification_values,
+        params.size_nm_values,
+        params.radius_values,
+        params.background_values,
+        params.contrast_values,
+        params.photons_values,
+        params.z_values,
+        params.x_fraction_values,
+        params.y_fraction_values,
+    ):
+        if magnification_val <= 0:
+            raise ValueError("magnification choices must be positive")
+        nm_per_px_val = params.camera_pixel_size_nm / magnification_val
+        size_px_exact = size_nm_val / nm_per_px_val
+        size_px_val = int(round(size_px_exact))
+        if size_px_val <= 0:
+            raise ValueError(
+                "Derived size_px must be positive. Adjust magnification or size_nm choices."
+            )
+        if abs(size_px_exact - size_px_val) > 1e-6:
+            raise ValueError(
+                "size_nm value {size_nm} is incompatible with magnification {mag}, "
+                "resulting in a non-integer pixel width".format(
+                    size_nm=size_nm_val, mag=magnification_val
+                )
+            )
+
+        x_nm = x_fraction * size_nm_val
+        y_nm = y_fraction * size_nm_val
+        xyz_nm = np.array([[x_nm, y_nm, z_choice]], dtype=np.float64)
+        clean_stack = simulate_beads(
+            xyz_nm,
+            nm_per_px=nm_per_px_val,
+            size_px=size_px_val,
+            radius_nm=radius_val,
+            background_level=background_val,
+            contrast_scale=contrast_val,
+        ).astype(np.float32)
+        stack = _simulate_noisy_stack(
+            clean_stack,
+            n_images=n_images,
+            photons_per_unit=photons_val,
+            rng=rng,
+        )
+        for index in range(stack.shape[2]):
+            tile = np.asarray(stack[:, :, index], dtype=np.float32)
+            tiles.append(tile)
+            max_tile_size = max(max_tile_size, tile.shape[0])
+
+    if not tiles:
+        raise ValueError("The sweep configuration did not produce any images")
+
+    rows = math.ceil(len(tiles) / tile_columns)
+    tile_size = max_tile_size
+    row_spacing = tile_spacing_px * max(rows - 1, 0)
+    col_spacing = tile_spacing_px * max(tile_columns - 1, 0)
+    height = rows * tile_size + row_spacing
+    width = tile_columns * tile_size + col_spacing
+    montage = np.full((height, width), fill_value, dtype=np.float32)
+
+    for idx, tile in enumerate(tiles):
+        row = idx // tile_columns
+        col = idx % tile_columns
+        top = row * (tile_size + tile_spacing_px)
+        left = col * (tile_size + tile_spacing_px)
+        padded_tile = _center_pad_tile(tile, tile_size, fill_value)
+        montage[top : top + tile_size, left : left + tile_size] = padded_tile
+
+    return montage
+
+
 __all__ = [
     "AccuracySweepConfig",
     "AccuracySweepResults",
@@ -593,6 +805,7 @@ __all__ = [
     "MethodFunc",
     "format_summary",
     "register_method",
+    "create_accuracy_sweep_montage",
     "run_accuracy_sweep",
     "summarize_accuracy",
 ]
