@@ -61,3 +61,20 @@ def test_parameter_combinations_produce_expected_count():
     assert df["image_index"].nunique() == expected_combos
     assert set(df["nm_per_px"].unique()) == {80.0, 100.0}
     assert set(df["size_px"].unique()) == {32, 64}
+
+
+def test_z_choices_expand_combinations():
+    z_values = (-400.0, 0.0, 250.0)
+    df = run_accuracy_sweep(
+        n_images=2,
+        nm_per_px=(90.0,),
+        size_px=(48,),
+        radius_nm_choices=(1200.0,),
+        background_levels=(0.25,),
+        contrast_scales=(0.75,),
+        z_nm_choices=z_values,
+        rng_seed=7,
+    )
+    expected_combos = 1 * 1 * 1 * 1 * 1 * len(z_values)
+    assert df["image_index"].nunique() == 2 * expected_combos
+    assert set(np.unique(df["z_true_nm"])) == set(z_values)

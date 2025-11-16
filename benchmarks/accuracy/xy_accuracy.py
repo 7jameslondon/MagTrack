@@ -91,6 +91,7 @@ def run_accuracy_sweep(
     radius_nm_choices: Tuple[float, ...] = (1500.0, 2500.0),
     background_levels: Tuple[float, ...] = (0.3, 0.8),
     contrast_scales: Tuple[float, ...] = (0.5, 1.0),
+    z_nm_choices: Sequence[float] | None = None,
     rng_seed: int | None = 0,
     methods: List[str] | None = None,
 ) -> pd.DataFrame:
@@ -104,11 +105,27 @@ def run_accuracy_sweep(
     radius_values = tuple(float(v) for v in radius_nm_choices)
     background_values = tuple(float(v) for v in background_levels)
     contrast_values = tuple(float(v) for v in contrast_scales)
+    if z_nm_choices is None:
+        z_values: Tuple[float | None, ...] = (None,)
+    else:
+        z_values = tuple(float(v) for v in _as_tuple(z_nm_choices))
 
     image_index_offset = 0
 
-    for nm_per_px_val, size_px_val, radius_val, background_val, contrast_val in product(
-        nm_per_px_values, size_px_values, radius_values, background_values, contrast_values
+    for (
+        nm_per_px_val,
+        size_px_val,
+        radius_val,
+        background_val,
+        contrast_val,
+        z_choice,
+    ) in product(
+        nm_per_px_values,
+        size_px_values,
+        radius_values,
+        background_values,
+        contrast_values,
+        z_values,
     ):
         x_true_px = np.empty(n_images, dtype=np.float64)
         y_true_px = np.empty(n_images, dtype=np.float64)
@@ -123,7 +140,10 @@ def run_accuracy_sweep(
         for i in range(n_images):
             x_nm = rng.uniform(-xy_range_nm, xy_range_nm)
             y_nm = rng.uniform(-xy_range_nm, xy_range_nm)
-            z_nm = rng.uniform(-500.0, 500.0)
+            if z_choice is None:
+                z_nm = rng.uniform(-500.0, 500.0)
+            else:
+                z_nm = z_choice
             z_true_nm[i] = z_nm
             x_true_px[i], y_true_px[i] = _true_xy_pixels(x_nm, y_nm, nm_per_px_val, size_px_val)
 
