@@ -36,7 +36,7 @@ class BenchmarkRecorder:
     def activate(self, module: Any) -> Iterable[None]:
         """Context manager that patches helper utilities to capture timings."""
 
-        from benchmarks import cpu_benchmark as cpu_module
+        from benchmarks.speed import cpu_benchmark as cpu_module
 
         original_cpu_benchmark = cpu_module.cpu_benchmark
 
