@@ -3,10 +3,14 @@
 from __future__ import annotations
 
 import json
+import math
 from dataclasses import asdict
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict
+
+import numpy as np
+from matplotlib import image as mpimg
 
 from benchmarks.accuracy.plot_xy_accuracy import make_default_plots
 from benchmarks.accuracy.xy_accuracy import (
@@ -87,6 +91,112 @@ def plot_accuracy_results(
     return out_dir_path
 
 
+def _normalize_background(color: tuple[float, float, float]) -> np.ndarray:
+    if len(color) != 3:
+        raise ValueError("background_color must contain exactly three components")
+    background = np.asarray(color, dtype=np.float32)
+    if np.any(background > 1.0):
+        background = background / 255.0
+    background = np.clip(background, 0.0, 1.0)
+    return background
+
+
+def _load_png_image(path: Path, background: np.ndarray) -> np.ndarray:
+    image = mpimg.imread(path)
+    array = np.asarray(image, dtype=np.float32)
+    if array.ndim == 2:
+        array = np.repeat(array[..., None], 3, axis=2)
+    elif array.ndim == 3 and array.shape[2] == 4:
+        rgb = array[..., :3]
+        alpha = array[..., 3:4]
+        array = rgb * alpha + background * (1.0 - alpha)
+    elif array.ndim != 3 or array.shape[2] < 3:
+        raise ValueError(f"Unsupported image shape for montage: {array.shape}")
+
+    if array.shape[2] > 3:
+        array = array[..., :3]
+    array = np.clip(array, 0.0, 1.0)
+    return array
+
+
+def create_accuracy_montage(
+    plot_dir: Path | str | None = None,
+    *,
+    csv_path: Path | str | None = None,
+    log_dir: Path | str | None = None,
+    out_path: Path | str | None = None,
+    columns: int = 2,
+    padding_px: int = 10,
+    background_color: tuple[float, float, float] = (1.0, 1.0, 1.0),
+) -> Path:
+    """Create a montage image from the PNG plots generated during accuracy sweeps.
+
+    Parameters
+    ----------
+    plot_dir : Path or None, optional
+        Directory containing PNGs from :func:`plot_accuracy_results`. If omitted the
+        latest accuracy CSV is plotted and that output directory is used.
+    csv_path, log_dir : Path or None, optional
+        Passed through to :func:`plot_accuracy_results` when ``plot_dir`` is not
+        provided.
+    out_path : Path or None, optional
+        Location of the generated montage PNG. Defaults to ``plot_dir`` with the
+        file name ``xy_accuracy_montage.png``.
+    columns : int, optional
+        Number of columns in the montage grid.
+    padding_px : int, optional
+        Pixel padding between plots.
+    background_color : tuple, optional
+        RGB color for padding/background. Values >1 are interpreted as 0-255.
+    """
+
+    if columns <= 0:
+        raise ValueError("columns must be a positive integer")
+    if padding_px < 0:
+        raise ValueError("padding_px cannot be negative")
+
+    if plot_dir is None:
+        plot_dir_path = plot_accuracy_results(csv_path=csv_path, log_dir=log_dir)
+    else:
+        plot_dir_path = Path(plot_dir)
+
+    if not plot_dir_path.exists():
+        raise FileNotFoundError(f"Plot directory '{plot_dir_path}' does not exist")
+
+    png_files = sorted(plot_dir_path.glob("*.png"))
+    if not png_files:
+        raise FileNotFoundError(
+            f"No PNG files were found in '{plot_dir_path}'. Run plot_accuracy_results first."
+        )
+
+    background = _normalize_background(background_color)
+    images = [_load_png_image(path, background) for path in png_files]
+
+    cell_height = max(image.shape[0] for image in images)
+    cell_width = max(image.shape[1] for image in images)
+    rows = math.ceil(len(images) / columns)
+
+    canvas_height = rows * cell_height + padding_px * (rows + 1)
+    canvas_width = columns * cell_width + padding_px * (columns + 1)
+    canvas = np.ones((canvas_height, canvas_width, 3), dtype=np.float32)
+    canvas[...] = background
+
+    for idx, image in enumerate(images):
+        row = idx // columns
+        col = idx % columns
+        top = padding_px + row * (cell_height + padding_px)
+        left = padding_px + col * (cell_width + padding_px)
+        height, width = image.shape[:2]
+        canvas[top : top + height, left : left + width, :] = image
+
+    if out_path is None:
+        out_path = plot_dir_path / "xy_accuracy_montage.png"
+    out_path = Path(out_path)
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    mpimg.imsave(out_path, canvas)
+    return out_path
+
+
 def run_full_accuracy_benchmark(
     config: AccuracySweepConfig | None = None,
     *,
@@ -129,5 +239,6 @@ if __name__ == "__main__":
 __all__ = [
     "get_latest_csv",
     "plot_accuracy_results",
+    "create_accuracy_montage",
     "run_full_accuracy_benchmark",
 ]

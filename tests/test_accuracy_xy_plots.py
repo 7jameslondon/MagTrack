@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import matplotlib.pyplot as plt
+from matplotlib import image as mpimg
 import numpy as np
 
 from benchmarks.accuracy.plot_xy_accuracy import (
@@ -10,6 +11,7 @@ from benchmarks.accuracy.plot_xy_accuracy import (
     make_default_plots,
     plot_metric_vs_factor,
 )
+from benchmarks.accuracy.runner import create_accuracy_montage
 from benchmarks.accuracy.xy_accuracy import AccuracySweepResults
 
 
@@ -71,3 +73,18 @@ def test_make_default_plots_show_only(tmp_path: Path) -> None:
     results = _synthetic_results()
     make_default_plots(results, out_dir=None, show=False)
     assert not any(tmp_path.iterdir())
+
+
+def test_create_accuracy_montage_from_existing_plots(tmp_path: Path) -> None:
+    results = _synthetic_results()
+    make_default_plots(results, tmp_path, show=False)
+    montage_path = create_accuracy_montage(
+        plot_dir=tmp_path,
+        out_path=tmp_path / "montage.png",
+        columns=2,
+        padding_px=0,
+    )
+    assert montage_path.exists()
+    montage = mpimg.imread(montage_path)
+    assert montage.ndim == 3
+    assert montage.shape[0] > 0 and montage.shape[1] > 0

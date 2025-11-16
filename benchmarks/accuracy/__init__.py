@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from benchmarks.accuracy.runner import (
+    create_accuracy_montage,
     get_latest_csv,
     plot_accuracy_results,
     run_full_accuracy_benchmark,
@@ -26,6 +27,7 @@ __all__ = [
     "DEFAULT_SWEEP_CONFIG",
     "MethodFunc",
     "format_summary",
+    "create_accuracy_montage",
     "get_latest_csv",
     "plot_accuracy_results",
     "register_method",
