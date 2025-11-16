@@ -19,7 +19,7 @@ from benchmarks.accuracy.xy_accuracy import (
     summarize_accuracy,
 )
 
-_DEFAULT_LOG_DIR = Path("benchmarks/accuracy/logs")
+_DEFAULT_LOG_DIR = Path(__file__).resolve().parent / "logs"
 
 
 def _ensure_log_dir(log_dir: Path | str | None) -> Path:
