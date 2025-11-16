@@ -36,6 +36,7 @@ benchmark = [
     "pandas",
 ]
 test = [
+    "matplotlib",
     "pandas",
     "pytest",
 ]
