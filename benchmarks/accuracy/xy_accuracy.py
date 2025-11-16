@@ -107,9 +107,10 @@ def run_accuracy_sweep(
     contrast_values = tuple(float(v) for v in contrast_scales)
     photons_values = tuple(float(v) for v in _as_tuple(photons_per_unit_choices))
     if z_nm_choices is None:
-        z_values: Tuple[float | None, ...] = (None,)
-    else:
-        z_values = tuple(float(v) for v in _as_tuple(z_nm_choices))
+        raise ValueError("z_nm_choices must be specified")
+    z_values = tuple(float(v) for v in _as_tuple(z_nm_choices))
+    if not z_values:
+        raise ValueError("z_nm_choices must contain at least one value")
 
     image_index_offset = 0
 
@@ -143,10 +144,7 @@ def run_accuracy_sweep(
         for i in range(n_images):
             x_nm = rng.uniform(-xy_range_nm, xy_range_nm)
             y_nm = rng.uniform(-xy_range_nm, xy_range_nm)
-            if z_choice is None:
-                z_nm = rng.uniform(-500.0, 500.0)
-            else:
-                z_nm = z_choice
+            z_nm = z_choice
             z_true_nm[i] = z_nm
             x_true_px[i], y_true_px[i] = _true_xy_pixels(x_nm, y_nm, nm_per_px_val, size_px_val)
 
@@ -211,6 +209,12 @@ def main(argv: List[str] | None = None) -> int:
     parser.add_argument("--n-images", type=int, default=100, help="Number of images to simulate.")
     parser.add_argument("--out", type=str, default=None, help="Optional path to CSV output.")
     parser.add_argument(
+        "--z-nm-choices",
+        type=str,
+        required=True,
+        help="Comma-separated list of z positions in nanometers (required).",
+    )
+    parser.add_argument(
         "--methods",
         type=str,
         default=None,
@@ -219,7 +223,10 @@ def main(argv: List[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     method_list = args.methods.split(",") if args.methods else None
-    df = run_accuracy_sweep(n_images=args.n_images, methods=method_list)
+    z_choices = tuple(float(part) for part in args.z_nm_choices.split(",") if part.strip())
+    if not z_choices:
+        raise SystemExit("--z-nm-choices must include at least one numeric value")
+    df = run_accuracy_sweep(n_images=args.n_images, methods=method_list, z_nm_choices=z_choices)
 
     if args.out:
         output_path = Path(args.out)
