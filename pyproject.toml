@@ -35,6 +35,10 @@ benchmark = [
     "matplotlib",
     "pandas",
 ]
+test = [
+    "pandas",
+    "pytest",
+]
 docs = [
     "sphinx>=7",
     "furo",
