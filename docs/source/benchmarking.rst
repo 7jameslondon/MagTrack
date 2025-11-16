@@ -47,9 +47,16 @@ equal footing. The metadata includes the hostname, operating system, CPU and
 memory (via :mod:`psutil` when available), GPU model details (via CuPy), the
 Python implementation, and installed versions of ``magtrack``, ``numpy``,
 ``scipy``, and any distribution whose name contains ``cupy`` (for example,
-``cupy-cuda12x``). The results are stored as JSON inside::
+``cupy-cuda12x``).
 
-   benchmarks/logs/<system-id>/<timestamp>/results.json
+Speed benchmark results are stored as JSON inside::
+
+   benchmarks/speed/logs/<system-id>/<timestamp>/results.json
+
+Accuracy benchmarks mirror the same directory structure so CSV and JSON logs for
+each run live beside the speed artifacts::
+
+   benchmarks/accuracy/logs/<system-id>/<timestamp>/xy_accuracy_<timestamp>.{csv,json}
 
 ``<system-id>`` combines the hostname, operating system, machine architecture,
 and Python version. ``<timestamp>`` is a UTC time formatted as
@@ -59,7 +66,7 @@ into version control if desired.
 Aggregated history
 ------------------
 
-After each run the orchestrator refreshes ``benchmarks/logs/combined_results.csv``
+After each run the orchestrator refreshes ``benchmarks/speed/logs/combined_results.csv``
 with a flat table of every successful benchmark measurement. This CSV is
 suitable for importing into pandas, spreadsheets, or other analysis tools. Use
 it to look for long-term trends or regressions beyond the visual summary
@@ -94,11 +101,11 @@ you want to share a new set of logs, follow the same Git workflow you would for
 code changes:
 
 1. Run the orchestrator and confirm the results appear under
-   ``benchmarks/logs/<system-id>/<timestamp>``.
+   ``benchmarks/speed/logs/<system-id>/<timestamp>``.
 2. Create a new branch and stage the generated artifacts::
 
       git checkout -b benchmark/<short-description>
-      git add benchmarks/logs
+      git add benchmarks/speed/logs
 
 3. Commit the changes with a message that summarizes the run, including any
    noteworthy hardware or software details::

@@ -14,7 +14,7 @@ import platform
 import socket
 from typing import Any, Iterable, Sequence
 
-LOG_ROOT = Path(__file__).resolve().parents[1] / "logs"
+LOG_ROOT = Path(__file__).resolve().parent / "logs"
 
 
 def _safe_float(value: Any) -> float | None:
