@@ -6,7 +6,7 @@ import numpy as np
 
 from benchmarks import confbenchmarks  # noqa: F401  # Ensures repository root on sys.path
 import magtrack
-from benchmarks.cpu_benchmark import cpu_benchmark
+from .cpu_benchmark import cpu_benchmark
 from magtrack._cupy import cp, check_cupy
 
 

@@ -1,4 +1,4 @@
-"""Performance benchmark for :func:`magtrack.auto_conv`."""
+"""Performance benchmark for :func:`magtrack.auto_conv_multiline`."""
 
 from __future__ import annotations
 
@@ -9,7 +9,7 @@ import numpy as np
 
 from benchmarks import confbenchmarks  # noqa: F401  # Ensures repository root on sys.path
 import magtrack
-from benchmarks.cpu_benchmark import cpu_benchmark
+from .cpu_benchmark import cpu_benchmark
 from magtrack._cupy import cp, check_cupy
 from magtrack.simulation import simulate_beads
 
@@ -89,7 +89,7 @@ def _print_summary(label: str, times: np.ndarray) -> None:
     print(f"{label}: mean {mean:.6f}s ± {std:.6f}s over {times.size} runs")
 
 
-def benchmark_auto_conv(
+def benchmark_auto_conv_multiline(
     *,
     n_images: int = 1000,
     nm_per_px: float = 100.0,
@@ -100,9 +100,9 @@ def benchmark_auto_conv(
     max_duration: float = 30.0,
     seed: int = 12345,
 ) -> None:
-    """Run CPU and GPU benchmarks for :func:`magtrack.auto_conv`."""
+    """Run CPU and GPU benchmarks for :func:`magtrack.auto_conv_multiline`."""
 
-    print("Benchmarking: magtrack.auto_conv")
+    print("Benchmarking: magtrack.auto_conv_multiline")
     print(
         "n_images: {n_images}, nm_per_px: {nm_per_px}, size_px: {size_px}".format(
             n_images=n_images,
@@ -131,7 +131,7 @@ def benchmark_auto_conv(
     )
 
     cpu_results = cpu_benchmark(
-        magtrack.auto_conv,
+        magtrack.auto_conv_multiline,
         args=(stack_cpu, guess_x_cpu, guess_y_cpu),
         kwargs={},
         max_duration=max_duration,
@@ -155,7 +155,7 @@ def benchmark_auto_conv(
     )
 
     gpu_results = cupy_benchmark(
-        magtrack.auto_conv,
+        magtrack.auto_conv_multiline,
         args=(stack_gpu, guess_x_gpu, guess_y_gpu),
         kwargs={},
         max_duration=max_duration,
@@ -165,3 +165,7 @@ def benchmark_auto_conv(
     gpu_times = cp.asnumpy(gpu_results.gpu_times).squeeze()
     gpu_cpu_times = np.asarray(gpu_results.cpu_times).squeeze()
     _print_summary("GPU", gpu_times + gpu_cpu_times)
+
+
+if __name__ == "__main__":
+    benchmark_auto_conv_multiline()

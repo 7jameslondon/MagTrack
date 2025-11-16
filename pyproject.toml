@@ -51,7 +51,12 @@ Issues = "https://github.com/7jameslondon/MagTrack/issues"
 benchmark-magtrack = "benchmarks.run_all:main"
 
 [tool.setuptools]
-packages = ["magtrack", "benchmarks"]
+packages = [
+    "magtrack",
+    "benchmarks",
+    "benchmarks.speed",
+    "benchmarks.accuracy",
+]
 
 [tool.setuptools.package-data]
 benchmarks = [

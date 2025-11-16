@@ -2,10 +2,12 @@ Benchmarking
 =====================
 
 MagTrack ships with a small benchmarking harness that exercises each module in
-``benchmarks/`` and records both CPU and GPU timings (when CuPy is installed).
-The workflow is driven by :mod:`benchmarks.run_all`, which discovers every
-callable whose name starts with ``benchmark_`` and measures it with repeat
-executions.
+``benchmarks/speed`` and records both CPU and GPU timings (when CuPy is
+installed). The workflow is driven by :mod:`benchmarks.speed.run_all`, which
+discovers every callable whose name starts with ``benchmark_`` and measures it
+with repeat executions. The :mod:`benchmarks.accuracy` package is reserved for
+future localization accuracy suites while keeping the existing runtime
+benchmarks unchanged.
 
 .. image:: https://raw.githubusercontent.com/7jameslondon/MagTrack/refs/heads/master/assets/benchmarks.png
    :alt: Benchmark Results Graph
@@ -27,6 +29,10 @@ Once the dependencies are in place you can launch the orchestrator directly
 from the project root with the convenience script::
 
    benchmark-magtrack
+
+The same run can be started explicitly with ``python -m benchmarks.run_all``,
+which now dispatches to :mod:`benchmarks.speed.run_all` under the hood while
+preserving the existing CLI experience.
 
 The command prints a short progress log while it imports benchmark modules and
 runs their ``benchmark_*`` functions. CPU timings are always collected. GPU
@@ -63,7 +69,7 @@ Interpreting the runtime plot
 -----------------------------
 
 Once the logs are written the orchestrator calls
-:func:`benchmarks.plot_benchmarks.plot_benchmark_history`. The function loads
+:func:`benchmarks.speed.plot_benchmarks.plot_benchmark_history`. The function loads
 all historical entries, computes the average runtime for each
 benchmark/backend pair, and then renders a grouped bar chart where every bar is
 the *average* runtime recorded on a particular system. All values are plotted

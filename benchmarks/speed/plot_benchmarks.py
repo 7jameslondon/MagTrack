@@ -10,7 +10,7 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 
-from benchmarks import log_utils
+from . import log_utils
 
 mpl.use('TkAgg')
 BASELINE_SYSTEM_ID = "windows-13th_gen_intel_i7_13700-nvidia_geforce_rtx_3070"

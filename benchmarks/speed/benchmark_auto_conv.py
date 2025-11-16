@@ -1,4 +1,4 @@
-"""Performance benchmark for :func:`magtrack.auto_conv_sub_pixel`."""
+"""Performance benchmark for :func:`magtrack.auto_conv`."""
 
 from __future__ import annotations
 
@@ -9,7 +9,7 @@ import numpy as np
 
 from benchmarks import confbenchmarks  # noqa: F401  # Ensures repository root on sys.path
 import magtrack
-from benchmarks.cpu_benchmark import cpu_benchmark
+from .cpu_benchmark import cpu_benchmark
 from magtrack._cupy import cp, check_cupy
 from magtrack.simulation import simulate_beads
 
@@ -89,7 +89,7 @@ def _print_summary(label: str, times: np.ndarray) -> None:
     print(f"{label}: mean {mean:.6f}s ± {std:.6f}s over {times.size} runs")
 
 
-def benchmark_auto_conv_sub_pixel(
+def benchmark_auto_conv(
     *,
     n_images: int = 1000,
     nm_per_px: float = 100.0,
@@ -100,9 +100,9 @@ def benchmark_auto_conv_sub_pixel(
     max_duration: float = 30.0,
     seed: int = 12345,
 ) -> None:
-    """Run CPU and GPU benchmarks for :func:`magtrack.auto_conv_sub_pixel`."""
+    """Run CPU and GPU benchmarks for :func:`magtrack.auto_conv`."""
 
-    print("Benchmarking: magtrack.auto_conv_sub_pixel")
+    print("Benchmarking: magtrack.auto_conv")
     print(
         "n_images: {n_images}, nm_per_px: {nm_per_px}, size_px: {size_px}".format(
             n_images=n_images,
@@ -131,7 +131,7 @@ def benchmark_auto_conv_sub_pixel(
     )
 
     cpu_results = cpu_benchmark(
-        magtrack.auto_conv_sub_pixel,
+        magtrack.auto_conv,
         args=(stack_cpu, guess_x_cpu, guess_y_cpu),
         kwargs={},
         max_duration=max_duration,
@@ -155,7 +155,7 @@ def benchmark_auto_conv_sub_pixel(
     )
 
     gpu_results = cupy_benchmark(
-        magtrack.auto_conv_sub_pixel,
+        magtrack.auto_conv,
         args=(stack_gpu, guess_x_gpu, guess_y_gpu),
         kwargs={},
         max_duration=max_duration,

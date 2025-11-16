@@ -1,4 +1,4 @@
-"""Performance benchmark for magtrack.gaussian."""
+"""Performance benchmark for magtrack.binmean."""
 
 from __future__ import annotations
 
@@ -6,24 +6,15 @@ import numpy as np
 
 from benchmarks import confbenchmarks  # noqa: F401  # Ensures repository root on sys.path
 import magtrack
-from benchmarks.cpu_benchmark import cpu_benchmark
+from .cpu_benchmark import cpu_benchmark
 from magtrack._cupy import cp, check_cupy
 
 
-def _generate_inputs(
-    xp,
-    n_values: int,
-    dtype,
-    sigma_min: float,
-):
+def _generate_inputs(xp, n_values: int, n_datasets: int, n_bins: int):
     """Create random test data on the requested array module."""
-
-    xp_dtype = xp.dtype(dtype)
-    x = xp.random.standard_normal(n_values).astype(xp_dtype)
-    mu = xp.random.standard_normal(n_values).astype(xp_dtype)
-    sigma = xp.random.random(n_values).astype(xp_dtype)
-    sigma = xp.maximum(sigma, xp.asarray(sigma_min, dtype=xp_dtype))
-    return x, mu, sigma
+    x = xp.random.randint(0, n_bins, size=(n_values, n_datasets)).astype(xp.int64)
+    weights = xp.random.random((n_values, n_datasets)).astype(xp.float64)
+    return x, weights
 
 
 def _print_summary(label: str, times: np.ndarray) -> None:
@@ -33,35 +24,26 @@ def _print_summary(label: str, times: np.ndarray) -> None:
     print(f"{label}: mean {mean:.6f}s ± {std:.6f}s over {times.size} runs")
 
 
-def benchmark_gaussian(
+def benchmark_binmean(
     n_values: int = 1_000_000,
-    dtype=np.float64,
-    sigma_min: float = 1e-3,
+    n_datasets: int = 16,
+    n_bins: int = 64,
     n_repeat: int = 100,
     n_warmup_cpu: int = 10,
     n_warmup_gpu: int = 10,
     max_duration: float = 30.0,
 ) -> None:
-    """Run CPU and GPU benchmarks for :func:`magtrack.gaussian`."""
+    """Run CPU and GPU benchmarks for :func:`magtrack.binmean`."""
 
-    print('Benchmarking: magtrack.gaussian')
-    dtype = np.dtype(dtype)
-    print(f"n_values: {n_values}, dtype: {dtype.name}")
-    print(
-        f"n_repeat: {n_repeat}, n_warmup_cpu: {n_warmup_cpu}, "
-        f"n_warmup_gpu: {n_warmup_gpu}, max_duration: {max_duration}"
-    )
+    print('Benchmarking: magtrack.binmean')
+    print(f"n_values: {n_values}, n_datasets: {n_datasets}, n_bins: {n_bins}")
+    print(f"n_repeat: {n_repeat}, n_warmup_cpu: {n_warmup_cpu}, n_warmup_gpu: {n_warmup_gpu}, max_duration: {max_duration}")
 
     # CPU benchmark
-    x_cpu, mu_cpu, sigma_cpu = _generate_inputs(
-        np,
-        n_values,
-        dtype,
-        sigma_min,
-    )
+    x_cpu, weights_cpu = _generate_inputs(np, n_values, n_datasets, n_bins)
     cpu_results = cpu_benchmark(
-        magtrack.gaussian,
-        args=(x_cpu, mu_cpu, sigma_cpu),
+        magtrack.binmean,
+        args=(x_cpu.copy(), weights_cpu, n_bins),
         max_duration=max_duration,
         n_repeat=n_repeat,
         n_warmup=n_warmup_cpu,
@@ -75,15 +57,10 @@ def benchmark_gaussian(
 
     from cupyx.profiler import benchmark as cupy_benchmark  # type: ignore
 
-    x_gpu, mu_gpu, sigma_gpu = _generate_inputs(
-        cp,
-        n_values,
-        dtype,
-        sigma_min,
-    )
+    x_gpu, weights_gpu = _generate_inputs(cp, n_values, n_datasets, n_bins)
     gpu_results = cupy_benchmark(
-        magtrack.gaussian,
-        args=(x_gpu, mu_gpu, sigma_gpu),
+        magtrack.binmean,
+        args=(x_gpu.copy(), weights_gpu, n_bins),
         max_duration=max_duration,
         n_repeat=n_repeat,
         n_warmup=n_warmup_gpu,
@@ -94,4 +71,4 @@ def benchmark_gaussian(
 
 
 if __name__ == "__main__":
-    benchmark_gaussian()
+    benchmark_binmean()
