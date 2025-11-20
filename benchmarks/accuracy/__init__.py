@@ -9,6 +9,7 @@ from benchmarks.accuracy.bead_simulation_sweep import (
     SweepArtifact,
     default_parameter_set,
 )
+from benchmarks.accuracy.sweep_loader import SweepData, SweepImage
 from benchmarks.accuracy.xy_accuracy import (
     AccuracySweepConfig,
     AccuracySweepResults,
@@ -31,6 +32,8 @@ __all__ = [
     "ParameterSet",
     "SweepArtifact",
     "default_parameter_set",
+    "SweepData",
+    "SweepImage",
     "format_summary",
     "get_latest_csv",
     "register_method",
