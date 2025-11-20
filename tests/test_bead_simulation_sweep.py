@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+import subprocess
+import sys
 
 import numpy as np
 
@@ -41,7 +43,10 @@ def test_generate_creates_npz_and_metadata(tmp_path: Path) -> None:
     assert metadata["image_file"] == artifact.images_path.name
     parameter_sets = metadata["parameter_sets"]
     assert len(parameter_sets) == 1
-    assert len(parameter_sets[0]["combinations"]) == expected_images
+    combinations = parameter_sets[0]["combinations"]
+    assert len(combinations) == expected_images
+    for combo in combinations:
+        assert combo["image_path"] == f"{artifact.images_path.name}::{combo['key']}"
     assert metadata["total_images"] == expected_images
 
 
@@ -60,3 +65,28 @@ def test_overwrite_flag_controls_replacement(tmp_path: Path) -> None:
     artifact = sweep.generate(overwrite=True)
     assert artifact.images_path.is_file()
     assert artifact.metadata_path.is_file()
+
+
+def test_cli_generates_default_sweep(tmp_path: Path) -> None:
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "benchmarks.accuracy.bead_simulation_sweep",
+            "--sweep-name",
+            "cli_sweep",
+            "--sweep-root",
+            str(tmp_path),
+            "--overwrite",
+        ],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+
+    sweep_dir = tmp_path / "cli_sweep"
+    images_path = sweep_dir / "images.npz"
+    metadata_path = sweep_dir / "metadata.json"
+
+    assert images_path.is_file(), result.stdout + result.stderr
+    assert metadata_path.is_file(), result.stdout + result.stderr

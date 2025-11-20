@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import argparse
 import itertools
 import json
 from dataclasses import dataclass, field
@@ -89,6 +90,7 @@ class BeadSimulationSweep:
                         "key": image_key,
                         "values": self._ensure_json_serializable(combo),
                         "image_shape": list(image_shape),
+                        "image_path": f"{images_path.name}::{image_key}",
                     }
                 )
             parameter_metadata.append(
@@ -194,3 +196,36 @@ def default_parameter_set() -> ParameterSet:
 
 
 __all__ = ["BeadSimulationSweep", "ParameterSet", "SweepArtifact", "default_parameter_set"]
+
+
+def _parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Generate the default bead simulation sweep.")
+    parser.add_argument(
+        "--sweep-name",
+        default="bead_simulation_sweep",
+        help="Name for the generated sweep directory (default: bead_simulation_sweep)",
+    )
+    parser.add_argument(
+        "--sweep-root",
+        default=str(_DEFAULT_SWEEP_ROOT),
+        help=f"Root directory for sweeps (default: {_DEFAULT_SWEEP_ROOT})",
+    )
+    parser.add_argument(
+        "--overwrite",
+        action="store_true",
+        help="Overwrite existing sweep artifacts if they already exist.",
+    )
+    return parser.parse_args()
+
+
+def _main() -> None:
+    args = _parse_args()
+    sweep = BeadSimulationSweep(args.sweep_name, sweep_root=Path(args.sweep_root))
+    artifact = sweep.generate(overwrite=args.overwrite)
+    print(f"Generated sweep '{artifact.sweep_name}' at {artifact.sweep_dir}")
+    print(f"Images: {artifact.images_path}")
+    print(f"Metadata: {artifact.metadata_path}")
+
+
+if __name__ == "__main__":
+    _main()
