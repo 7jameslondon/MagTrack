@@ -202,8 +202,8 @@ def _parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Generate the default bead simulation sweep.")
     parser.add_argument(
         "--sweep-name",
-        default="bead_simulation_sweep",
-        help="Name for the generated sweep directory (default: bead_simulation_sweep)",
+        default="default",
+        help="Name for the generated sweep directory (default: default)",
     )
     parser.add_argument(
         "--sweep-root",

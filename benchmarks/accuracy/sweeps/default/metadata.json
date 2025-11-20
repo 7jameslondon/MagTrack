@@ -1,0 +1,582 @@
+{
+  "sweep_name": "default",
+  "created_at": "2025-11-20T18:06:22.626554+00:00",
+  "image_file": "images.npz",
+  "total_images": 32,
+  "parameter_sets": [
+    {
+      "name": "default",
+      "parameters": {
+        "x_offset": [
+          -1.0,
+          1.0
+        ],
+        "y_offset": [
+          -1.0,
+          1.0
+        ],
+        "z_offset": [
+          -1.0,
+          1.0
+        ],
+        "background": [
+          0.0,
+          10.0
+        ],
+        "seed": [
+          123,
+          456
+        ]
+      },
+      "combinations": [
+        {
+          "key": "default__0000",
+          "values": {
+            "x_offset": -1.0,
+            "y_offset": -1.0,
+            "z_offset": -1.0,
+            "background": 0.0,
+            "seed": 123
+          },
+          "image_shape": [
+            64,
+            64,
+            1
+          ],
+          "image_path": "images.npz::default__0000"
+        },
+        {
+          "key": "default__0001",
+          "values": {
+            "x_offset": -1.0,
+            "y_offset": -1.0,
+            "z_offset": -1.0,
+            "background": 0.0,
+            "seed": 456
+          },
+          "image_shape": [
+            64,
+            64,
+            1
+          ],
+          "image_path": "images.npz::default__0001"
+        },
+        {
+          "key": "default__0002",
+          "values": {
+            "x_offset": -1.0,
+            "y_offset": -1.0,
+            "z_offset": -1.0,
+            "background": 10.0,
+            "seed": 123
+          },
+          "image_shape": [
+            64,
+            64,
+            1
+          ],
+          "image_path": "images.npz::default__0002"
+        },
+        {
+          "key": "default__0003",
+          "values": {
+            "x_offset": -1.0,
+            "y_offset": -1.0,
+            "z_offset": -1.0,
+            "background": 10.0,
+            "seed": 456
+          },
+          "image_shape": [
+            64,
+            64,
+            1
+          ],
+          "image_path": "images.npz::default__0003"
+        },
+        {
+          "key": "default__0004",
+          "values": {
+            "x_offset": -1.0,
+            "y_offset": -1.0,
+            "z_offset": 1.0,
+            "background": 0.0,
+            "seed": 123
+          },
+          "image_shape": [
+            64,
+            64,
+            1
+          ],
+          "image_path": "images.npz::default__0004"
+        },
+        {
+          "key": "default__0005",
+          "values": {
+            "x_offset": -1.0,
+            "y_offset": -1.0,
+            "z_offset": 1.0,
+            "background": 0.0,
+            "seed": 456
+          },
+          "image_shape": [
+            64,
+            64,
+            1
+          ],
+          "image_path": "images.npz::default__0005"
+        },
+        {
+          "key": "default__0006",
+          "values": {
+            "x_offset": -1.0,
+            "y_offset": -1.0,
+            "z_offset": 1.0,
+            "background": 10.0,
+            "seed": 123
+          },
+          "image_shape": [
+            64,
+            64,
+            1
+          ],
+          "image_path": "images.npz::default__0006"
+        },
+        {
+          "key": "default__0007",
+          "values": {
+            "x_offset": -1.0,
+            "y_offset": -1.0,
+            "z_offset": 1.0,
+            "background": 10.0,
+            "seed": 456
+          },
+          "image_shape": [
+            64,
+            64,
+            1
+          ],
+          "image_path": "images.npz::default__0007"
+        },
+        {
+          "key": "default__0008",
+          "values": {
+            "x_offset": -1.0,
+            "y_offset": 1.0,
+            "z_offset": -1.0,
+            "background": 0.0,
+            "seed": 123
+          },
+          "image_shape": [
+            64,
+            64,
+            1
+          ],
+          "image_path": "images.npz::default__0008"
+        },
+        {
+          "key": "default__0009",
+          "values": {
+            "x_offset": -1.0,
+            "y_offset": 1.0,
+            "z_offset": -1.0,
+            "background": 0.0,
+            "seed": 456
+          },
+          "image_shape": [
+            64,
+            64,
+            1
+          ],
+          "image_path": "images.npz::default__0009"
+        },
+        {
+          "key": "default__0010",
+          "values": {
+            "x_offset": -1.0,
+            "y_offset": 1.0,
+            "z_offset": -1.0,
+            "background": 10.0,
+            "seed": 123
+          },
+          "image_shape": [
+            64,
+            64,
+            1
+          ],
+          "image_path": "images.npz::default__0010"
+        },
+        {
+          "key": "default__0011",
+          "values": {
+            "x_offset": -1.0,
+            "y_offset": 1.0,
+            "z_offset": -1.0,
+            "background": 10.0,
+            "seed": 456
+          },
+          "image_shape": [
+            64,
+            64,
+            1
+          ],
+          "image_path": "images.npz::default__0011"
+        },
+        {
+          "key": "default__0012",
+          "values": {
+            "x_offset": -1.0,
+            "y_offset": 1.0,
+            "z_offset": 1.0,
+            "background": 0.0,
+            "seed": 123
+          },
+          "image_shape": [
+            64,
+            64,
+            1
+          ],
+          "image_path": "images.npz::default__0012"
+        },
+        {
+          "key": "default__0013",
+          "values": {
+            "x_offset": -1.0,
+            "y_offset": 1.0,
+            "z_offset": 1.0,
+            "background": 0.0,
+            "seed": 456
+          },
+          "image_shape": [
+            64,
+            64,
+            1
+          ],
+          "image_path": "images.npz::default__0013"
+        },
+        {
+          "key": "default__0014",
+          "values": {
+            "x_offset": -1.0,
+            "y_offset": 1.0,
+            "z_offset": 1.0,
+            "background": 10.0,
+            "seed": 123
+          },
+          "image_shape": [
+            64,
+            64,
+            1
+          ],
+          "image_path": "images.npz::default__0014"
+        },
+        {
+          "key": "default__0015",
+          "values": {
+            "x_offset": -1.0,
+            "y_offset": 1.0,
+            "z_offset": 1.0,
+            "background": 10.0,
+            "seed": 456
+          },
+          "image_shape": [
+            64,
+            64,
+            1
+          ],
+          "image_path": "images.npz::default__0015"
+        },
+        {
+          "key": "default__0016",
+          "values": {
+            "x_offset": 1.0,
+            "y_offset": -1.0,
+            "z_offset": -1.0,
+            "background": 0.0,
+            "seed": 123
+          },
+          "image_shape": [
+            64,
+            64,
+            1
+          ],
+          "image_path": "images.npz::default__0016"
+        },
+        {
+          "key": "default__0017",
+          "values": {
+            "x_offset": 1.0,
+            "y_offset": -1.0,
+            "z_offset": -1.0,
+            "background": 0.0,
+            "seed": 456
+          },
+          "image_shape": [
+            64,
+            64,
+            1
+          ],
+          "image_path": "images.npz::default__0017"
+        },
+        {
+          "key": "default__0018",
+          "values": {
+            "x_offset": 1.0,
+            "y_offset": -1.0,
+            "z_offset": -1.0,
+            "background": 10.0,
+            "seed": 123
+          },
+          "image_shape": [
+            64,
+            64,
+            1
+          ],
+          "image_path": "images.npz::default__0018"
+        },
+        {
+          "key": "default__0019",
+          "values": {
+            "x_offset": 1.0,
+            "y_offset": -1.0,
+            "z_offset": -1.0,
+            "background": 10.0,
+            "seed": 456
+          },
+          "image_shape": [
+            64,
+            64,
+            1
+          ],
+          "image_path": "images.npz::default__0019"
+        },
+        {
+          "key": "default__0020",
+          "values": {
+            "x_offset": 1.0,
+            "y_offset": -1.0,
+            "z_offset": 1.0,
+            "background": 0.0,
+            "seed": 123
+          },
+          "image_shape": [
+            64,
+            64,
+            1
+          ],
+          "image_path": "images.npz::default__0020"
+        },
+        {
+          "key": "default__0021",
+          "values": {
+            "x_offset": 1.0,
+            "y_offset": -1.0,
+            "z_offset": 1.0,
+            "background": 0.0,
+            "seed": 456
+          },
+          "image_shape": [
+            64,
+            64,
+            1
+          ],
+          "image_path": "images.npz::default__0021"
+        },
+        {
+          "key": "default__0022",
+          "values": {
+            "x_offset": 1.0,
+            "y_offset": -1.0,
+            "z_offset": 1.0,
+            "background": 10.0,
+            "seed": 123
+          },
+          "image_shape": [
+            64,
+            64,
+            1
+          ],
+          "image_path": "images.npz::default__0022"
+        },
+        {
+          "key": "default__0023",
+          "values": {
+            "x_offset": 1.0,
+            "y_offset": -1.0,
+            "z_offset": 1.0,
+            "background": 10.0,
+            "seed": 456
+          },
+          "image_shape": [
+            64,
+            64,
+            1
+          ],
+          "image_path": "images.npz::default__0023"
+        },
+        {
+          "key": "default__0024",
+          "values": {
+            "x_offset": 1.0,
+            "y_offset": 1.0,
+            "z_offset": -1.0,
+            "background": 0.0,
+            "seed": 123
+          },
+          "image_shape": [
+            64,
+            64,
+            1
+          ],
+          "image_path": "images.npz::default__0024"
+        },
+        {
+          "key": "default__0025",
+          "values": {
+            "x_offset": 1.0,
+            "y_offset": 1.0,
+            "z_offset": -1.0,
+            "background": 0.0,
+            "seed": 456
+          },
+          "image_shape": [
+            64,
+            64,
+            1
+          ],
+          "image_path": "images.npz::default__0025"
+        },
+        {
+          "key": "default__0026",
+          "values": {
+            "x_offset": 1.0,
+            "y_offset": 1.0,
+            "z_offset": -1.0,
+            "background": 10.0,
+            "seed": 123
+          },
+          "image_shape": [
+            64,
+            64,
+            1
+          ],
+          "image_path": "images.npz::default__0026"
+        },
+        {
+          "key": "default__0027",
+          "values": {
+            "x_offset": 1.0,
+            "y_offset": 1.0,
+            "z_offset": -1.0,
+            "background": 10.0,
+            "seed": 456
+          },
+          "image_shape": [
+            64,
+            64,
+            1
+          ],
+          "image_path": "images.npz::default__0027"
+        },
+        {
+          "key": "default__0028",
+          "values": {
+            "x_offset": 1.0,
+            "y_offset": 1.0,
+            "z_offset": 1.0,
+            "background": 0.0,
+            "seed": 123
+          },
+          "image_shape": [
+            64,
+            64,
+            1
+          ],
+          "image_path": "images.npz::default__0028"
+        },
+        {
+          "key": "default__0029",
+          "values": {
+            "x_offset": 1.0,
+            "y_offset": 1.0,
+            "z_offset": 1.0,
+            "background": 0.0,
+            "seed": 456
+          },
+          "image_shape": [
+            64,
+            64,
+            1
+          ],
+          "image_path": "images.npz::default__0029"
+        },
+        {
+          "key": "default__0030",
+          "values": {
+            "x_offset": 1.0,
+            "y_offset": 1.0,
+            "z_offset": 1.0,
+            "background": 10.0,
+            "seed": 123
+          },
+          "image_shape": [
+            64,
+            64,
+            1
+          ],
+          "image_path": "images.npz::default__0030"
+        },
+        {
+          "key": "default__0031",
+          "values": {
+            "x_offset": 1.0,
+            "y_offset": 1.0,
+            "z_offset": 1.0,
+            "background": 10.0,
+            "seed": 456
+          },
+          "image_shape": [
+            64,
+            64,
+            1
+          ],
+          "image_path": "images.npz::default__0031"
+        }
+      ]
+    }
+  ],
+  "system": {
+    "id": "windows-13th_gen_intel_i7_13700-nvidia_geforce_rtx_3070",
+    "timestamp": "20251120T180620Z",
+    "metadata": {
+      "collected_at": "2025-11-20T18:06:20.608591+00:00",
+      "hostname": "CC-82ZWCX3",
+      "platform": {
+        "system": "Windows",
+        "release": "10",
+        "version": "10.0.26100",
+        "machine": "AMD64",
+        "processor": "13th Gen Intel(R) Core(TM) i7-13700"
+      },
+      "python": {
+        "version": "3.11.5",
+        "implementation": "CPython"
+      },
+      "dependencies": {
+        "magtrack": "0.7.3",
+        "numpy": "2.3.5",
+        "scipy": "1.16.3",
+        "cupy-cuda12x": "13.6.0"
+      },
+      "cpu": null,
+      "memory": null,
+      "gpus": [
+        {
+          "id": 0,
+          "name": "NVIDIA GeForce RTX 3070",
+          "total_memory": 8589410304,
+          "multiprocessor_count": 46
+        }
+      ]
+    }
+  }
+}
