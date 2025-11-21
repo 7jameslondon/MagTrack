@@ -68,10 +68,16 @@ def _ensure_pipeline_records(
 
 
 def _euclidean_error(record: Mapping[str, object]) -> float:
+    if "truth_x" not in record or "truth_y" not in record:
+        image_key = record.get("image_key", "<unknown>")
+        raise ValueError(
+            f"Record for image '{image_key}' is missing true coordinates ('truth_x', 'truth_y').",
+        )
+
     predicted_x = float(record.get("predicted_x", 0.0))
     predicted_y = float(record.get("predicted_y", 0.0))
-    truth_x = float(record.get("truth_x", 0.0))
-    truth_y = float(record.get("truth_y", 0.0))
+    truth_x = float(record["truth_x"])
+    truth_y = float(record["truth_y"])
     return float(np.hypot(predicted_x - truth_x, predicted_y - truth_y))
 
 
