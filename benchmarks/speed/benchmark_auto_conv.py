@@ -13,7 +13,9 @@ from benchmarks.speed.cpu_benchmark import cpu_benchmark
 from magtrack._cupy import cp, check_cupy
 from magtrack.simulation import simulate_beads
 
-
+BLUE   = "\033[34m"
+GREEN  = "\033[32m"
+RESET  = "\033[0m"
 _BASE_LAYOUT_NM = (
     np.array(
         [
@@ -60,7 +62,7 @@ def _generate_inputs(
         xyz_nm,
         nm_per_px=nm_per_px,
         size_px=size_px,
-    ).astype(np.float64, copy=False)
+    ).astype(np.float32, copy=False)
 
     base_px = (size_px - 1) / 2.0
     expected_x_np = base_px + xyz_nm[:, 0] / nm_per_px
@@ -91,9 +93,9 @@ def _print_summary(label: str, times: np.ndarray) -> None:
 
 def benchmark_auto_conv(
     *,
-    n_images: int = 1000,
+    n_images: int = 512,
     nm_per_px: float = 100.0,
-    size_px: int = 64,
+    size_px: int = 256,
     n_repeat: int = 100,
     n_warmup_cpu: int = 10,
     n_warmup_gpu: int = 10,
@@ -102,7 +104,7 @@ def benchmark_auto_conv(
 ) -> None:
     """Run CPU and GPU benchmarks for :func:`magtrack.auto_conv`."""
 
-    print("Benchmarking: magtrack.auto_conv")
+    print(GREEN + "Benchmarking: magtrack.auto_conv" + RESET)
     print(
         "n_images: {n_images}, nm_per_px: {nm_per_px}, size_px: {size_px}".format(
             n_images=n_images,
@@ -138,7 +140,7 @@ def benchmark_auto_conv(
         n_repeat=n_repeat,
         n_warmup=n_warmup_cpu,
     )
-    _print_summary("CPU", cpu_results.cpu_times)
+    _print_summary(BLUE + "CPU" + RESET, cpu_results.cpu_times)
 
     if not check_cupy():
         print("CuPy with GPU support is not available; skipping GPU benchmark.")
@@ -164,4 +166,8 @@ def benchmark_auto_conv(
     )
     gpu_times = cp.asnumpy(gpu_results.gpu_times).squeeze()
     gpu_cpu_times = np.asarray(gpu_results.cpu_times).squeeze()
-    _print_summary("GPU", gpu_times + gpu_cpu_times)
+    _print_summary(BLUE + "GPU" + RESET, gpu_times + gpu_cpu_times)
+
+
+if __name__ == "__main__":
+    benchmark_auto_conv()

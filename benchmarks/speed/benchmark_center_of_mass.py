@@ -13,7 +13,9 @@ from benchmarks.speed.cpu_benchmark import cpu_benchmark
 from magtrack._cupy import cp, check_cupy
 from magtrack.simulation import simulate_beads
 
-
+BLUE   = "\033[34m"
+GREEN  = "\033[32m"
+RESET  = "\033[0m"
 _BASE_LAYOUT_NM = (
     np.array(
         [
@@ -62,7 +64,7 @@ def _generate_inputs(
         xyz_nm,
         nm_per_px=nm_per_px,
         size_px=size_px,
-    ).astype(np.float64, copy=False)
+    ).astype(np.float32, copy=False)
 
     if xp is np:
         return stack_np
@@ -80,10 +82,10 @@ def _print_summary(label: str, times: np.ndarray) -> None:
 
 def benchmark_center_of_mass(
     *,
-    n_images: int = 1000,
+    n_images: int = 1024,
     nm_per_px: float = 100.0,
-    size_px: int = 64,
-    background: str = "mean",
+    size_px: int = 128,
+    background: str = "median",
     n_repeat: int = 100,
     n_warmup_cpu: int = 10,
     n_warmup_gpu: int = 10,
@@ -92,7 +94,7 @@ def benchmark_center_of_mass(
 ) -> None:
     """Run CPU and GPU benchmarks for :func:`magtrack.center_of_mass`."""
 
-    print("Benchmarking: magtrack.center_of_mass")
+    print(GREEN + "Benchmarking: magtrack.center_of_mass" + RESET)
     print(
         "n_images: {n_images}, nm_per_px: {nm_per_px}, size_px: {size_px}, "
         "background: {background}".format(
@@ -130,7 +132,7 @@ def benchmark_center_of_mass(
         n_repeat=n_repeat,
         n_warmup=n_warmup_cpu,
     )
-    _print_summary("CPU", cpu_results.cpu_times)
+    _print_summary(BLUE + "CPU" + RESET, cpu_results.cpu_times)
 
     if not check_cupy():
         print("CuPy with GPU support is not available; skipping GPU benchmark.")
@@ -156,7 +158,7 @@ def benchmark_center_of_mass(
     )
     gpu_times = cp.asnumpy(gpu_results.gpu_times).squeeze()
     gpu_cpu_times = np.asarray(gpu_results.cpu_times).squeeze()
-    _print_summary("GPU", gpu_times + gpu_cpu_times)
+    _print_summary(BLUE + "GPU" + RESET, gpu_times + gpu_cpu_times)
 
 
 if __name__ == "__main__":
