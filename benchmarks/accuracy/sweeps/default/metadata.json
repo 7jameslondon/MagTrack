@@ -1,8 +1,8 @@
 {
   "sweep_name": "default",
-  "created_at": "2025-11-21T02:00:44.486313+00:00",
+  "created_at": "2025-11-21T17:17:32.167588+00:00",
   "image_file": "images.npz",
-  "total_images": 6,
+  "total_images": 12,
   "parameter_sets": [
     {
       "name": "default",
@@ -17,7 +17,7 @@
           0
         ],
         "background_level": [
-          0.8
+          0.4
         ],
         "seed": [
           0
@@ -26,7 +26,8 @@
           5
         ],
         "radius_nm": [
-          500
+          500,
+          1500
         ],
         "nm_per_px_1x": [
           1000,
@@ -45,7 +46,7 @@
             "x_offset": 0,
             "y_offset": 0,
             "z_offset": 0,
-            "background_level": 0.8,
+            "background_level": 0.4,
             "seed": 0,
             "roi_bead_ratio": 5,
             "radius_nm": 500,
@@ -63,7 +64,7 @@
             "x_offset": 0,
             "y_offset": 0,
             "z_offset": 0,
-            "background_level": 0.8,
+            "background_level": 0.4,
             "seed": 0,
             "roi_bead_ratio": 5,
             "radius_nm": 500,
@@ -81,7 +82,7 @@
             "x_offset": 0,
             "y_offset": 0,
             "z_offset": 0,
-            "background_level": 0.8,
+            "background_level": 0.4,
             "seed": 0,
             "roi_bead_ratio": 5,
             "radius_nm": 500,
@@ -99,7 +100,7 @@
             "x_offset": 0,
             "y_offset": 0,
             "z_offset": 0,
-            "background_level": 0.8,
+            "background_level": 0.4,
             "seed": 0,
             "roi_bead_ratio": 5,
             "radius_nm": 500,
@@ -117,7 +118,7 @@
             "x_offset": 0,
             "y_offset": 0,
             "z_offset": 0,
-            "background_level": 0.8,
+            "background_level": 0.4,
             "seed": 0,
             "roi_bead_ratio": 5,
             "radius_nm": 500,
@@ -135,7 +136,7 @@
             "x_offset": 0,
             "y_offset": 0,
             "z_offset": 0,
-            "background_level": 0.8,
+            "background_level": 0.4,
             "seed": 0,
             "roi_bead_ratio": 5,
             "radius_nm": 500,
@@ -146,15 +147,123 @@
           "nm_per_px": 50.0,
           "radius_nm": 500.0,
           "image_path": "images.npz::default__0005"
+        },
+        {
+          "key": "default__0006",
+          "values": {
+            "x_offset": 0,
+            "y_offset": 0,
+            "z_offset": 0,
+            "background_level": 0.4,
+            "seed": 0,
+            "roi_bead_ratio": 5,
+            "radius_nm": 1500,
+            "nm_per_px_1x": 1000,
+            "magnification": 10
+          },
+          "size_px": 75,
+          "nm_per_px": 100.0,
+          "radius_nm": 1500.0,
+          "image_path": "images.npz::default__0006"
+        },
+        {
+          "key": "default__0007",
+          "values": {
+            "x_offset": 0,
+            "y_offset": 0,
+            "z_offset": 0,
+            "background_level": 0.4,
+            "seed": 0,
+            "roi_bead_ratio": 5,
+            "radius_nm": 1500,
+            "nm_per_px_1x": 1000,
+            "magnification": 40
+          },
+          "size_px": 300,
+          "nm_per_px": 25.0,
+          "radius_nm": 1500.0,
+          "image_path": "images.npz::default__0007"
+        },
+        {
+          "key": "default__0008",
+          "values": {
+            "x_offset": 0,
+            "y_offset": 0,
+            "z_offset": 0,
+            "background_level": 0.4,
+            "seed": 0,
+            "roi_bead_ratio": 5,
+            "radius_nm": 1500,
+            "nm_per_px_1x": 1000,
+            "magnification": 100
+          },
+          "size_px": 750,
+          "nm_per_px": 10.0,
+          "radius_nm": 1500.0,
+          "image_path": "images.npz::default__0008"
+        },
+        {
+          "key": "default__0009",
+          "values": {
+            "x_offset": 0,
+            "y_offset": 0,
+            "z_offset": 0,
+            "background_level": 0.4,
+            "seed": 0,
+            "roi_bead_ratio": 5,
+            "radius_nm": 1500,
+            "nm_per_px_1x": 5000,
+            "magnification": 10
+          },
+          "size_px": 15,
+          "nm_per_px": 500.0,
+          "radius_nm": 1500.0,
+          "image_path": "images.npz::default__0009"
+        },
+        {
+          "key": "default__0010",
+          "values": {
+            "x_offset": 0,
+            "y_offset": 0,
+            "z_offset": 0,
+            "background_level": 0.4,
+            "seed": 0,
+            "roi_bead_ratio": 5,
+            "radius_nm": 1500,
+            "nm_per_px_1x": 5000,
+            "magnification": 40
+          },
+          "size_px": 60,
+          "nm_per_px": 125.0,
+          "radius_nm": 1500.0,
+          "image_path": "images.npz::default__0010"
+        },
+        {
+          "key": "default__0011",
+          "values": {
+            "x_offset": 0,
+            "y_offset": 0,
+            "z_offset": 0,
+            "background_level": 0.4,
+            "seed": 0,
+            "roi_bead_ratio": 5,
+            "radius_nm": 1500,
+            "nm_per_px_1x": 5000,
+            "magnification": 100
+          },
+          "size_px": 150,
+          "nm_per_px": 50.0,
+          "radius_nm": 1500.0,
+          "image_path": "images.npz::default__0011"
         }
       ]
     }
   ],
   "system": {
     "id": "windows-13th_gen_intel_i7_13700-nvidia_geforce_rtx_3070",
-    "timestamp": "20251121T020043Z",
+    "timestamp": "20251121T171730Z",
     "metadata": {
-      "collected_at": "2025-11-21T02:00:43.130345+00:00",
+      "collected_at": "2025-11-21T17:17:30.815588+00:00",
       "hostname": "CC-82ZWCX3",
       "platform": {
         "system": "Windows",
