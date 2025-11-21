@@ -13,6 +13,7 @@ from typing import Any, Iterable, Mapping, Sequence
 import numpy as np
 
 from benchmarks.speed import log_utils
+from magtrack.simulation import simulate_beads
 
 _DEFAULT_SWEEP_ROOT = Path(__file__).resolve().parent / "sweeps"
 
@@ -23,7 +24,7 @@ class ParameterSet:
 
     name: str
     parameters: Mapping[str, Sequence[Any]]
-    image_shape: Sequence[int] = (64, 64, 1)
+    size_px: int = 64
 
     def combinations(self) -> list[dict[str, Any]]:
         """Return all parameter combinations expanded from the grid."""
@@ -48,7 +49,7 @@ class SweepArtifact:
 
 
 class BeadSimulationSweep:
-    """Generate placeholder bead simulation sweeps and metadata."""
+    """Generate bead simulation sweeps and metadata."""
 
     def __init__(
         self,
@@ -81,15 +82,28 @@ class BeadSimulationSweep:
             combinations = param_set.combinations()
             combination_metadata = []
             for index, combo in enumerate(combinations):
-                image_shape = tuple(combo.get("image_shape", param_set.image_shape))
-                self._validate_image_shape(image_shape)
+                size_px = self._validate_size_px(combo.get("size_px", param_set.size_px))
+                xyz_nm = np.array(
+                    [
+                        [
+                            float(combo.get("x_offset", 0.0)),
+                            float(combo.get("y_offset", 0.0)),
+                            float(combo.get("z_offset", 0.0)),
+                        ]
+                    ],
+                    dtype=np.float64,
+                )
                 image_key = f"{set_name}__{index:04d}"
-                images[image_key] = self._simulate_placeholder(image_shape, combo)
+                images[image_key] = simulate_beads(
+                    xyz_nm,
+                    size_px=size_px,
+                    background_level=float(combo.get("background_level", 0.8)),
+                )
                 combination_metadata.append(
                     {
                         "key": image_key,
                         "values": self._ensure_json_serializable(combo),
-                        "image_shape": list(image_shape),
+                        "size_px": size_px,
                         "image_path": f"{images_path.name}::{image_key}",
                     }
                 )
@@ -131,18 +145,6 @@ class BeadSimulationSweep:
         )
 
     @staticmethod
-    def _simulate_placeholder(image_shape: tuple[int, int, int], combo: Mapping[str, Any]) -> np.ndarray:
-        """Return a placeholder float64 image for the given *image_shape*.
-
-        The placeholder uses the ``background`` parameter when present to fill
-        the array so that downstream consumers can differentiate sweeps even
-        before the real simulator is wired in.
-        """
-
-        background = float(combo.get("background", 0.0))
-        return np.full(image_shape, background, dtype=np.float64)
-
-    @staticmethod
     def _sanitize_name(name: str) -> str:
         safe = [c if c.isalnum() or c in {"-", "_"} else "-" for c in name]
         sanitized = "".join(safe).strip("-")
@@ -167,12 +169,11 @@ class BeadSimulationSweep:
             return repr(value)
 
     @staticmethod
-    def _validate_image_shape(image_shape: Iterable[int]) -> None:
-        shape = tuple(int(dim) for dim in image_shape)
-        if len(shape) != 3:
-            raise ValueError(f"Image shape must be a 3-tuple (H, W, 1); received {shape}.")
-        if shape[2] != 1:
-            raise ValueError(f"Final image dimension must be 1; received {shape}.")
+    def _validate_size_px(size_px: int | Iterable[int]) -> int:
+        size = int(size_px)
+        if size <= 0:
+            raise ValueError(f"Image size must be positive; received {size}.")
+        return size
 
     @staticmethod
     def default_parameter_set() -> ParameterSet:
@@ -180,18 +181,18 @@ class BeadSimulationSweep:
 
 
 def default_parameter_set() -> ParameterSet:
-    """Return the default placeholder parameter set."""
+    """Return the default parameter set."""
 
     return ParameterSet(
         name="default",
         parameters={
-            "x_offset": [-1.0, 1.0],
-            "y_offset": [-1.0, 1.0],
-            "z_offset": [-1.0, 1.0],
-            "background": [0.0, 10.0],
-            "seed": [123, 456],
+            "x_offset": [0],
+            "y_offset": [0],
+            "z_offset": [0],
+            "background_level": [0.8],
+            "seed": [0],
+            "size_px": [64, 128, 256, 512],
         },
-        image_shape=(64, 64, 1),
     )
 
 
@@ -212,6 +213,7 @@ def _parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--overwrite",
+        default=True,
         action="store_true",
         help="Overwrite existing sweep artifacts if they already exist.",
     )
