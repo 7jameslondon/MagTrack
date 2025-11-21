@@ -291,7 +291,7 @@ def plot_benchmark_history(
                 zorder=config["zorder"],
             )
 
-        axis.set_ylabel("Relative Runtime")
+        axis.set_ylabel("Runtime\n(relative to CPU, per function)")
         title = f"{backend.upper()} Benchmark"
         axis.set_title(title)
         axis.set_yscale("log")
