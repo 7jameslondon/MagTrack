@@ -107,16 +107,22 @@ class BeadSimulationSweep:
                     roi_bead_ratio * radius_nm, "size_nm"
                 )
                 size_px = self._validate_positive_int(size_nm / nm_per_px, "size_px")
+                x_offset_nm = float(combo.get("x_offset", 0.0))
+                y_offset_nm = float(combo.get("y_offset", 0.0))
+                z_offset_nm = float(combo.get("z_offset", 0.0))
+
                 xyz_nm = np.array(
-                    [
-                        [
-                            float(combo.get("x_offset", 0.0)),
-                            float(combo.get("y_offset", 0.0)),
-                            float(combo.get("z_offset", 0.0)),
-                        ]
-                    ],
+                    [[x_offset_nm, y_offset_nm, z_offset_nm]],
                     dtype=np.float64,
                 )
+                center_px = size_px // 2
+                center_nm = center_px * nm_per_px
+                true_x_nm = center_nm + x_offset_nm
+                true_y_nm = center_nm + y_offset_nm
+                true_z_nm = z_offset_nm
+                true_x_px = true_x_nm / nm_per_px
+                true_y_px = true_y_nm / nm_per_px
+                true_z_px = true_z_nm / nm_per_px
                 image_key = f"{set_name}__{index:04d}"
                 images[image_key] = simulate_beads(
                     xyz_nm,
@@ -133,6 +139,16 @@ class BeadSimulationSweep:
                         "nm_per_px": nm_per_px,
                         "radius_nm": radius_nm,
                         "image_path": f"{images_path.name}::{image_key}",
+                        "true_position_nm": {
+                            "x": true_x_nm,
+                            "y": true_y_nm,
+                            "z": true_z_nm,
+                        },
+                        "true_position_px": {
+                            "x": true_x_px,
+                            "y": true_y_px,
+                            "z": true_z_px,
+                        },
                     }
                 )
             parameter_metadata.append(

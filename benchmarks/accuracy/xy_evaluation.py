@@ -76,8 +76,27 @@ def _evaluate_image(
 
     parameters = dict(image.parameters)
     combo_metadata = combination_lookup.get(image.key, {})
-    truth_x = float(parameters.get("x_offset", 0.0))
-    truth_y = float(parameters.get("y_offset", 0.0))
+    true_position_px = combo_metadata.get("true_position_px", {})
+    true_position_nm = combo_metadata.get("true_position_nm", {})
+    nm_per_px = float(combo_metadata.get("nm_per_px", parameters.get("nm_per_px", 1.0)))
+
+    if isinstance(true_position_px, Mapping):
+        truth_x_px = float(true_position_px.get("x", 0.0))
+        truth_y_px = float(true_position_px.get("y", 0.0))
+    else:
+        size_px = int(combo_metadata.get("size_px", parameters.get("size_px", 0)))
+        center_px = size_px // 2
+        truth_x_px = center_px + float(parameters.get("x_offset", 0.0)) / nm_per_px
+        truth_y_px = center_px + float(parameters.get("y_offset", 0.0)) / nm_per_px
+
+    if isinstance(true_position_nm, Mapping):
+        truth_x_nm = float(true_position_nm.get("x", 0.0))
+        truth_y_nm = float(true_position_nm.get("y", 0.0))
+        truth_z_nm = float(true_position_nm.get("z", 0.0))
+    else:
+        truth_x_nm = truth_x_px * nm_per_px
+        truth_y_nm = truth_y_px * nm_per_px
+        truth_z_nm = float(parameters.get("z_offset", 0.0))
 
     record: dict[str, object] = {
         "sweep_name": sweep.sweep_name,
@@ -85,8 +104,11 @@ def _evaluate_image(
         "pipeline": pipeline.name,
         "predicted_x": predicted_x,
         "predicted_y": predicted_y,
-        "truth_x": truth_x,
-        "truth_y": truth_y,
+        "truth_x": truth_x_px,
+        "truth_y": truth_y_px,
+        "truth_x_nm": truth_x_nm,
+        "truth_y_nm": truth_y_nm,
+        "truth_z_nm": truth_z_nm,
         "parameters": parameters,
     }
 
