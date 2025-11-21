@@ -24,6 +24,10 @@
    or call `BeadSimulationSweep(...).generate()` directly after constructing custom `ParameterSet`s.
 2) Plot for quick visual QA: `python -m benchmarks.accuracy.plot_sweep --sweep <name>`.
 
+## Maintenance
+- Keep this file accurate and concise for future agents; remove outdated notes and avoid duplicating information available directly in code or metadata.
+- Update with key findings, new sweeps, and evaluation steps as they are implemented so future accuracy tasks start from current context.
+
 ## Open questions / next steps
 - Define evaluation routines that consume `SweepData` to measure localization error for x/y (and later z/radial profile) against known offsets in metadata.
 - Decide on additional sweeps (e.g., variable noise, offsets, z, seed, GPU vs CPU) and standardize naming.
