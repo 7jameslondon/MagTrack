@@ -95,12 +95,15 @@ def _plot_groups(
     fig, axes = plt.subplots(rows, cols, squeeze=False, figsize=(4 * cols, 3 * rows))
     fig.suptitle(f"XY Evaluation Results: {result_name}")
 
+    x_positions = np.arange(len(pipeline_names))
+
     for ax, (group_label, records) in zip(axes.flatten(), group_items):
         ordered_records = _ensure_pipeline_records(pipeline_names, records, group_label)
         errors = [_euclidean_error(record) for record in ordered_records]
-        ax.bar(pipeline_names, errors, color="tab:blue")
+        ax.bar(x_positions, errors, color="tab:blue")
         ax.set_title(group_label, fontsize=10)
         ax.set_ylabel("Euclidean error (px)")
+        ax.set_xticks(x_positions)
         ax.set_xticklabels(pipeline_names, rotation=45, ha="right")
         ax.grid(axis="y", linestyle="--", alpha=0.5)
 
