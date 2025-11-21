@@ -1,0 +1,324 @@
+{
+  "generated_at": "2025-11-21T22:02:06.352589+00:00",
+  "pipelines": [
+    "center_of_mass",
+    "center_of_mass_auto_conv"
+  ],
+  "records": [
+    {
+      "image_key": "default__0000",
+      "nm_per_px": 100.0,
+      "parameters": {
+        "background_level": 0.4,
+        "magnification": 10,
+        "nm_per_px_1x": 1000,
+        "radius_nm": 1500,
+        "roi_bead_ratio": 5,
+        "seed": 0,
+        "x_offset": 0,
+        "y_offset": 0,
+        "z_offset": 0
+      },
+      "pipeline": "center_of_mass",
+      "predicted_x": 37.000000000000014,
+      "predicted_y": 37.000000000000014,
+      "radius_nm": 1500.0,
+      "size_px": 75,
+      "sweep_name": "default",
+      "truth_x": 0.0,
+      "truth_y": 0.0
+    },
+    {
+      "image_key": "default__0000",
+      "nm_per_px": 100.0,
+      "parameters": {
+        "background_level": 0.4,
+        "magnification": 10,
+        "nm_per_px_1x": 1000,
+        "radius_nm": 1500,
+        "roi_bead_ratio": 5,
+        "seed": 0,
+        "x_offset": 0,
+        "y_offset": 0,
+        "z_offset": 0
+      },
+      "pipeline": "center_of_mass_auto_conv",
+      "predicted_x": 37.0,
+      "predicted_y": 37.0,
+      "radius_nm": 1500.0,
+      "size_px": 75,
+      "sweep_name": "default",
+      "truth_x": 0.0,
+      "truth_y": 0.0
+    },
+    {
+      "image_key": "default__0001",
+      "nm_per_px": 25.0,
+      "parameters": {
+        "background_level": 0.4,
+        "magnification": 40,
+        "nm_per_px_1x": 1000,
+        "radius_nm": 1500,
+        "roi_bead_ratio": 5,
+        "seed": 0,
+        "x_offset": 0,
+        "y_offset": 0,
+        "z_offset": 0
+      },
+      "pipeline": "center_of_mass",
+      "predicted_x": 149.4868658715555,
+      "predicted_y": 149.48686587155555,
+      "radius_nm": 1500.0,
+      "size_px": 300,
+      "sweep_name": "default",
+      "truth_x": 0.0,
+      "truth_y": 0.0
+    },
+    {
+      "image_key": "default__0001",
+      "nm_per_px": 25.0,
+      "parameters": {
+        "background_level": 0.4,
+        "magnification": 40,
+        "nm_per_px_1x": 1000,
+        "radius_nm": 1500,
+        "roi_bead_ratio": 5,
+        "seed": 0,
+        "x_offset": 0,
+        "y_offset": 0,
+        "z_offset": 0
+      },
+      "pipeline": "center_of_mass_auto_conv",
+      "predicted_x": 150.0,
+      "predicted_y": 150.0,
+      "radius_nm": 1500.0,
+      "size_px": 300,
+      "sweep_name": "default",
+      "truth_x": 0.0,
+      "truth_y": 0.0
+    },
+    {
+      "image_key": "default__0002",
+      "nm_per_px": 10.0,
+      "parameters": {
+        "background_level": 0.4,
+        "magnification": 100,
+        "nm_per_px_1x": 1000,
+        "radius_nm": 1500,
+        "roi_bead_ratio": 5,
+        "seed": 0,
+        "x_offset": 0,
+        "y_offset": 0,
+        "z_offset": 0
+      },
+      "pipeline": "center_of_mass",
+      "predicted_x": 374.4868938793192,
+      "predicted_y": 374.4868938793195,
+      "radius_nm": 1500.0,
+      "size_px": 750,
+      "sweep_name": "default",
+      "truth_x": 0.0,
+      "truth_y": 0.0
+    },
+    {
+      "image_key": "default__0002",
+      "nm_per_px": 10.0,
+      "parameters": {
+        "background_level": 0.4,
+        "magnification": 100,
+        "nm_per_px_1x": 1000,
+        "radius_nm": 1500,
+        "roi_bead_ratio": 5,
+        "seed": 0,
+        "x_offset": 0,
+        "y_offset": 0,
+        "z_offset": 0
+      },
+      "pipeline": "center_of_mass_auto_conv",
+      "predicted_x": 375.0,
+      "predicted_y": 375.0,
+      "radius_nm": 1500.0,
+      "size_px": 750,
+      "sweep_name": "default",
+      "truth_x": 0.0,
+      "truth_y": 0.0
+    },
+    {
+      "image_key": "default__0003",
+      "nm_per_px": 500.0,
+      "parameters": {
+        "background_level": 0.4,
+        "magnification": 10,
+        "nm_per_px_1x": 5000,
+        "radius_nm": 1500,
+        "roi_bead_ratio": 5,
+        "seed": 0,
+        "x_offset": 0,
+        "y_offset": 0,
+        "z_offset": 0
+      },
+      "pipeline": "center_of_mass",
+      "predicted_x": 7.0,
+      "predicted_y": 7.0,
+      "radius_nm": 1500.0,
+      "size_px": 15,
+      "sweep_name": "default",
+      "truth_x": 0.0,
+      "truth_y": 0.0
+    },
+    {
+      "image_key": "default__0003",
+      "nm_per_px": 500.0,
+      "parameters": {
+        "background_level": 0.4,
+        "magnification": 10,
+        "nm_per_px_1x": 5000,
+        "radius_nm": 1500,
+        "roi_bead_ratio": 5,
+        "seed": 0,
+        "x_offset": 0,
+        "y_offset": 0,
+        "z_offset": 0
+      },
+      "pipeline": "center_of_mass_auto_conv",
+      "predicted_x": 7.0,
+      "predicted_y": 7.0,
+      "radius_nm": 1500.0,
+      "size_px": 15,
+      "sweep_name": "default",
+      "truth_x": 0.0,
+      "truth_y": 0.0
+    },
+    {
+      "image_key": "default__0004",
+      "nm_per_px": 125.0,
+      "parameters": {
+        "background_level": 0.4,
+        "magnification": 40,
+        "nm_per_px_1x": 5000,
+        "radius_nm": 1500,
+        "roi_bead_ratio": 5,
+        "seed": 0,
+        "x_offset": 0,
+        "y_offset": 0,
+        "z_offset": 0
+      },
+      "pipeline": "center_of_mass",
+      "predicted_x": 29.48612074581783,
+      "predicted_y": 29.48612074581783,
+      "radius_nm": 1500.0,
+      "size_px": 60,
+      "sweep_name": "default",
+      "truth_x": 0.0,
+      "truth_y": 0.0
+    },
+    {
+      "image_key": "default__0004",
+      "nm_per_px": 125.0,
+      "parameters": {
+        "background_level": 0.4,
+        "magnification": 40,
+        "nm_per_px_1x": 5000,
+        "radius_nm": 1500,
+        "roi_bead_ratio": 5,
+        "seed": 0,
+        "x_offset": 0,
+        "y_offset": 0,
+        "z_offset": 0
+      },
+      "pipeline": "center_of_mass_auto_conv",
+      "predicted_x": 30.0,
+      "predicted_y": 30.0,
+      "radius_nm": 1500.0,
+      "size_px": 60,
+      "sweep_name": "default",
+      "truth_x": 0.0,
+      "truth_y": 0.0
+    },
+    {
+      "image_key": "default__0005",
+      "nm_per_px": 50.0,
+      "parameters": {
+        "background_level": 0.4,
+        "magnification": 100,
+        "nm_per_px_1x": 5000,
+        "radius_nm": 1500,
+        "roi_bead_ratio": 5,
+        "seed": 0,
+        "x_offset": 0,
+        "y_offset": 0,
+        "z_offset": 0
+      },
+      "pipeline": "center_of_mass",
+      "predicted_x": 74.4868439492486,
+      "predicted_y": 74.48684394924858,
+      "radius_nm": 1500.0,
+      "size_px": 150,
+      "sweep_name": "default",
+      "truth_x": 0.0,
+      "truth_y": 0.0
+    },
+    {
+      "image_key": "default__0005",
+      "nm_per_px": 50.0,
+      "parameters": {
+        "background_level": 0.4,
+        "magnification": 100,
+        "nm_per_px_1x": 5000,
+        "radius_nm": 1500,
+        "roi_bead_ratio": 5,
+        "seed": 0,
+        "x_offset": 0,
+        "y_offset": 0,
+        "z_offset": 0
+      },
+      "pipeline": "center_of_mass_auto_conv",
+      "predicted_x": 75.0,
+      "predicted_y": 75.0,
+      "radius_nm": 1500.0,
+      "size_px": 150,
+      "sweep_name": "default",
+      "truth_x": 0.0,
+      "truth_y": 0.0
+    }
+  ],
+  "result_name": "default",
+  "sweeps": [
+    "default"
+  ],
+  "system": {
+    "id": "windows-13th_gen_intel_i7_13700-nvidia_geforce_rtx_3070",
+    "metadata": {
+      "collected_at": "2025-11-21T22:02:05.008443+00:00",
+      "cpu": null,
+      "dependencies": {
+        "cupy-cuda12x": "13.6.0",
+        "magtrack": "0.7.3",
+        "numpy": "2.3.5",
+        "scipy": "1.16.3"
+      },
+      "gpus": [
+        {
+          "id": 0,
+          "multiprocessor_count": 46,
+          "name": "NVIDIA GeForce RTX 3070",
+          "total_memory": 8589410304
+        }
+      ],
+      "hostname": "CC-82ZWCX3",
+      "memory": null,
+      "platform": {
+        "machine": "AMD64",
+        "processor": "13th Gen Intel(R) Core(TM) i7-13700",
+        "release": "10",
+        "system": "Windows",
+        "version": "10.0.26100"
+      },
+      "python": {
+        "implementation": "CPython",
+        "version": "3.11.5"
+      }
+    },
+    "timestamp": "20251121T220205Z"
+  }
+}
