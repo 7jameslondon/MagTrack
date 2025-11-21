@@ -14,6 +14,9 @@ from magtrack._cupy import cp, check_cupy
 from magtrack.simulation import simulate_beads
 
 
+BLUE   = "\033[34m"
+GREEN  = "\033[32m"
+RESET  = "\033[0m"
 _BASE_LAYOUT_NM = (
     np.array(
         [
@@ -104,7 +107,7 @@ def benchmark_auto_conv_multiline_sub_pixel(
 ) -> None:
     """Run CPU and GPU benchmarks for :func:`magtrack.auto_conv_multiline_sub_pixel`."""
 
-    print("Benchmarking: magtrack.auto_conv_multiline_sub_pixel")
+    print(GREEN + "Benchmarking: magtrack.auto_conv_multiline_sub_pixel" + RESET)
     print(
         "n_images: {n_images}, nm_per_px: {nm_per_px}, size_px: {size_px}".format(
             n_images=n_images,
@@ -142,7 +145,7 @@ def benchmark_auto_conv_multiline_sub_pixel(
         n_repeat=n_repeat,
         n_warmup=n_warmup_cpu,
     )
-    _print_summary("CPU", cpu_results.cpu_times)
+    _print_summary(BLUE + "CPU" + RESET, cpu_results.cpu_times)
 
     if not check_cupy():
         print("CuPy with GPU support is not available; skipping GPU benchmark.")
@@ -168,4 +171,4 @@ def benchmark_auto_conv_multiline_sub_pixel(
     )
     gpu_times = cp.asnumpy(gpu_results.gpu_times).squeeze()
     gpu_cpu_times = np.asarray(gpu_results.cpu_times).squeeze()
-    _print_summary("GPU", gpu_times + gpu_cpu_times)
+    _print_summary(BLUE + "GPU" + RESET, gpu_times + gpu_cpu_times)
