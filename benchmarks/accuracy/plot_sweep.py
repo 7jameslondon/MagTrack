@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import math
+import sys
 import textwrap
 import tkinter as tk
 from tkinter import ttk
@@ -94,6 +95,12 @@ def _embed_figure_in_scrollable_canvas(root: tk.Tk, figure: plt.Figure) -> None:
     widget.pack(fill=tk.BOTH, expand=True)
 
 
+def _on_close(root: tk.Tk) -> None:
+    root.quit()
+    root.destroy()
+    sys.exit(0)
+
+
 def _parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
@@ -112,6 +119,7 @@ def main() -> None:
 
     root = tk.Tk()
     root.title(f"Accuracy sweep: {sweep_data.sweep_name}")
+    root.protocol("WM_DELETE_WINDOW", lambda: _on_close(root))
     _embed_figure_in_scrollable_canvas(root, figure)
     root.mainloop()
 
