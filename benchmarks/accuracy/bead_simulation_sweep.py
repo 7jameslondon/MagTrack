@@ -224,12 +224,12 @@ def default_parameter_set() -> ParameterSet:
             "x_offset": [0],
             "y_offset": [0],
             "z_offset": [0],
-            "background_level": [0.8],
+            "background_level": [0.4],
             "seed": [0],
             "roi_bead_ratio": [5],
             "radius_nm": [1500],
-            "nm_per_px_1x": [5000],
-            "magnification": [40, 100],
+            "nm_per_px_1x": [1000, 5000],
+            "magnification": [10, 40, 100],
         },
     )
 
