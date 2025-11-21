@@ -29,9 +29,8 @@ def simulate_beads(
     wavelength_nm: float = 550.0, # Advanced
     n_sphere: float = 1.59, # Advanced
     n_medium: float = 1.33, # Advanced
-    NA: float = 1.3, # Advanced
     absorption_per_nm: float = 0.0, # Advanced
-    background_level=0.8, # Advanced
+    background_level=0.4, # Advanced
     contrast_scale=1.0, # Advanced
     pad_factor=2.0, # Advanced
 ):
@@ -40,6 +39,13 @@ def simulate_beads(
 
     # ========== Setup ==========
     dx_nm = float(nm_per_px)
+
+    # Sampling-limited effective NA:
+    #   NA_max = λ / (2 * Δx)
+    #   NA_eff = min(NA_NOMINAL, NA_max)
+    NA_NOMINAL = 1.3
+    NA_max = wavelength_nm / (2.0 * dx_nm)
+    NA_eff = min(NA_NOMINAL, NA_max)
 
     N = int(size_px)
     ax = (np.arange(N) - N//2) * dx_nm
@@ -75,11 +81,9 @@ def simulate_beads(
     kxy2 = kx**2 + ky**2
     kz = np.sqrt(np.maximum(k**2 - kxy2, 0.0)).astype(np.float64)
 
-    if NA is not None:
-        f_cut = NA / wavelength_nm
-        pupil = (np.sqrt(FX**2 + FY**2) <= f_cut).astype(np.float64)
-    else:
-        pupil = np.ones_like(FX, dtype=np.float64)
+    # Pupil with sampling-limited effective NA
+    f_cut = NA_eff / wavelength_nm
+    pupil = (np.sqrt(FX ** 2 + FY ** 2) <= f_cut).astype(np.float64)
 
     U0 = np.fft.fft2(T)
 
@@ -93,7 +97,7 @@ def simulate_beads(
         crop = Uz_shift[i0:i0+N, i0:i0+N]
         I = (np.abs(crop)**2).astype(np.float64)
         bg = float(I[:bg_width, :bg_width].mean()) or 1.0
-        I = background_level * (1.0 + contrast_scale * (I / bg - 1.0))
+        I = background_level * 2 * (1.0 + contrast_scale * (I / bg - 1.0))
         stack.append(I)
 
     stack = np.stack(stack, axis=2)
