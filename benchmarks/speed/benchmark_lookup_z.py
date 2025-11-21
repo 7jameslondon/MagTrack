@@ -11,6 +11,10 @@ from magtrack._cupy import cp, check_cupy
 from magtrack.simulation import simulate_beads
 
 
+BLUE   = "\033[34m"
+GREEN  = "\033[32m"
+RESET  = "\033[0m"
+
 def _generate_reference_zlut(
     *,
     nm_per_px: float,
@@ -118,7 +122,7 @@ def benchmark_lookup_z(
 ) -> None:
     """Run CPU and GPU benchmarks for :func:`magtrack.lookup_z`."""
 
-    print("Benchmarking: magtrack.lookup_z")
+    print(GREEN + "Benchmarking: magtrack.lookup_z" + RESET)
     print(
         "n_profiles: {n_profiles}, nm_per_px: {nm_per_px}, roi_px: {roi_px}, "
         "n_local: {n_local}".format(
@@ -176,7 +180,7 @@ def benchmark_lookup_z(
         n_repeat=n_repeat,
         n_warmup=n_warmup_cpu,
     )
-    _print_summary("CPU", cpu_results.cpu_times)
+    _print_summary(BLUE + "CPU" + RESET, cpu_results.cpu_times)
 
     # GPU benchmark
     if not check_cupy():
@@ -197,7 +201,7 @@ def benchmark_lookup_z(
     )
     gpu_times = cp.asnumpy(gpu_results.gpu_times).squeeze()
     gpu_cpu_times = np.asarray(gpu_results.cpu_times).squeeze()
-    _print_summary("GPU", gpu_times + gpu_cpu_times)
+    _print_summary(BLUE + "GPU" + RESET, gpu_times + gpu_cpu_times)
 
 
 if __name__ == "__main__":
