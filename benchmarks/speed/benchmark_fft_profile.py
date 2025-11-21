@@ -66,7 +66,7 @@ def _generate_stack(
         xyz_nm,
         nm_per_px=nm_per_px,
         size_px=size_px,
-    ).astype(np.float64, copy=False)
+    ).astype(np.float32, copy=False)
 
     if xp is np:
         return stack_np
@@ -87,7 +87,7 @@ def benchmark_fft_profile(
     n_images: int = 512,
     nm_per_px: float = 100.0,
     size_px: int = 256,
-    oversample: int = 4,
+    oversample: int = 1,
     rmin: float = 0.0,
     rmax: float = 0.5,
     n_repeat: int = 100,
