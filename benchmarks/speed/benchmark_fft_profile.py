@@ -1,0 +1,172 @@
+"""Performance benchmark for :func:`magtrack.fft_profile`."""
+
+from __future__ import annotations
+
+import math
+from typing import Any
+
+import numpy as np
+
+from benchmarks.speed import confbenchmarks  # noqa: F401  # Ensures repository root on sys.path
+import magtrack
+from benchmarks.speed.cpu_benchmark import cpu_benchmark
+from magtrack._cupy import cp, check_cupy
+from magtrack.simulation import simulate_beads
+
+
+BLUE = "\033[34m"
+GREEN = "\033[32m"
+RESET = "\033[0m"
+_BASE_LAYOUT_NM = (
+    np.array(
+        [
+            [-0.02, 0.015, -0.05],
+            [0.018, -0.022, 0.02],
+            [0.005, 0.007, -0.01],
+            [-0.012, -0.018, 0.04],
+            [0.02, 0.012, -0.03],
+            [-0.015, 0.022, 0.0],
+            [0.017, -0.005, 0.01],
+            [-0.018, 0.009, -0.02],
+            [0.008, -0.01, 0.03],
+            [-0.01, 0.0, -0.04],
+        ],
+        dtype=np.float64,
+    )
+    * 1e3
+)
+
+
+def _generate_stack(
+    xp: Any,
+    *,
+    n_images: int,
+    nm_per_px: float,
+    size_px: int,
+    oversample: int,
+    seed: int,
+) -> Any:
+    """Generate bead stacks suitable for FFT profiling."""
+
+    if n_images <= 0:
+        raise ValueError("n_images must be a positive integer")
+    if oversample <= 0:
+        raise ValueError("oversample must be a positive integer")
+
+    rng = np.random.default_rng(seed)
+    base = _BASE_LAYOUT_NM
+    repeats = math.ceil(n_images / base.shape[0])
+    xyz_nm = np.tile(base, (repeats, 1))[:n_images].copy()
+
+    jitter_scale = np.array([50.0, 50.0, 75.0], dtype=np.float64)
+    jitter = rng.normal(scale=jitter_scale, size=xyz_nm.shape)
+    xyz_nm += jitter
+
+    stack_np = simulate_beads(
+        xyz_nm,
+        nm_per_px=nm_per_px,
+        size_px=size_px,
+    ).astype(np.float64, copy=False)
+
+    if xp is np:
+        return stack_np
+    if xp is cp:
+        return cp.asarray(stack_np)
+    raise TypeError("xp must be either numpy or cupy")
+
+
+def _print_summary(label: str, times: np.ndarray) -> None:
+    times = np.asarray(times, dtype=float).squeeze()
+    mean = float(times.mean())
+    std = float(times.std())
+    print(f"{label}: mean {mean:.6f}s ± {std:.6f}s over {times.size} runs")
+
+
+def benchmark_fft_profile(
+    *,
+    n_images: int = 512,
+    nm_per_px: float = 100.0,
+    size_px: int = 256,
+    oversample: int = 4,
+    rmin: float = 0.0,
+    rmax: float = 0.5,
+    n_repeat: int = 100,
+    n_warmup_cpu: int = 10,
+    n_warmup_gpu: int = 10,
+    max_duration: float = 30.0,
+    seed: int = 12345,
+) -> None:
+    """Run CPU and GPU benchmarks for :func:`magtrack.fft_profile`."""
+
+    print(GREEN + "Benchmarking: magtrack.fft_profile" + RESET)
+    print(
+        "n_images: {n_images}, nm_per_px: {nm_per_px}, size_px: {size_px}, oversample: {oversample}, "
+        "rmin: {rmin}, rmax: {rmax}".format(
+            n_images=n_images,
+            nm_per_px=nm_per_px,
+            size_px=size_px,
+            oversample=oversample,
+            rmin=rmin,
+            rmax=rmax,
+        )
+    )
+    print(
+        "n_repeat: {n_repeat}, n_warmup_cpu: {n_warmup_cpu}, "
+        "n_warmup_gpu: {n_warmup_gpu}, max_duration: {max_duration}, seed: {seed}".format(
+            n_repeat=n_repeat,
+            n_warmup_cpu=n_warmup_cpu,
+            n_warmup_gpu=n_warmup_gpu,
+            max_duration=max_duration,
+            seed=seed,
+        )
+    )
+
+    stack_cpu = _generate_stack(
+        np,
+        n_images=n_images,
+        nm_per_px=nm_per_px,
+        size_px=size_px,
+        oversample=oversample,
+        seed=seed,
+    )
+
+    cpu_results = cpu_benchmark(
+        magtrack.fft_profile,
+        args=(stack_cpu,),
+        kwargs={"oversample": oversample, "rmin": rmin, "rmax": rmax},
+        max_duration=max_duration,
+        n_repeat=n_repeat,
+        n_warmup=n_warmup_cpu,
+    )
+    _print_summary(BLUE + "CPU" + RESET, cpu_results.cpu_times)
+
+    if not check_cupy():
+        print("CuPy with GPU support is not available; skipping GPU benchmark.")
+        return
+
+    from cupyx.profiler import benchmark as cupy_benchmark  # type: ignore
+
+    stack_gpu = _generate_stack(
+        cp,
+        n_images=n_images,
+        nm_per_px=nm_per_px,
+        size_px=size_px,
+        oversample=oversample,
+        seed=seed,
+    )
+
+    gpu_results = cupy_benchmark(
+        magtrack.fft_profile,
+        args=(stack_gpu,),
+        kwargs={"oversample": oversample, "rmin": rmin, "rmax": rmax},
+        max_duration=max_duration,
+        n_repeat=n_repeat,
+        n_warmup=n_warmup_gpu,
+    )
+    gpu_times = cp.asnumpy(gpu_results.gpu_times).squeeze()
+    gpu_cpu_times = np.asarray(gpu_results.cpu_times).squeeze()
+    _print_summary(BLUE + "GPU" + RESET, gpu_times + gpu_cpu_times)
+
+
+if __name__ == "__main__":
+    benchmark_fft_profile()
