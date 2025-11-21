@@ -1,4 +1,4 @@
-""" Various methods of simulating images of beads for testing """
+"""Simulation utilities for generating synthetic bead image stacks."""
 
 import numpy as np
 import scipy as sp
@@ -17,6 +17,45 @@ def simulate_beads(
     contrast_scale=1.0, # Advanced
     pad_factor=2.0, # Advanced
 ):
+    """Simulate brightfield images of spherical beads.
+
+    Generates a 3D stack of normalized brightfield images for beads located at
+    the provided nanometer coordinates. The simulation models refraction and
+    absorption through a spherical object, applies a sampling-limited pupil
+    defined by the imaging wavelength and medium, and returns intensity images
+    cropped to the requested pixel size.
+
+    Parameters
+    ----------
+    xyz_nm : array_like, shape (n_beads, 3)
+        Nanometer coordinates ``[x_nm, y_nm, z_nm]`` for each bead.
+    nm_per_px : float, optional
+        Nanometers per pixel. Defaults to 100.0 nm/px.
+    size_px : int, optional
+        Output image width and height in pixels. Defaults to 64.
+    radius_nm : float, optional
+        Bead radius in nanometers. Defaults to 1500.0 nm.
+    wavelength_nm : float, optional
+        Illumination wavelength in nanometers. Defaults to 550.0 nm.
+    n_sphere : float, optional
+        Refractive index of the bead. Defaults to 1.59.
+    n_medium : float, optional
+        Refractive index of the surrounding medium. Defaults to 1.33.
+    absorption_per_nm : float, optional
+        Absorption coefficient per nanometer. Defaults to 0.0.
+    background_level : float, optional
+        Baseline background intensity scaling. Defaults to 0.4.
+    contrast_scale : float, optional
+        Contrast scaling relative to the background. Defaults to 1.0.
+    pad_factor : float, optional
+        Factor for zero-padding the pupil function to reduce edge effects.
+        Defaults to 2.0.
+
+    Returns
+    -------
+    stack : ndarray, shape (size_px, size_px, n_beads)
+        Normalized simulated bead images with intensities clipped to ``[0, 1]``.
+    """
     # ========== Parameters ==========
     xyz_nm = np.asarray(xyz_nm, dtype=np.float64)
 
