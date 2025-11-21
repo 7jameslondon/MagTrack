@@ -66,7 +66,7 @@ def _generate_inputs(
         xyz_nm,
         nm_per_px=nm_per_px,
         size_px=size_px,
-    ).astype(np.float64, copy=False)
+    ).astype(np.float32, copy=False)
 
     base_px = (size_px - 1) / 2.0
     expected_x_np = base_px + xyz_nm[:, 0] / nm_per_px
@@ -97,10 +97,10 @@ def _print_summary(label: str, times: np.ndarray) -> None:
 
 def benchmark_radial_profile(
     *,
-    n_images: int = 1000,
+    n_images: int = 512,
     nm_per_px: float = 100.0,
-    size_px: int = 64,
-    oversample: int = 3,
+    size_px: int = 256,
+    oversample: int = 1,
     n_repeat: int = 100,
     n_warmup_cpu: int = 10,
     n_warmup_gpu: int = 10,
@@ -175,3 +175,7 @@ def benchmark_radial_profile(
     gpu_times = cp.asnumpy(gpu_results.gpu_times).squeeze()
     gpu_cpu_times = np.asarray(gpu_results.cpu_times).squeeze()
     _print_summary(BLUE + "GPU" + RESET, gpu_times + gpu_cpu_times)
+
+
+if __name__ == "__main__":
+    benchmark_radial_profile()

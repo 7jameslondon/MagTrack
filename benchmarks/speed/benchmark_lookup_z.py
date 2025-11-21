@@ -76,7 +76,7 @@ def _generate_eval_profiles(
         xyz_eval_nm,
         size_px=roi_px,
         nm_per_px=nm_per_px,
-    ).astype(np.float64, copy=False)
+    ).astype(np.float32, copy=False)
 
     center = roi_px / 2.0
     centers = np.full(z_true_nm.shape, center, dtype=np.float64)
