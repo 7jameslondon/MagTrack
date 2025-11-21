@@ -7,14 +7,14 @@
 ## Current components
 - **`bead_simulation_sweep.py`**
   - Provides `BeadSimulationSweep` to generate images via `magtrack.simulation.simulate_beads`, storing `images.npz` and `metadata.json` per sweep directory. Images are float64 arrays normalized for visualization/runs.
-  - `ParameterSet` defines parameter grids; default set sweeps `size_px` over `[64, 128, 256, 512]` with zero offsets and `background_level` 0.8. Keys for images follow `{set_name}__{index:04d}`.
+  - `ParameterSet` defines parameter grids; the default set sweeps `roi_bead_ratio` over `[4.5, 8.5, 17.0, 34.0]` with zero offsets, `radius_nm=1500`, `nm_per_px_1x=100`, `magnification=1`, and `background_level=0.8`. Keys for images follow `{set_name}__{index:04d}`.
   - Metadata captures parameter combinations and system info; raises if outputs exist unless `overwrite=True`.
 - **`sweep_loader.py`**
   - `SweepData.load(name)` loads a sweep from `sweeps/<name>/images.npz` + `metadata.json`, attaching flattened parameter values to each `SweepImage` for downstream evaluation.
 - **`plot_sweep.py`**
   - CLI (`python -m benchmarks.accuracy.plot_sweep --sweep <name>`) loads a sweep and displays all images in a scrollable Tk UI. Titles show key/value parameters (wrapped to width 40). Grid auto-sizes to near-square.
 - **`sweeps/default`**
-  - Contains the default sweep artifacts generated from the default parameter set (4 images, sizes 64–512). Serves as a sanity-check fixture for plotting/loading.
+  - Contains the default sweep artifacts generated from the default parameter set (4 images derived from the ROI/size grid, currently ~68–510 px). Serves as a sanity-check fixture for plotting/loading.
 
 ## How to generate/inspect sweeps
 1) Generate (overwrites disabled by default):

@@ -8,7 +8,7 @@ import json
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Iterable, Mapping, Sequence
+from typing import Any, Mapping, Sequence
 
 import numpy as np
 
@@ -24,7 +24,10 @@ class ParameterSet:
 
     name: str
     parameters: Mapping[str, Sequence[Any]]
-    size_px: int = 64
+    roi_bead_ratio: float = 17.0
+    radius_nm: float = 1500.0
+    nm_per_px_1x: float = 100.0
+    magnification: float = 1.0
 
     def combinations(self) -> list[dict[str, Any]]:
         """Return all parameter combinations expanded from the grid."""
@@ -82,7 +85,28 @@ class BeadSimulationSweep:
             combinations = param_set.combinations()
             combination_metadata = []
             for index, combo in enumerate(combinations):
-                size_px = self._validate_size_px(combo.get("size_px", param_set.size_px))
+                roi_bead_ratio = self._validate_positive(
+                    float(combo.get("roi_bead_ratio", param_set.roi_bead_ratio)),
+                    "roi_bead_ratio",
+                )
+                radius_nm = self._validate_positive(
+                    float(combo.get("radius_nm", param_set.radius_nm)), "radius_nm"
+                )
+                nm_per_px_1x = self._validate_positive(
+                    float(combo.get("nm_per_px_1x", param_set.nm_per_px_1x)),
+                    "nm_per_px_1x",
+                )
+                magnification = self._validate_positive(
+                    float(combo.get("magnification", param_set.magnification)),
+                    "magnification",
+                )
+                nm_per_px = self._validate_positive(
+                    nm_per_px_1x * magnification, "nm_per_px"
+                )
+                size_nm = self._validate_positive(
+                    roi_bead_ratio * radius_nm, "size_nm"
+                )
+                size_px = self._validate_positive_int(size_nm / nm_per_px, "size_px")
                 xyz_nm = np.array(
                     [
                         [
@@ -97,6 +121,8 @@ class BeadSimulationSweep:
                 images[image_key] = simulate_beads(
                     xyz_nm,
                     size_px=size_px,
+                    nm_per_px=nm_per_px,
+                    radius_nm=radius_nm,
                     background_level=float(combo.get("background_level", 0.8)),
                 )
                 combination_metadata.append(
@@ -104,6 +130,8 @@ class BeadSimulationSweep:
                         "key": image_key,
                         "values": self._ensure_json_serializable(combo),
                         "size_px": size_px,
+                        "nm_per_px": nm_per_px,
+                        "radius_nm": radius_nm,
                         "image_path": f"{images_path.name}::{image_key}",
                     }
                 )
@@ -169,11 +197,17 @@ class BeadSimulationSweep:
             return repr(value)
 
     @staticmethod
-    def _validate_size_px(size_px: int | Iterable[int]) -> int:
-        size = int(size_px)
-        if size <= 0:
-            raise ValueError(f"Image size must be positive; received {size}.")
-        return size
+    def _validate_positive(value: float, name: str) -> float:
+        if value <= 0:
+            raise ValueError(f"{name} must be positive; received {value}.")
+        return value
+
+    @staticmethod
+    def _validate_positive_int(value: float, name: str) -> int:
+        rounded = int(round(value))
+        if rounded <= 0:
+            raise ValueError(f"{name} must round to a positive integer; received {value}.")
+        return rounded
 
     @staticmethod
     def default_parameter_set() -> ParameterSet:
@@ -191,7 +225,10 @@ def default_parameter_set() -> ParameterSet:
             "z_offset": [0],
             "background_level": [0.8],
             "seed": [0],
-            "size_px": [64, 128, 256, 512],
+            "roi_bead_ratio": [4.5, 8.5, 17.0, 34.0],
+            "radius_nm": [1500.0],
+            "nm_per_px_1x": [100.0],
+            "magnification": [1.0],
         },
     )
 
