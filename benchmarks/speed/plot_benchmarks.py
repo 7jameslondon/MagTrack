@@ -270,6 +270,7 @@ def plot_benchmark_history(
         axis.set_ylabel("Relative Runtime")
         title = f"{backend.upper()} Benchmark"
         axis.set_title(title)
+        axis.set_yscale("log")
         display_labels = [_strip_benchmark(str(label)) for label in labels]
         axis.set_xticks(x, display_labels, rotation=45, ha="right")
         axis.grid(axis="y", linestyle=":", alpha=0.4)
