@@ -128,14 +128,37 @@ def plot_benchmark_history(
             for row in rows
             if row.get("benchmark") == benchmark and row.get("backend") == backend
         ]
-        baseline_values = [
-            row.get("mean_time")
-            for row in category_rows
-            if row.get("system_id") == BASELINE_SYSTEM_ID and row.get("mean_time") is not None
-        ]
-        baseline = _mean(baseline_values)
-        if np.isnan(baseline) or baseline == 0:
-            continue
+        baseline_per_system: dict[str, float]
+        if backend_key == "gpu":
+            cpu_rows = [
+                row
+                for row in rows
+                if row.get("benchmark") == benchmark and row.get("backend") == "cpu"
+            ]
+            baseline_per_system = {
+                system: _mean(
+                    [
+                        row.get("mean_time")
+                        for row in cpu_rows
+                        if row.get("system_id") == system and row.get("mean_time") is not None
+                    ]
+                )
+                for system in systems
+            }
+            if not any(
+                baseline_per_system.values()
+            ) or all(np.isnan(value) or value == 0 for value in baseline_per_system.values()):
+                continue
+        else:
+            baseline_values = [
+                row.get("mean_time")
+                for row in category_rows
+                if row.get("system_id") == BASELINE_SYSTEM_ID and row.get("mean_time") is not None
+            ]
+            baseline = _mean(baseline_values)
+            if np.isnan(baseline) or baseline == 0:
+                continue
+            baseline_per_system = {system: baseline for system in systems}
 
         backend_labels[backend_key].append(label)
         for system in systems:
@@ -146,7 +169,7 @@ def plot_benchmark_history(
             ]
             mean_value = _mean(system_values)
             backend_per_system_values[backend_key][system].append(
-                _normalize(mean_value, baseline)
+                _normalize(mean_value, baseline_per_system.get(system, float("nan")))
             )
 
         if show_latest and latest_run_id:
@@ -155,8 +178,9 @@ def plot_benchmark_history(
                 for row in category_rows
                 if row.get("run_id") == latest_run_id and row.get("mean_time") is not None
             ]
+            latest_baseline = baseline_per_system.get(latest_system_id, float("nan"))
             backend_latest_values[backend_key].append(
-                _normalize(_mean(latest_times), baseline)
+                _normalize(_mean(latest_times), latest_baseline)
             )
 
     if not any(backend_labels.values()):
@@ -267,7 +291,7 @@ def plot_benchmark_history(
                 zorder=config["zorder"],
             )
 
-        axis.set_ylabel("Relative Runtime")
+        axis.set_ylabel("Runtime\n(relative to CPU, per function)")
         title = f"{backend.upper()} Benchmark"
         axis.set_title(title)
         axis.set_yscale("log")
