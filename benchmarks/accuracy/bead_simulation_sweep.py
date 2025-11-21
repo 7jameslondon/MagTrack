@@ -236,14 +236,14 @@ def default_parameter_set() -> ParameterSet:
     return ParameterSet(
         name="default",
         parameters={
-            "x_offset": [0],
-            "y_offset": [0],
-            "z_offset": [0],
+            "x_offset": [0, 1, 10, 100],
+            "y_offset": [0, 1, 10, 100],
+            "z_offset": [0, 1, 10, 100, 1000],
             "background_level": [0.4],
             "seed": [0],
             "roi_bead_ratio": [5],
-            "radius_nm": [1500],
-            "nm_per_px_1x": [1000, 5000],
+            "radius_nm": [500, 1500],
+            "nm_per_px_1x": [5000],
             "magnification": [10, 40, 100],
         },
     )
