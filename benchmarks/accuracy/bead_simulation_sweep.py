@@ -24,10 +24,10 @@ class ParameterSet:
 
     name: str
     parameters: Mapping[str, Sequence[Any]]
-    roi_bead_ratio: float = 17.0
+    roi_bead_ratio: float = 6.0
     radius_nm: float = 1500.0
-    nm_per_px_1x: float = 100.0
-    magnification: float = 1.0
+    nm_per_px_1x: float = 5000.0
+    magnification: float = 40.0
 
     def combinations(self) -> list[dict[str, Any]]:
         """Return all parameter combinations expanded from the grid."""
@@ -101,7 +101,7 @@ class BeadSimulationSweep:
                     "magnification",
                 )
                 nm_per_px = self._validate_positive(
-                    nm_per_px_1x * magnification, "nm_per_px"
+                    nm_per_px_1x / magnification, "nm_per_px"
                 )
                 size_nm = self._validate_positive(
                     roi_bead_ratio * radius_nm, "size_nm"
@@ -118,6 +118,7 @@ class BeadSimulationSweep:
                     dtype=np.float64,
                 )
                 image_key = f"{set_name}__{index:04d}"
+                print(f'##### size_px: {size_px}')
                 images[image_key] = simulate_beads(
                     xyz_nm,
                     size_px=size_px,
@@ -225,10 +226,10 @@ def default_parameter_set() -> ParameterSet:
             "z_offset": [0],
             "background_level": [0.8],
             "seed": [0],
-            "roi_bead_ratio": [4.5, 8.5, 17.0, 34.0],
-            "radius_nm": [1500.0],
-            "nm_per_px_1x": [100.0],
-            "magnification": [1.0],
+            "roi_bead_ratio": [5],
+            "radius_nm": [1500],
+            "nm_per_px_1x": [5000],
+            "magnification": [40, 100],
         },
     )
 
