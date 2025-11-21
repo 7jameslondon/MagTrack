@@ -118,7 +118,6 @@ class BeadSimulationSweep:
                     dtype=np.float64,
                 )
                 image_key = f"{set_name}__{index:04d}"
-                print(f'##### size_px: {size_px}')
                 images[image_key] = simulate_beads(
                     xyz_nm,
                     size_px=size_px,
