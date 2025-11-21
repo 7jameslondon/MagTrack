@@ -186,12 +186,12 @@ def default_parameter_set() -> ParameterSet:
     return ParameterSet(
         name="default",
         parameters={
-            "x_offset": [-1.0, 1.0],
-            "y_offset": [-1.0, 1.0],
-            "z_offset": [-1.0, 1.0],
-            "background_level": [0.0, 10.0],
-            "seed": [123, 456],
-            "size_px": [64],
+            "x_offset": [0],
+            "y_offset": [0],
+            "z_offset": [0],
+            "background_level": [0.8],
+            "seed": [0],
+            "size_px": [64, 128, 256, 512],
         },
     )
 
@@ -213,6 +213,7 @@ def _parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--overwrite",
+        default=True,
         action="store_true",
         help="Overwrite existing sweep artifacts if they already exist.",
     )
