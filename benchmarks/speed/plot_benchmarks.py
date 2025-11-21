@@ -210,7 +210,7 @@ def plot_benchmark_history(
         nrows=len(ordered_backends),
         ncols=1,
         figsize=(max(8, max_label_count * 0.9) +3., fig_height),
-        sharex=True,
+        sharex=True, sharey=True,
     )
 
     if not isinstance(axes, np.ndarray):
