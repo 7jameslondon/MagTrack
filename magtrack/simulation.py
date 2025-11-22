@@ -142,8 +142,7 @@ def simulate_zlut(
     This convenience function renders a stack of bead images at the supplied
     axial positions using :func:`simulate_beads`, converts each frame into a
     radial profile via :func:`magtrack.core.radial_profile`, and assembles the
-    results into a Z-LUT where the first row stores the z positions. Beads are
-    always simulated at ``x = y = 0`` for every plane.
+    results into a Z-LUT where the first row stores the z positions.
 
     Parameters
     ----------
