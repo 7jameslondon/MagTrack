@@ -44,6 +44,16 @@ MagTrack is a Python package for tracking symmetric beads in single-molecule mag
 
       Examples and tips.
 
+   .. grid-item-card:: Simulation Guide
+      :link: simulation
+      :link-type: doc
+      :text-align: center
+      :shadow: md
+
+      :octicon:`cpu;3rem;sd-text-indigo`
+
+      Build realistic synthetic stacks.
+
    .. grid-item-card:: (Advanced) Benchmarking
       :link: benchmarking
       :link-type: doc
@@ -79,4 +89,5 @@ MagTrack is a Python package for tracking symmetric beads in single-molecule mag
 
    getting_started
    user_guide
+   simulation
    benchmarking
