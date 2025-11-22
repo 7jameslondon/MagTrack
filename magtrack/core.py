@@ -957,7 +957,7 @@ def fft_profile_with_center(stack, x, y, oversample=4, rmin=0.0, rmax=0.5, gaus_
 
 # ---------- Z-Lookup functions ---------- #
 
-def lookup_z(profiles, zlut, n_local=5):
+def lookup_z(profiles, zlut, n_local=7):
     """
     Calculate the corresponding sub-planar z-coordinate of each profile by LUT
 
@@ -984,7 +984,7 @@ def lookup_z(profiles, zlut, n_local=5):
         avoid the central pixel when matching.
     n_local : int, optional
         The number of local points around the vertex to be used in parabolic
-        fitting. Must be an odd int >=3. Default is 5.
+        fitting. Must be an odd int >=3. Default is 7.
 
     Returns
     ----------
