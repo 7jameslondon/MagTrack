@@ -2,7 +2,9 @@
 
 import numpy as np
 import scipy as sp
+
 from magtrack._cupy import cp, cupyx
+from magtrack.core import radial_profile
 
 def simulate_beads(
     xyz_nm, # array of [x_nm, y_nm, z_nm]
@@ -126,3 +128,60 @@ def simulate_beads(
     stack /= 2
     stack = np.clip(stack, 0, 1)
     return stack
+
+
+def simulate_zlut(
+    z_nm,
+    nm_per_px: float = 100.0,
+    size_px: int = 64,
+    oversample: int = 1,
+    **simulate_beads_kwargs,
+):
+    """Simulate a Z look-up table (Z-LUT) from synthetic bead images.
+
+    This convenience function renders a stack of bead images at the supplied
+    axial positions using :func:`simulate_beads`, converts each frame into a
+    radial profile via :func:`magtrack.core.radial_profile`, and assembles the
+    results into a Z-LUT where the first row stores the z positions. Beads are
+    always simulated at ``x = y = 0`` for every plane.
+
+    Parameters
+    ----------
+    z_nm : array_like, shape (n_planes,)
+        Z coordinates in nanometers for the reference stack.
+    nm_per_px : float, optional
+        Nanometers per pixel used for the simulation. Defaults to 100.0.
+    size_px : int, optional
+        Width/height in pixels of the simulated frames. Defaults to 64.
+    oversample : int, optional
+        Oversampling factor passed to :func:`magtrack.core.radial_profile`.
+        Defaults to 1.
+    **simulate_beads_kwargs : dict, optional
+        Additional keyword arguments forwarded to :func:`simulate_beads` (for
+        example ``radius_nm`` or ``wavelength_nm``).
+
+    Returns
+    -------
+    zlut : ndarray, shape (1 + n_bins, n_planes)
+        Z look-up table where ``zlut[0, :]`` contains the reference z positions
+        and the remaining rows contain the corresponding radial profiles.
+    """
+
+    z_nm = np.asarray(z_nm, dtype=np.float64)
+    n_planes = z_nm.shape[0]
+
+    xyz_nm = np.column_stack([
+        np.zeros_like(z_nm, dtype=np.float64),
+        np.zeros_like(z_nm, dtype=np.float64),
+        z_nm,
+    ])
+
+    stack = simulate_beads(
+        xyz_nm, nm_per_px=nm_per_px, size_px=size_px, **simulate_beads_kwargs
+    )
+
+    center = np.full(n_planes, size_px / 2.0, dtype=np.float64)
+    profiles = radial_profile(stack, center, center, oversample=oversample)
+
+    zlut = np.vstack([z_nm, profiles])
+    return zlut
