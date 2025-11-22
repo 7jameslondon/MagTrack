@@ -64,12 +64,8 @@ def simulate_beads(
     # ========== Setup ==========
     dx_nm = float(nm_per_px)
 
-    # Sampling-limited effective NA:
-    #   NA_max = λ / (2 * Δx)
-    #   NA_eff = min(NA_NOMINAL, NA_max)
-    NA_NOMINAL = 1.3
-    NA_max = wavelength_nm / (2.0 * dx_nm)
-    NA_eff = min(NA_NOMINAL, NA_max)
+    # NA:
+    NA_eff = 1.3
 
     N = int(size_px)
     ax = (np.arange(N) - N//2) * dx_nm
@@ -107,7 +103,16 @@ def simulate_beads(
 
     # Pupil with sampling-limited effective NA
     f_cut = NA_eff / wavelength_nm
-    pupil = (np.sqrt(FX ** 2 + FY ** 2) <= f_cut).astype(np.float64)
+    pupil = (np.sqrt(FX ** 2 + FY ** 2) <= f_cut).astype(np.complex128)
+
+    def _sinc(x):
+        out = np.ones_like(x)
+        nz = x != 0
+        out[nz] = np.sin(x[nz]) / x[nz]
+        return out
+
+    M_pixel = _sinc(np.pi * dx_nm * FX) * _sinc(np.pi * dx_nm * FY)
+    pupil *= M_pixel
 
     U0 = np.fft.fft2(T)
 
