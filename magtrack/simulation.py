@@ -1,4 +1,4 @@
-"""Simulation utilities for generating synthetic bead image stacks."""
+"""Simulations for generating realistic synthetic images and Z-LUTs of beads."""
 
 import numpy as np
 import scipy as sp
@@ -22,9 +22,9 @@ def simulate_beads(
     """Simulate brightfield images of spherical beads.
 
     Generates a 3D stack of normalized brightfield images for beads located at
-    the provided nanometer coordinates. The simulation models refraction and
+    the provided coordinates in nanometers. The simulation models refraction and
     absorption through a spherical object, applies a sampling-limited pupil
-    defined by the imaging wavelength and medium, and returns intensity images
+    defined by the imaging wavelength and medium, and returns images
     cropped to the requested pixel size.
 
     Parameters
