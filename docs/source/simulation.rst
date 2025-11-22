@@ -25,7 +25,8 @@ Quick start
 
    # ``stack`` now has shape (64, 64, 120) and contains a single bead drifting and oscillating over time.
 
-Or you can create Z-LUT
+
+
 .. code-block:: python
 
    import numpy as np
