@@ -18,6 +18,11 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Operating System :: OS Independent",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: MacOS",
+    "Operating System :: POSIX :: Linux",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: Image Processing"
 ]
 license = "GPL-3.0"
 license-files = ["license"]
@@ -51,6 +56,8 @@ docs = [
 
 [project.urls]
 Homepage = "https://github.com/7jameslondon/MagTrack"
+Source = "https://github.com/7jameslondon/MagTrack"
+Documentation = "https://magtrack.readthedocs.io"
 Issues = "https://github.com/7jameslondon/MagTrack/issues"
 
 [project.scripts]
