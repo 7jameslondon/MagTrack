@@ -47,6 +47,9 @@ Or you can [download](https://github.com/7jameslondon/MagTrack/blob/master/examp
 ## 📖 Documentation
 View the full guide to MagTrack at [magtrack.readthedocs.io](https://magtrack.readthedocs.io)
 
+## 🔬 Live Microscope Control and Acquisition
+You can use MagTrack for live video processes using [our sister project MagScope](https://github.com/7jameslondon/MagScope).
+
 ## 💬 Support
 Report issues and make requests on the [GitHub issue tracker](https://github.com/7jameslondon/MagTrack/issues).<br><br>
 Having trouble? Need help? Have suggestions? Want to contribute?<br>
