@@ -115,5 +115,17 @@ class TestLookupZ(unittest.TestCase):
             self.assertTrue(np.allclose(zlut_diff, 0.0))
 
 
+    def test_lookup_z_validates_profile_length(self):
+        for xp in self.xp_modules:
+            profiles = self._to_xp(xp, self.eval_profiles_np)
+            zlut = self._to_xp(xp, self.zlut_np[:-1])
+
+            with self.assertRaisesRegex(
+                magtrack.LookupZProfileSizeError,
+                r"profiles and zlut must have matching radial bins",
+            ):
+                magtrack.lookup_z(profiles, zlut, n_local=self.n_local)
+
+
 if __name__ == "__main__":
     unittest.main()

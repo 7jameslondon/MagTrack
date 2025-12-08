@@ -957,6 +957,11 @@ def fft_profile_with_center(stack, x, y, oversample=4, rmin=0.0, rmax=0.5, gaus_
 
 # ---------- Z-Lookup functions ---------- #
 
+
+class LookupZProfileSizeError(ValueError):
+    """Raised when ``lookup_z`` inputs have mismatched radial bin counts."""
+
+
 def lookup_z(profiles, zlut, n_local=7):
     """
     Calculate the corresponding sub-planar z-coordinate of each profile by LUT
@@ -993,6 +998,13 @@ def lookup_z(profiles, zlut, n_local=7):
     """
     # GPU or CPU?
     xp = cp.get_array_module(profiles)
+
+    expected_bins = zlut.shape[0] - 1
+    if profiles.shape[0] != expected_bins:
+        raise LookupZProfileSizeError(
+            "profiles and zlut must have matching radial bins: got "
+            f"{profiles.shape[0]} bins in profiles and {expected_bins} in zlut"
+        )
 
     ref_z = zlut[0, :]
     ref_profiles = zlut[2:, :]  # Skip the first pixel
