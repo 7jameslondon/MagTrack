@@ -961,6 +961,9 @@ def fft_profile_with_center(stack, x, y, oversample=4, rmin=0.0, rmax=0.5, gaus_
 class LookupZProfileSizeError(ValueError):
     """Raised when ``lookup_z`` inputs have mismatched radial bin counts."""
 
+class LookupZProfileSizeWarning(UserWarning):
+    """Raised when ``lookup_z`` inputs have mismatched radial bin counts."""
+
 
 def lookup_z(profiles, zlut, n_local=7):
     """
@@ -1080,7 +1083,11 @@ def stack_to_xyzp(stack, zlut=None):
     if zlut is None:
         z = x * xp.nan
     else:
-        z = lookup_z(profiles, zlut)
+        try:
+            z = lookup_z(profiles, zlut)
+        except LookupZProfileSizeError as e:
+            warnings.warn(str(e), LookupZProfileSizeWarning)
+            z = x * xp.nan
 
     return x, y, z, profiles
 
@@ -1151,9 +1158,11 @@ def stack_to_xyzp_advanced(stack, zlut=None, **kwargs):
     if zlut is None:
         z = x * cp.nan
     else:
-        z = lookup_z(
-            profiles, zlut, **kwargs.get('lookup_z', {})
-        )
+        try:
+            z = lookup_z(profiles, zlut, **kwargs.get('lookup_z', {}))
+        except LookupZProfileSizeError as e:
+            warnings.warn(str(e), LookupZProfileSizeWarning)
+            z = x * cp.nan
 
     # Return and move back to regular memory
     return cp.asnumpy(x), cp.asnumpy(y), cp.asnumpy(z), cp.asnumpy(profiles)
