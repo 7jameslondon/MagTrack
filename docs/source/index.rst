@@ -30,7 +30,7 @@ MagTrack is a Python package for tracking symmetric beads in single-molecule mag
       :text-align: center
       :shadow: md
 
-      :octicon:`rocket;3rem;sd-text-info`
+      :octicon:`rocket;3rem;sd-text-secondary`
 
       How to install.
 
@@ -40,7 +40,7 @@ MagTrack is a Python package for tracking symmetric beads in single-molecule mag
       :text-align: center
       :shadow: md
 
-      :octicon:`book;3rem;sd-text-success`
+      :octicon:`book;3rem;sd-text-info`
 
       Examples and tips.
 
@@ -50,7 +50,7 @@ MagTrack is a Python package for tracking symmetric beads in single-molecule mag
       :text-align: center
       :shadow: md
 
-      :octicon:`cpu;3rem;sd-text-indigo`
+      :octicon:`cpu;3rem;sd-text-dark`
 
       Create realistic images of beads for testing.
 
@@ -60,7 +60,7 @@ MagTrack is a Python package for tracking symmetric beads in single-molecule mag
       :text-align: center
       :shadow: md
 
-      :octicon:`graph;3rem;sd-text-warning`
+      :octicon:`graph;3rem;sd-text-dark`
 
       Compare performance between systems.
 
@@ -70,7 +70,7 @@ MagTrack is a Python package for tracking symmetric beads in single-molecule mag
       :text-align: center
       :shadow: md
 
-      :octicon:`code;3rem;sd-text-primary`
+      :octicon:`code;3rem;sd-text-dark`
 
       Full module documentation.
 
