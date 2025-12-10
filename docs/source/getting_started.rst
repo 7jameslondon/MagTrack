@@ -67,15 +67,7 @@ This allows MagTrack to use either the CPU or a CUDA-capable GPU.
 Verify the installation
 -----------------------
 
-After installing, import MagTrack in a Python session and print the version string. This confirms that Python can
-locate the package and that the compiled extensions were installed correctly:
-
-.. code-block:: python
-
-   import magtrack
-   print(magtrack.__version__)
-
-You can also try a function like center-of-mass, which converts an image stack into x,y bead coordinates:
+After installing, you can try a function like center-of-mass, which converts an image stack into x,y bead coordinates:
 
 .. code-block:: python
 
