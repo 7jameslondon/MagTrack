@@ -7,6 +7,7 @@ lateral and axial motion.
 
 Quick start
 -----------
+Run the code block to generate a simulated bead:
 
 .. code-block:: python
 
@@ -20,27 +21,42 @@ Quick start
    z_true = np.zeros_like(x_true)
    xyz_true = np.column_stack([x_true, y_true, z_true])
 
-   # Render a 64x64 pixel stack at 500 nm/px
-   stack = simulate_beads(xyz_true, size_px=64, nm_per_px=500.0)
+   # Render a 256x256 pixel stack at 75 nm/px
+   stack = simulate_beads(xyz_true, size_px=256, nm_per_px=75.0)
 
-   # ``stack`` now has shape (64, 64, 120) and contains a single bead drifting and oscillating over time.
-
-
+   # ``stack`` now has shape (256, 256, 120) and contains a single bead drifting and oscillating over time.
+To visualize the bead, install matplotlib and run the code block below:
 
 .. code-block:: python
 
-   import numpy as np
-   from magtrack.simulation import simulate_zlut
+    import matplotlib.pyplot as plt
+    plt.imshow(stack[:,:,0], cmap='gray')
+    plt.show()
 
-   # Define some z-reference values (in nm)
-   z_min = -10000 # nm
-   z_step = 100   # nm
-   z_max = 10000  # nm
-   z_ref = np.arange(z_min, z_max+1, z_step)
+Run the code block to generate a simulated ZLUT:
 
-   # Render a Z-LUT for beads with 64x64 pixel stack at 500 nm/px
-   # This generates a Z-LUT for profiles generated with radial_profile and oversample=1
-   zlut = simulate_zlut(z_ref, size_px=64, nm_per_px=500.0, oversample=1)
+.. code-block:: python
+
+    import numpy as np
+    from magtrack.simulation import simulate_zlut
+
+    # Define some z-reference values (in nm)
+    z_min = -10000 # nm
+    z_step = 100   # nm
+    z_max = 10000  # nm
+    z_ref = np.arange(z_min, z_max+1, z_step)
+
+    # Render a Z-LUT for beads with 256x256 pixel stack at 75 nm/px
+    # This generates a Z-LUT for profiles generated with radial_profile and oversample=1
+    zlut = simulate_zlut(z_ref, size_px=256, nm_per_px=75.0, oversample=1)
+
+To visualize the ZLUT, install matplotlib and run the code block below:
+
+.. code-block:: python
+
+    import matplotlib.pyplot as plt
+    plt.imshow(zlut[1:,:], cmap='gray')
+    plt.show()
 
 Tips for clean simulations
 --------------------------

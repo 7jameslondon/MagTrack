@@ -27,7 +27,7 @@ User Guide
 Import MagTrack
 ----------------------
 
-To start import magtrack. Here we will also import a simulation and NumPy.
+To start, import magtrack. Here we will also import NumPy and a simulation that can generate bead images.
 
 .. code-block:: python
 
@@ -86,8 +86,8 @@ the peak intensity around the bead, and the sub-pixel variant increases accuracy
    x_ac_px, y_ac_px = magtrack.auto_conv(stack, x_com_px, y_com_px)
    x_acsp_px, y_acsp_px = magtrack.auto_conv_sub_pixel(stack, x_com_px, y_com_px)
 
-   error_acsp_nm = np.sqrt((x_acsp_px * nm_per_px - x_true_nm)**2 +
-                           (y_acsp_px * nm_per_px - y_true_nm)**2)
+   error_acsp_nm = np.sqrt((x_acsp_px * nm_per_px - x_true)**2 +
+                           (y_acsp_px * nm_per_px - y_true)**2)
 
 For even finer control, Quadrant Interpolation (QI) can be iterated. Starting from the same seed coordinates, refine the
 result multiple times to progressively reduce the residual error:
