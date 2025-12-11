@@ -79,3 +79,10 @@ After installing, you can try a function like center-of-mass, which converts an 
 
    print(f'x: {x}')
    print(f'y: {y}')
+
+If working properly, this will output an array of
+
+.. code-block:: python
+
+    x: [4.5 4.5 4.5]
+    y: [4.5 4.5 4.5]
