@@ -86,3 +86,4 @@ If working properly, this will output an array of
 
     x: [4.5 4.5 4.5]
     y: [4.5 4.5 4.5]
+You may receive a warning that GPU-acceleration with CuPy is unavailable if MagTrack was installed with CPU only.
