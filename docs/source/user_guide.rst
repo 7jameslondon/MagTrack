@@ -62,12 +62,12 @@ Estimating lateral positions
 ----------------------------
 
 For a first-pass lateral estimate, use :func:`magtrack.center_of_mass`. The ``background`` keyword controls how the
-intensity bias is removed before computing the centroid. ``"none"`` leaves the data unchanged, ``"mean"`` subtracts the
-frame mean, and ``"median"`` subtracts the frame median for the most robust accuracy:
+intensity bias is removed before computing the centroid. By default, ``"median"`` subtraction removes the frame median
+for robust centering; ``"none"`` leaves the data unchanged and ``"mean"`` subtracts the frame mean:
 
 .. code-block:: python
 
-   x_com_px, y_com_px = magtrack.center_of_mass(stack, background="median")
+   x_com_px, y_com_px = magtrack.center_of_mass(stack)
 
    x_com_nm = x_com_px * nm_per_px
    y_com_nm = y_com_px * nm_per_px
