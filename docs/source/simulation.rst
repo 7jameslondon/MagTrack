@@ -25,7 +25,7 @@ Run the code block to generate a simulated bead:
    stack = simulate_beads(xyz_true, size_px=256, nm_per_px=75.0)
 
    # ``stack`` now has shape (256, 256, 120) and contains a single bead drifting and oscillating over time.
-To visualize the bead, install matplotlib and run the code block below:
+To visualize the bead, install `matplotlib <https://matplotlib.org>`_ and run the code block below:
 
 .. code-block:: python
 
@@ -50,7 +50,7 @@ Run the code block to generate a simulated ZLUT:
     # This generates a Z-LUT for profiles generated with radial_profile and oversample=1
     zlut = simulate_zlut(z_ref, size_px=256, nm_per_px=75.0, oversample=1)
 
-To visualize the ZLUT, install matplotlib and run the code block below:
+To visualize the bead, install `matplotlib <https://matplotlib.org>`_ and run the code block below:
 
 .. code-block:: python
 
