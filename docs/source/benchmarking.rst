@@ -53,7 +53,7 @@ Speed benchmark results are stored as JSON inside::
 
    benchmarks/speed/logs/<system-id>/<timestamp>/results.json
 
-Accuracy benchmarks mirror the same directory structure so CSV and JSON logs for
+Accuracy benchmarks mirror the same directory structure, so CSV and JSON logs for
 each run live beside the speed artifacts::
 
    benchmarks/accuracy/logs/<system-id>/<timestamp>/xy_accuracy_<timestamp>.{csv,json}

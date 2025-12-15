@@ -63,7 +63,7 @@ Tips for clean simulations
 
 * Keep properties like ``nm_per_px`` consistent between simulations and downstream analysis to avoid scale mismatches.
 * The simulation works best with larger image sizes (``size_px >= 64px``).
-* The simulation is far from perfect. The wrong combination of parameters can unrealistic images of beads. Start with the default simulation values and work your way towards what you want to simulate.
+* The simulation is far from perfect. The wrong combination of parameters can create unrealistic images of beads. Start with the default simulation values and work your way towards what you want to simulate.
 
 Examples
 ----------------------------
