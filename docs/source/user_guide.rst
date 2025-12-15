@@ -79,7 +79,7 @@ Refining XY positions
 ---------------------
 
 MagTrack offers multiple refinement strategies after the coarse center-of-mass estimate. Auto-convolution narrows in on
-the peak intensity around the bead, and the sub-pixel variant increases accuracy with a localized curve fit:
+the peak intensity around the bead, and the sub-pixel variant increases accuracy using a localized curve fit:
 
 .. code-block:: python
 
@@ -105,8 +105,7 @@ Working with radial profiles and axial lookup
 ---------------------------------------------
 
 To recover axial motion, convert each frame into a radial intensity profile and compare it with a precomputed lookup
-library (Z-LUT). Start by simulating a reference stack that scans through known ``z`` offsets and building the table of
-profiles:
+library (Z-LUT). Start by simulating a reference stack and scan through known ``z`` offsets to build a table of radial profiles:
 
 .. code-block:: python
 
@@ -156,7 +155,7 @@ Inspect ``profiles_fit`` to debug how well the observed profiles match the looku
 Accelerating with GPUs
 ----------------------
 
-All MagTrack functions operate on either NumPy arrays (CPU) or CuPy arrays (GPU). To use the GPU, move the stack to
+All MagTrack functions can operate on either NumPy arrays (CPU) or CuPy arrays (GPU). To use the GPU, move the stack to
 device memory and call the same functions.
 
 .. code-block:: python
