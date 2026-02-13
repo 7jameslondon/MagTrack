@@ -75,7 +75,7 @@ After installing, you can try a function like center-of-mass, which converts an 
    import numpy as np
 
    stack = np.ones((10, 10, 3))
-   x, y = magtrack.center_of_mass(stack)
+   x, y = magtrack.center_of_mass(stack, background="none")
 
    print(f'x: {x}')
    print(f'y: {y}')
