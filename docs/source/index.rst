@@ -44,6 +44,16 @@ MagTrack is a Python package for tracking symmetric beads in single-molecule mag
 
       Examples and tips.
 
+   .. grid-item-card:: Live Microscope Control
+      :link: https://github.com/7jameslondon/MagScope
+      :link-type: url
+      :text-align: center
+      :shadow: md
+
+      :octicon:`device-camera-video;3rem;sd-text-dark`
+
+      Check out our sister project MagScope for live microscope control and analysis.
+
    .. grid-item-card:: (Advanced) Simulation Guide
       :link: simulation
       :link-type: doc
