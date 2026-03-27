@@ -85,6 +85,12 @@ class TestLookupZ(unittest.TestCase):
             msg=f"Maximum deviation {max_value:.3f} exceeded tolerance {tolerance}",
         )
 
+    def _assert_allclose(self, xp, result, expected, rtol=1e-7, atol=1e-12):
+        if xp is cp:
+            cp.testing.assert_allclose(result, expected, rtol=rtol, atol=atol)
+        else:
+            np.testing.assert_allclose(result, expected, rtol=rtol, atol=atol)
+
     def test_lookup_z_recovers_true_z_positions(self):
         tolerance = 150.0  # nanometers
         for xp in self.xp_modules:
@@ -125,6 +131,26 @@ class TestLookupZ(unittest.TestCase):
                 r"profiles and zlut must have matching radial bins",
             ):
                 magtrack.lookup_z(profiles, zlut, n_local=self.n_local)
+
+    def test_lookup_z_warns_and_falls_back_to_coarse_match_when_reference_count_is_too_small(self):
+        short_ref_indices = np.array([20, 50, 80], dtype=np.int64)
+        zlut_short_np = self.zlut_np[:, short_ref_indices]
+        profiles_short_np = zlut_short_np[1:, :]
+        expected_z_np = zlut_short_np[0, :]
+
+        for xp in self.xp_modules:
+            profiles = self._to_xp(xp, profiles_short_np)
+            zlut = self._to_xp(xp, zlut_short_np)
+            expected_z = self._to_xp(xp, expected_z_np)
+
+            with self.assertWarnsRegex(
+                magtrack.LookupZProfileSizeWarning,
+                r"falling back to coarse z lookup",
+            ):
+                z_fit = magtrack.lookup_z(profiles, zlut, n_local=7)
+
+            self.assertEqual(z_fit.shape, expected_z.shape)
+            self._assert_allclose(xp, z_fit, expected_z)
 
 
 if __name__ == "__main__":

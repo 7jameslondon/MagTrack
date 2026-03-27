@@ -961,7 +961,7 @@ class LookupZProfileSizeError(ValueError):
     """Raised when ``lookup_z`` inputs have mismatched radial bin counts."""
 
 class LookupZProfileSizeWarning(UserWarning):
-    """Raised when ``lookup_z`` inputs have mismatched radial bin counts."""
+    """Raised when ``lookup_z`` must fall back or cannot use the requested fit."""
 
 
 def lookup_z(profiles, zlut, n_local=7):
@@ -1021,8 +1021,19 @@ def lookup_z(profiles, zlut, n_local=7):
     # Find index of the max
     z_int_idx = xp.argmax(r, axis=1).astype(xp.float64)
 
-    # Find the sub-planar index of the max
-    z_idx = parabolic_vertex(r, z_int_idx, n_local)
+    # Find the sub-planar index of the max when enough reference planes exist.
+    # Otherwise, fall back to the coarse best-match index.
+    if n_ref < n_local:
+        warnings.warn(
+            "lookup_z requires at least "
+            f"{n_local} reference profiles for parabolic refinement, but zlut "
+            f"contains only {n_ref}; falling back to coarse z lookup.",
+            LookupZProfileSizeWarning,
+            stacklevel=2,
+        )
+        z_idx = z_int_idx
+    else:
+        z_idx = parabolic_vertex(r, z_int_idx, n_local)
 
     # Interpolate z from the reference index
     z = xp.interp(z_idx, xp.arange(n_ref), ref_z, left=xp.nan, right=xp.nan)
