@@ -1161,7 +1161,9 @@ def stack_to_xyzp_advanced(stack, zlut=None, **kwargs):
         )
 
     if kwargs.get('use fft_profile', False):
-        profiles = fft_profile_with_center(gpu_stack, **kwargs.get('fft_profile', {}))
+        profiles = fft_profile_with_center(
+            gpu_stack, x, y, **kwargs.get('fft_profile', {})
+        )
     else:
         profiles = radial_profile(gpu_stack, x, y, **kwargs.get('radial_profile', {}))
 
